@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Mitglieder & Events – Guthaben Verwaltung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg: #0f172a;          /* slate-900 */
+      --panel: #111827cc;     /* zinc-900 w/ alpha */
+      --card: #0b1220cc;      /* deep glass */
+      --text: #e5e7eb;        /* zinc-200 */
+      --muted: #9ca3af;       /* zinc-400 */
+      --accent: #7c3aed;      /* violet-600 */
+      --accent-2: #06b6d4;    /* cyan-500 */
+      --success:#16a34a;      /* green-600 */
+      --danger: #ef4444;      /* red-500 */
+      --border:#1f2937;       /* gray-800 */
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      background: radial-gradient(1200px 1200px at 10% -20%, #1e293b 0%, transparent 60%),
+                  radial-gradient(1000px 800px at 120% 10%, #0ea5e9 0%, transparent 45%),
+                  linear-gradient(160deg, #0b1020 0%, #0f172a 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      line-height: 1.4;
+      padding: 40px 20px 60px;
+    }
+    .container{
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .title{
+      display:flex; align-items:center; gap:12px; margin-bottom:18px;
+    }
+    .title h1{
+      margin:0; font-size: clamp(22px, 4vw, 34px); letter-spacing:.2px;
+      background: linear-gradient(120deg, #fff, #a5b4fc 40%, #67e8f9 80%);
+      -webkit-background-clip: text; background-clip:text; color: transparent;
+      font-weight: 800;
+    }
+    .subtitle{ color: var(--muted); margin: 0 0 28px; }
+
+    .grid{
+      display:grid; gap:18px;
+      grid-template-columns: 1.1fr .9fr;
+    }
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(6px);
+    }
+
+    .card h2{
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: .3px;
+      font-weight: 700;
+    }
+
+    .row{ display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 680px){ .row{ grid-template-columns: 1fr; } }
+
+    label{ font-size: 12px; text-transform: uppercase; letter-spacing:.06em; color:var(--muted); }
+    input, select, button{
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0b1020;
+      color: var(--text);
+      outline: none;
+      transition: all .2s ease;
+    }
+    input::placeholder{ color:#6b7280; }
+    input:focus, select:focus{
+      border-color: #4c1d95;
+      box-shadow: 0 0 0 4px rgba(124,58,237,.2);
+    }
+    select{ appearance: none; background-image: linear-gradient(45deg, transparent 48%, #7c3aed 50%), linear-gradient(135deg, #7c3aed 50%, transparent 52%); background-position: right 14px top 55%, right 8px top 55%; background-size: 10px 10px; background-repeat: no-repeat; }
+    .muted{ color: var(--muted); font-size: 12px; }
+
+    .btn{
+      cursor: pointer;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      border: none;
+      margin-top: 8px;
+      box-shadow: 0 6px 16px rgba(6,182,212,.35);
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+    .btn:active{ transform: translateY(0); }
+
+    .stats{ display:flex; gap:12px; flex-wrap: wrap; margin-bottom: 10px; }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      background: #0b1020; border:1px solid var(--border); border-radius:999px;
+      padding: 8px 12px; font-size: 13px; color: var(--muted);
+    }
+    .chip b{ color: #e2e8f0; }
+
+    table{ width:100%; border-collapse: collapse; }
+    thead th{
+      position: sticky; top:0;
+      background: #0b1020; border-bottom: 1px solid var(--border);
+      font-size:12px; letter-spacing:.06em; text-transform:uppercase; color: var(--muted);
+      padding: 12px 10px; text-align:left;
+    }
+    tbody td{
+      padding: 12px 10px; border-bottom: 1px dashed #1f2a44;
+    }
+    tbody tr:hover{ background: rgba(124,58,237,.05); }
+    .right{ text-align:right; }
+    .id{ color:#a5b4fc; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace; }
+
+    .footer-note{ color: var(--muted); margin-top: 12px; font-size: 12px; }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">
+      <h1>Guthaben Verwaltung</h1>
+    </div>
+    <p class="subtitle">Mitglieder verwalten, Events mit festen Preisen auswählen und Kontostände automatisch berechnen.</p>
+
+    <div class="grid">
+      <!-- Left: Form -->
+      <div class="card">
+        <h2>Neue Buchung / Mitglied anlegen</h2>
+        <div class="row">
+          <div>
+            <label>Mitglied auswählen</label>
+            <select id="mitglied">
+              <option value="">— Neues Mitglied anlegen —</option>
+            </select>
+          </div>
+          <div>
+            <label>Neues Mitglied (optional)</label>
+            <input type="text" id="neuesMitglied" placeholder="Name eingeben">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Mitglieds-ID (optional)</label>
+            <input type="text" id="mitgliedId" placeholder="z. B. M001">
+          </div>
+          <div>
+            <label>Event-Vorlage (optional)</label>
+            <select id="eventVorlage">
+              <option value="">— Kein Event —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Betrag (€) <span class="muted">(optional – wird durch Event gesetzt)</span></label>
+            <input type="number" id="betrag" step="0.01" placeholder="z. B. 20000">
+          </div>
+          <div>
+            <label>Typ</label>
+            <select id="typ">
+              <option value="einzahlung">Einzahlung</option>
+              <option value="auszahlung">Auszahlung</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn" onclick="eintragen()">Abschicken</button>
+        <p class="footer-note">Tipp: Ein Mitglied kann auch ohne Betrag/Event angelegt werden. Die Übersicht unten zeigt immer den aktuellen Stand.</p>
+      </div>
+
+      <!-- Right: Overview -->
+      <div class="card">
+        <h2>Übersicht</h2>
+        <div class="stats">
+          <span class="chip">Mitglieder: <b id="statMitglieder">0</b></span>
+          <span class="chip">Gesamtsaldo: <b id="statSaldo">0</b> €</span>
+        </div>
+        <div style="overflow:auto; max-height: 55vh; border:1px solid var(--border); border-radius: 12px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Mitglied</th>
+                <th>ID</th>
+                <th class="right">Kontostand (€)</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Event-Vorlagen (EUR)
+    const eventTemplates = {
+      "40er Kill": 25000,
+      "50er Win": 35000,
+      "Bizwar Kill Win": 20000,
+      "Bizwar Kill Lose": 10000,
+      "Bizwar Teilnahme": 10000,
+      "Waffenfab. Kill Win": 20000,
+      "Waffenfab. Kills Lose": 10000,
+      "Waffenfab. Win": 20000,
+      "Gießerei Kills Win": 20000,
+      "Gießerei Kills Lose": 10000,
+      "Bank": 50000,
+      "Hafen Drop": 20000,
+      "EKZ/Mall Win": 75000,
+      "RP Fabrik Win": 300000,
+      "RP Fabrik Teilnahme": 0,
+      "Cayo": 100000
+    };
+
+    // Datenstruktur
+    let mitglieder = {}; // { name: { id:string, kontostand:number } }
+
+    // DOM Refs
+    const mitgliedSel = document.getElementById('mitglied');
+    const neuesMitgliedInput = document.getElementById('neuesMitglied');
+    const mitgliedIdInput = document.getElementById('mitgliedId');
+    const eventSel = document.getElementById('eventVorlage');
+    const betragInput = document.getElementById('betrag');
+    const typSel = document.getElementById('typ');
+    const tbody = document.getElementById('tbody');
+    const statMitglieder = document.getElementById('statMitglieder');
+    const statSaldo = document.getElementById('statSaldo');
+
+    // Init
+    initEventsDropdown();
+    aktualisiereTabelle();
+
+    eventSel.addEventListener('change', () => {
+      const ev = eventSel.value;
+      if (ev && eventTemplates[ev] != null) {
+        betragInput.value = eventTemplates[ev];
+      }
+    });
+
+    function initEventsDropdown() {
+      const entries = Object.entries(eventTemplates);
+      // Sort alphabetisch im Dropdown
+      entries.sort((a,b)=> a[0].localeCompare(b[0], 'de'));
+      for (const [label, value] of entries) {
+        const opt = document.createElement('option');
+        opt.value = label;
+        opt.textContent = `${label} (${formatEUR(value)})`;
+        eventSel.appendChild(opt);
+      }
+    }
+
+    function ensureMitgliedExists(name, idMaybe) {
+      if (!(name in mitglieder)) {
+        mitglieder[name] = { id: idMaybe || '', kontostand: 0 };
+        const option = document.createElement('option');
+        option.value = name;
+        option.text = name;
+        mitgliedSel.appendChild(option);
+        sortMitgliedDropdown();
+      }
+      if (idMaybe && !mitglieder[name].id) {
+        mitglieder[name].id = idMaybe;
+      }
+    }
+
+    function sortMitgliedDropdown(){
+      // sort dropdown options alphabetically except first placeholder
+      const opts = [...mitgliedSel.options].slice(1).map(o => o);
+      opts.sort((a,b)=> a.text.localeCompare(b.text,'de'));
+      // clear and rebuild
+      mitgliedSel.length = 1;
+      for (const o of opts) mitgliedSel.appendChild(o);
+    }
+
+    function eintragen(){
+      let name = mitgliedSel.value;
+      const neuerName = (neuesMitgliedInput.value || '').trim();
+      const id = (mitgliedIdInput.value || '').trim();
+
+      if (!name && neuerName) name = neuerName;
+      if (!name){
+        alert('Bitte ein Mitglied auswählen oder einen neuen Namen eingeben.');
+        return;
+      }
+
+      ensureMitgliedExists(name, id);
+
+      // Betrag ermitteln
+      let betrag = betragInput.value === '' ? NaN : parseFloat(betragInput.value);
+      if (isNaN(betrag)){
+        const ev = eventSel.value;
+        if (ev && eventTemplates[ev] != null) betrag = parseFloat(eventTemplates[ev]);
+      }
+
+      // Falls kein Betrag -> nur anlegen/aktualisieren
+      if (isNaN(betrag)){
+        aktualisiereTabelle();
+        clearInputs();
+        return;
+      }
+
+      if (typSel.value === 'einzahlung') {
+        mitglieder[name].kontostand += betrag;
+      } else {
+        mitglieder[name].kontostand -= betrag;
+      }
+
+      aktualisiereTabelle();
+      clearInputs();
+    }
+
+    function aktualisiereTabelle(){
+      // Tabelle leeren
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+      // Sort by name
+      const rows = Object.entries(mitglieder)
+        .sort((a,b)=> a[0].localeCompare(b[0], 'de'))
+        .map(([name, d])=> ({ name, id: d.id, saldo: round2(d.kontostand) }));
+
+      // Build rows
+      let total = 0;
+      for (const r of rows){
+        total += r.saldo;
+        const tr = document.createElement('tr');
+        const tdName = document.createElement('td'); tdName.textContent = r.name;
+        const tdId = document.createElement('td'); tdId.textContent = r.id; tdId.className = 'id';
+        const tdSaldo = document.createElement('td'); tdSaldo.textContent = toLocale(r.saldo); tdSaldo.className = 'right';
+        tr.appendChild(tdName); tr.appendChild(tdId); tr.appendChild(tdSaldo);
+        tbody.appendChild(tr);
+      }
+
+      statMitglieder.textContent = rows.length.toString();
+      statSaldo.textContent = toLocale(round2(total));
+    }
+
+    function clearInputs(){
+      neuesMitgliedInput.value = '';
+      mitgliedSel.value = '';
+      mitgliedIdInput.value = '';
+      betragInput.value = '';
+      eventSel.value = '';
+      typSel.value = 'einzahlung';
+    }
+
+    function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+    function toLocale(n){ return n.toLocaleString('de-DE'); }
+    function formatEUR(n){
+      try { return new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(n); }
+      catch(e){ return n.toString(); }
+    }
+  </script>
+</body>
+</html>
