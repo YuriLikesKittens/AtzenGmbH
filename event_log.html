@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Event-Log · Einträge & Screenshots</title>
+  <title>Event-Log · Einträge & Screenshots (Imgur Upload)</title>
   <style>
     :root{
       --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -44,7 +44,7 @@
   <div class="wrap">
     <div class="topbar">
       <h1>Event-Log · Einträge & Screenshots</h1>
-      <a class="btn" href="https://yurilikeskittens.github.io/guthaben-verwaltung/">Zur Übersicht</a>
+      <a class="btn" href="public_sync_readonly_with_rates.html">Zur Übersicht</a>
     </div>
 
     <div class="grid">
@@ -66,7 +66,7 @@
           <div>
             <label>Screenshot (optional)</label>
             <input type="file" id="screenshot" accept="image/*" />
-            <div class="hint">Max. ~5 MB empfohlen. PNG/JPG/WebP.</div>
+            <div class="hint">Max. ~5 MB empfohlen. PNG/JPG/WebP. Upload via Imgur.</div>
           </div>
           <div>
             <label>Bemerkung (optional)</label>
@@ -88,12 +88,11 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (nur App + Firestore; KEIN Storage mehr nötig) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script>
-    // Konfiguration (gleich wie Admin/Public)
+    // === Firebase-Konfiguration ===
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -105,9 +104,12 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const storage = firebase.storage();
 
-    // Eventvorlagen (gleich wie Auszahlungen)
+    // === Imgur-Konfiguration ===
+    // Hole dir hier einen Client-ID: https://api.imgur.com/oauth2/addclient (ohne OAuth, "Anonymous usage without user authorization")
+    const IMGUR_CLIENT_ID = "REPLACE_WITH_YOUR_IMGUR_CLIENT_ID";
+
+    // === Eventvorlagen (wie Auszahlungen) ===
     const eventTemplates = {
       "40er Kill": 25000, "50er Win": 35000, "Bizwar Kill Win": 20000, "Bizwar Kill Lose": 10000,
       "Bizwar Teilnahme": 10000, "Waffenfab. Kill Win": 20000, "Waffenfab. Kills Lose": 10000, "Waffenfab. Win": 20000,
@@ -116,7 +118,7 @@
       "Sanktion": 0, "Komplett Auszahlung": -1
     };
 
-    // UI Refs
+    // === UI Refs ===
     const eventType = document.getElementById('eventType');
     const memberCount = document.getElementById('memberCount');
     const screenshot = document.getElementById('screenshot');
@@ -148,127 +150,16 @@
         if (!type){ return fail("Bitte eine Event-Art wählen."); }
         if (isNaN(cnt) || cnt < 0){ return fail("Anzahl Mitglieder ungültig."); }
 
-        // Optional Screenshot uploaden
+        // Optional: Screenshot -> Imgur
         let screenshotUrl = "";
-        let screenshotPath = "";
         const file = screenshot.files && screenshot.files[0];
         if (file){
           if (!file.type.startsWith("image/")) { return fail("Nur Bilddateien erlaubt."); }
           if (file.size > 5 * 1024 * 1024) { return fail("Bild zu groß (max ~5 MB)."); }
-
-          try{
-            const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, "_");
-            const path = `eventLogs/${Date.now()}_${safeName}`;
-            const ref = storage.ref().child(path);
-            await ref.put(file, { contentType: file.type, customMetadata: { note: note.value||"" } });
-            screenshotUrl = await ref.getDownloadURL();
-            screenshotPath = path;
-          }catch(upErr){
-            // Upload fehlgeschlagen -> wir speichern den Event trotzdem ohne Bild
-            warn("Screenshot konnte nicht hochgeladen werden. Der Event wird ohne Bild gespeichert.");
-            logDebug(upErr);
-          }
-        }
-
-        const payload = {
-          ts: new Date().toISOString(),
-          serverTs: firebase.firestore.FieldValue.serverTimestamp(),
-          type,
-          memberCount: cnt,
-          note: note.value || "",
-          screenshotUrl,
-          screenshotPath
-        };
-
-        try{
-          await db.collection('eventLogs').add(payload);
-        }catch(dbErr){
-          logDebug(dbErr);
-          // Häufigster Grund: Firestore-Regeln blockieren 'create' für Gäste
-          return fail("Konnte nicht in Firestore speichern. Bitte Regeln prüfen (siehe Hinweise unten).");
-        }
-
-        // Cleanup
-        eventType.value = "";
-        memberCount.value = "";
-        screenshot.value = "";
-        note.value = "";
-        ok("Gespeichert.");
-      }catch(e){
-        logDebug(e);
-        fail("Unerwarteter Fehler. Details siehe 'Technische Details'.");
-      }
-    }
-
-    // Liste live anzeigen
-    db.collection('eventLogs').orderBy('serverTs','desc').limit(50).onSnapshot(snap => {
-      while (list.firstChild) list.removeChild(list.firstChild);
-      snap.forEach(doc => {
-        const d = doc.data();
-        const div = document.createElement('div');
-        div.className = 'item';
-        const imgPart = d.screenshotUrl ? `<img src="${d.screenshotUrl}" alt="Screenshot">` : `<span style="color:#9ca3af;font-size:12px">Kein Bild</span>`;
-        div.innerHTML = `
-          <div class="thumb">${imgPart}</div>
-          <div>
-            <p class="title">${escapeHTML(d.type||'')}</p>
-            <div class="meta">
-              <span>Mitglieder: <b>${(d.memberCount||0)}</b></span>
-              <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
-            </div>
-            ${d.note ? `<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>` : ""}
-          </div>
-        `;
-        list.appendChild(div);
-      });
-    }, err => {
-      logDebug(err);
-      warn("Konnte Event-Liste nicht laden. Prüfe Firestore-Leserechte.");
-    });
-
-    function setStatus(msg, cls){ status.textContent = msg; status.className = "muted " + (cls||""); }
-    function ok(msg){ setStatus(msg, "status-ok"); }
-    function warn(msg){ setStatus(msg, "status-warn"); }
-    function fail(msg){ setStatus(msg, "status-err"); return false; }
-    function logDebug(e){ debug.textContent += (e && (e.message || e.code) ? `${e.code||""} ${e.message}\n` : String(e) + "\n"); }
-    function formatDate(x){ try{ const dt=(x instanceof Date)?x:new Date(x); return dt.toLocaleString('de-DE'); }catch(e){ return String(x); } }
-    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])) }
-  </script>
-
-  <section class="wrap" style="margin-top:12px">
-    <div class="card">
-      <h2 style="margin:0 0 8px">Hinweise zu Firestore/Storage-Rechten</h2>
-      <ol style="margin:0 0 0 18px; padding:0; color:#9ca3af">
-        <li>Öffentliche Erstellung erlauben (mind. für <code>eventLogs</code>):</li>
-      </ol>
-      <pre style="white-space:pre-wrap;color:#9ca3af;background:#0b1020;border:1px solid #1f2937;border-radius:12px;padding:10px;margin-top:8px"><code>rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /eventLogs/{docId} {
-      allow read: if true;
-      allow create: if request.resource.data.type is string
-                    && request.resource.data.memberCount is number
-                    && request.resource.data.memberCount &gt;= 0
-                    && request.resource.data.ts is string
-                    && request.resource.data.size() &lt;= 1024;
-    }
-  }
-}</code></pre>
-      <ol style="margin:8px 0 0 18px; padding:0; color:#9ca3af">
-        <li>Storage: Nur Bilder &lt; 5 MB im Ordner <code>eventLogs/</code>:</li>
-      </ol>
-      <pre style="white-space:pre-wrap;color:#9ca3af;background:#0b1020;border:1px solid #1f2937;border-radius:12px;padding:10px;margin-top:8px"><code>rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /eventLogs/{fileName} {
-      allow read: if true;
-      allow write: if request.resource.size &lt; 5 * 1024 * 1024
-                   &amp;&amp; request.resource.contentType.matches('image/.*');
-    }
-  }
-}</code></pre>
-      <p class="muted" style="margin-top:8px">Wenn du lieber nur eingeloggten Admins Schreibrechte gibst, stelle <i>allow create</i>/<i>allow write</i> auf <code>if request.auth != null</code>.</p>
-    </div>
-  </section>
-</body>
-</html>
+          if (!IMGUR_CLIENT_ID || IMGUR_CLIENT_ID === "REPLACE_WITH_YOUR_IMGUR_CLIENT_ID"){
+            warn("IMGUR_CLIENT_ID ist nicht gesetzt. Event wird ohne Bild gespeichert.");
+          } else {
+            try{
+              screenshotUrl = await uploadToImgur(file);
+            }catch(upErr){
+              warn("Screenshot k
