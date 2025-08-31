@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin · Guthaben Verwaltung (Sync + Stabiler Auto-Logout)</title>
+  <title>Admin · Guthaben Verwaltung (Sync)</title>
   <style>
     :root{
-      --bg:#0f172a; --card:#0b1220cc; --text:#e5e7eb; --muted:#9ca3af;
+      --bg:#0f172a; --panel:#111827cc; --card:#0b1220cc; --text:#e5e7eb; --muted:#9ca3af;
       --accent:#7c3aed; --accent2:#06b6d4; --border:#1f2937; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
     }
     *{box-sizing:border-box}
@@ -38,24 +38,19 @@
     .id{color:#a5b4fc;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     .auth{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
     .warn{color:#fca5a5;font-size:12px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-    .countdown{font-size:12px;color:#9ca3af}
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="topbar">
-      <h1>Admin · Guthaben Verwaltung (Sync)</h1>
-      <div class="countdown" id="logoutTimerInfo" title="Automatische Abmeldung nach Inaktivität"></div>
-    </div>
-    <p class="subtitle">Anmelden → Mitglieder & Auszahlungen pflegen. Änderungen synchronisieren live zur öffentlichen Seite.</p>
+    <h1>Admin · Guthaben Verwaltung (Sync)</h1>
+    <p class="subtitle">Sign-In → Mitglieder & Auszahlungen pflegen. Änderungen synchronisieren live zur öffentlichen Seite.</p>
 
     <div class="card" id="authCard">
       <h2>Admin Login</h2>
       <div class="row">
         <div>
           <label>E-Mail</label>
-        <input type="email" id="email" placeholder="admin@beispiel.de" />
+          <input type="email" id="email" placeholder="admin@beispiel.de" />
         </div>
         <div>
           <label>Passwort</label>
@@ -148,6 +143,7 @@
       measurementId: "G-FWXF3GM505"
     };
 
+    // Events (keine Backslashes/„Smart Quotes“)
     const eventTemplates = {
       "40er Kill": 25000,
       "50er Win": 35000,
@@ -167,99 +163,70 @@
       "Cayo": 100000
     };
 
+    // --- Firebase Init ---
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
-    // Persistenz: NONE (Logout bei Reload)
-    auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(console.warn);
 
     // --- UI Refs ---
     const authCard = document.getElementById("authCard");
     const appEl = document.getElementById("app");
     const authState = document.getElementById("authState");
-    const logoutTimerInfo = document.getElementById("logoutTimerInfo");
     const email = document.getElementById("email");
     const password = document.getElementById("password");
-
     document.getElementById("btnLogin").onclick = async () => {
-      authState.textContent = "Anmeldung läuft…";
       try { await auth.signInWithEmailAndPassword(email.value, password.value); }
       catch (e) { authState.textContent = e && e.message ? e.message : "Login fehlgeschlagen"; }
     };
     document.getElementById("btnLogout").onclick = async () => { await auth.signOut(); };
 
-    // ---- Stabile Inaktivitäts-Überwachung (ohne Listener-Leak) ----
-    const MAX_IDLE_MS = 5 * 60 * 1000; // 5 Minuten
-    let lastActivity = Date.now();
-    let countdownInterval = null;
-    const activityHandler = () => { lastActivity = Date.now(); };
-
-    function startIdleWatch(){
-      stopIdleWatch();
-      lastActivity = Date.now();
-      countdownInterval = setInterval(() => {
-        const left = Math.max(0, MAX_IDLE_MS - (Date.now() - lastActivity));
-        const s = Math.ceil(left / 1000);
-        logoutTimerInfo.textContent = "Auto-Logout in " + s + "s";
-        if (left <= 0){
-          clearInterval(countdownInterval);
-          auth.signOut();
-        }
-      }, 1000);
-      window.addEventListener("mousemove", activityHandler, { passive:true });
-      window.addEventListener("keydown", activityHandler);
-      window.addEventListener("click", activityHandler, { passive:true });
-      window.addEventListener("touchstart", activityHandler, { passive:true });
-      window.addEventListener("scroll", activityHandler, { passive:true });
-      document.addEventListener("visibilitychange", () => {
-        // Bei Tab-Wechsel direkt Zeit aktualisieren
-        if (document.visibilityState === "visible") lastActivity = Date.now();
-      });
-    }
-
-    function stopIdleWatch(){
-      clearInterval(countdownInterval);
-      countdownInterval = null;
-      logoutTimerInfo.textContent = "";
-      window.removeEventListener("mousemove", activityHandler);
-      window.removeEventListener("keydown", activityHandler);
-      window.removeEventListener("click", activityHandler);
-      window.removeEventListener("touchstart", activityHandler);
-      window.removeEventListener("scroll", activityHandler);
-    }
-
-    // --- Auth State ---
-    let unsubMembers = null;
     auth.onAuthStateChanged(user => {
       if (user){
-        // Login UI ausblenden
-        authCard.style.display = "none";
-        document.getElementById("btnLogout").style.display = "inline-block";
-        document.getElementById("btnLogin").style.display = "none";
+        authCard.querySelector("#btnLogin").style.display = "none";
+        authCard.querySelector("#btnLogout").style.display = "inline-block";
         authState.textContent = "Angemeldet";
         appEl.style.display = "";
-        initMembersListener();
-        startIdleWatch();
       } else {
-        appEl.style.display = "none";
-        authCard.style.display = "";
-        document.getElementById("btnLogin").style.display = "inline-block";
-        document.getElementById("btnLogout").style.display = "none";
+        authCard.querySelector("#btnLogin").style.display = "inline-block";
+        authCard.querySelector("#btnLogout").style.display = "none";
         authState.textContent = "Abgemeldet";
-        stopIdleWatch();
-        if (unsubMembers){ unsubMembers(); unsubMembers = null; }
+        appEl.style.display = "none";
       }
     });
 
-    // --- Members Live-Listener (einmalig je Login) ---
-    function initMembersListener(){
+    // --- DOM inputs ---
+    const mitgliedSel = document.getElementById("mitglied");
+    const neuesMitgliedInput = document.getElementById("neuesMitglied");
+    const mitgliedIdInput = document.getElementById("mitgliedId");
+    const eventSel = document.getElementById("eventVorlage");
+    const betragInput = document.getElementById("betrag");
+    const typSel = document.getElementById("typ");
+    const tbody = document.getElementById("tbody");
+    const statMitglieder = document.getElementById("statMitglieder");
+    const statSaldo = document.getElementById("statSaldo");
+    document.getElementById("btnSave").onclick = saveEntry;
+
+    // Fill events
+    (function initEvents(){
+      const entries = Object.entries(eventTemplates).sort((a,b)=> a[0].localeCompare(b[0], "de"));
+      for (const [label, value] of entries){
+        const opt = document.createElement("option");
+        opt.value = label;
+        opt.textContent = `${label} (${formatEUR(value)})`;
+        eventSel.appendChild(opt);
+      }
+      eventSel.addEventListener("change", () => {
+        const ev = eventSel.value;
+        if (ev && eventTemplates[ev] != null) betragInput.value = eventTemplates[ev];
+      });
+    })();
+
+    // Live listeners
+    let unsubMembers = null;
+    auth.onAuthStateChanged(user => {
       if (unsubMembers) unsubMembers();
       unsubMembers = db.collection("members").orderBy("name").onSnapshot(snap => {
-        const mitgliedSel = document.getElementById("mitglied");
-        const tbody = document.getElementById("tbody");
-        const statMitglieder = document.getElementById("statMitglieder");
-        const statSaldo = document.getElementById("statSaldo");
+        // refresh dropdown + table
         while (mitgliedSel.options.length > 1) mitgliedSel.remove(1);
         while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
         let total = 0, count = 0;
@@ -277,7 +244,7 @@
         statMitglieder.textContent = count.toString();
         statSaldo.textContent = toLocale(round2(total));
       });
-    }
+    });
 
     async function ensureMember(name, idMaybe){
       const ref = db.collection("members").doc(name);
@@ -291,13 +258,6 @@
     }
 
     async function saveEntry(){
-      const mitgliedSel = document.getElementById("mitglied");
-      const neuesMitgliedInput = document.getElementById("neuesMitglied");
-      const mitgliedIdInput = document.getElementById("mitgliedId");
-      const eventSel = document.getElementById("eventVorlage");
-      const betragInput = document.getElementById("betrag");
-      const typSel = document.getElementById("typ");
-
       let name = mitgliedSel.value;
       const neuerName = (neuesMitgliedInput.value || "").trim();
       const id = (mitgliedIdInput.value || "").trim();
@@ -306,11 +266,13 @@
 
       const memberRef = await ensureMember(name, id);
 
+      // Betrag
       let amount = betragInput.value === "" ? NaN : parseFloat(betragInput.value);
       if (isNaN(amount)){
         const ev = eventSel.value;
         if (ev && eventTemplates[ev] != null) amount = parseFloat(eventTemplates[ev]);
       }
+
       if (isNaN(amount)){
         clearInputs();
         return; // nur Mitglied anlegen
@@ -340,36 +302,18 @@
     }
 
     function clearInputs(){
-      document.getElementById("neuesMitglied").value = "";
-      document.getElementById("mitglied").value = "";
-      document.getElementById("mitgliedId").value = "";
-      document.getElementById("betrag").value = "";
-      document.getElementById("eventVorlage").value = "";
-      document.getElementById("typ").value = "einzahlung";
+      neuesMitgliedInput.value = "";
+      mitgliedSel.value = "";
+      mitgliedIdInput.value = "";
+      betragInput.value = "";
+      eventSel.value = "";
+      typSel.value = "einzahlung";
     }
 
     function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
     function toLocale(n){ return (n || 0).toLocaleString("de-DE"); }
     function formatEUR(n){ try { return new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n); } catch(e){ return n.toString(); } }
     function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;" }[s])); }
-    
-    // Events Dropdown initialisieren
-    (function initEventsDropdown(){
-      const eventSel = document.getElementById("eventVorlage");
-      const entries = Object.entries(eventTemplates).sort((a,b)=> a[0].localeCompare(b[0], "de"));
-      for (const [label, value] of entries){
-        const opt = document.createElement("option");
-        opt.value = label;
-        opt.textContent = `${label} (${formatEUR(value)})`;
-        eventSel.appendChild(opt);
-      }
-      eventSel.addEventListener("change", () => {
-        const ev = eventSel.value;
-        if (ev && eventTemplates[ev] != null) document.getElementById("betrag").value = eventTemplates[ev];
-      });
-    })();
-
-    document.getElementById("btnSave").addEventListener("click", saveEntry);
   </script>
 </body>
 </html>
