@@ -19,7 +19,7 @@
     .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;backdrop-filter:blur(6px);}
     h2{margin:0 0 12px;font-size:18px}
     label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-    input,select,button{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#0b1020;color:var(--text);outline:none;transition:.2s}
+    input,select,button,a.btn{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#0b1020;color:var(--text);outline:none;transition:.2s;display:inline-block;text-align:center;text-decoration:none}
     input:focus,select:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.2)}
     .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
     @media (max-width:680px){.row{grid-template-columns:1fr}}
@@ -60,6 +60,8 @@
       <div class="auth">
         <button class="btn" id="btnLogin">Anmelden</button>
         <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
+        <!-- NEU: Link zur öffentlichen Auszahlungs-Seite -->
+        <a class="btn" id="btnToPayouts" href="#" style="display:none">Zu Auszahlungen</a>
       </div>
       <p class="muted">Hinweis: E-Mail/Passwort in Firebase Authentication anlegen. <span class="warn" id="authState"></span></p>
     </div>
@@ -143,7 +145,11 @@
       measurementId: "G-FWXF3GM505"
     };
 
-    // Events (keine Backslashes/„Smart Quotes“)
+    // Seite für normale Member (öffentliche Auszahlungen)
+    // -> Bitte auf deine echte URL setzen (z. B. https://deinname.github.io/public_sync.html)
+    const PAYOUTS_URL = "https://yurilikeskittens.github.io/guthaben-verwaltung/";
+
+    // Events
     const eventTemplates = {
       "40er Kill": 25000,
       "50er Win": 35000,
@@ -174,21 +180,35 @@
     const authState = document.getElementById("authState");
     const email = document.getElementById("email");
     const password = document.getElementById("password");
-    document.getElementById("btnLogin").onclick = async () => {
-      try { await auth.signInWithEmailAndPassword(email.value, password.value); }
-      catch (e) { authState.textContent = e && e.message ? e.message : "Login fehlgeschlagen"; }
+    const btnLogin = document.getElementById("btnLogin");
+    const btnLogout = document.getElementById("btnLogout");
+    const btnToPayouts = document.getElementById("btnToPayouts");
+
+    // Login: Persistenz NONE (automatisch ausgeloggt nach Reload)
+    btnLogin.onclick = async () => {
+      authState.textContent = "Anmeldung läuft…";
+      try {
+        await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+        await auth.signInWithEmailAndPassword(email.value, password.value);
+        authState.textContent = "Angemeldet";
+      } catch (e) {
+        authState.textContent = e && e.message ? e.message : "Login fehlgeschlagen";
+      }
     };
-    document.getElementById("btnLogout").onclick = async () => { await auth.signOut(); };
+    btnLogout.onclick = async () => { await auth.signOut(); };
 
     auth.onAuthStateChanged(user => {
       if (user){
-        authCard.querySelector("#btnLogin").style.display = "none";
-        authCard.querySelector("#btnLogout").style.display = "inline-block";
+        btnLogin.style.display = "none";
+        btnLogout.style.display = "inline-block";
+        btnToPayouts.style.display = "inline-block";
+        btnToPayouts.href = PAYOUTS_URL;
         authState.textContent = "Angemeldet";
         appEl.style.display = "";
       } else {
-        authCard.querySelector("#btnLogin").style.display = "inline-block";
-        authCard.querySelector("#btnLogout").style.display = "none";
+        btnLogin.style.display = "inline-block";
+        btnLogout.style.display = "none";
+        btnToPayouts.style.display = "none";
         authState.textContent = "Abgemeldet";
         appEl.style.display = "none";
       }
