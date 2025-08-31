@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Event-Log · Einträge & Screenshots</title>
+  <style>
+    :root{
+      --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
+      --accent:#7c3aed; --accent2:#06b6d4;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);color:var(--text);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;padding:24px 16px 40px;}
+    .wrap{max-width:1100px;margin:0 auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+    h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800}
+    a.btn{display:inline-block;padding:10px 14px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;text-decoration:none;font-weight:700;border:0}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;backdrop-filter:blur(6px)}
+    h2{margin:0 0 12px;font-size:18px}
+    label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+    input,select,button{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#0b1020;color:var(--text);outline:none;transition:.2s}
+    input:focus,select:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.2)}
+    .btn{cursor:pointer;font-weight:700;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);border:none;margin-top:8px;box-shadow:0 6px 16px rgba(6,182,212,.35)}
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+    .muted{color:var(--muted);font-size:12px}
+    .list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media (max-width:900px){.list{grid-template-columns:1fr}}
+    .item{display:grid;grid-template-columns:140px 1fr;gap:12px;border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+    .thumb{width:140px;height:100px;background:#0a0f1f;border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .thumb img{max-width:100%;max-height:100%;display:block}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    .title{font-weight:700;margin:0 0 6px}
+    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    @media (max-width:700px){.row{grid-template-columns:1fr}}
+    .hint{font-size:12px;color:#9ca3af;margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>Event-Log · Einträge & Screenshots</h1>
+      <a class="btn" href="public_sync_readonly_payouts_and_deposits.html">Zur Übersicht</a>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Neues Event eintragen</h2>
+        <div class="row">
+          <div>
+            <label>Art des Events</label>
+            <select id="eventType">
+              <option value="">— Bitte wählen —</option>
+            </select>
+          </div>
+          <div>
+            <label>Anzahl Mitglieder</label>
+            <input type="number" id="memberCount" min="0" step="1" placeholder="z. B. 12" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Screenshot (optional)</label>
+            <input type="file" id="screenshot" accept="image/*" />
+            <div class="hint">Max. ~5 MB empfohlen. PNG/JPG/WebP.</div>
+          </div>
+          <div>
+            <label>Bemerkung (optional)</label>
+            <input type="text" id="note" placeholder="z. B. Map/Server/MatchID" />
+          </div>
+        </div>
+        <button class="btn" id="btnSubmit">Eintragen</button>
+        <p class="muted" id="status"></p>
+      </div>
+
+      <div class="card">
+        <h2>Letzte Events</h2>
+        <div id="list" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  <script>
+    // Konfiguration (gleich wie Admin/Public)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
+      authDomain: "msauszahlung.firebaseapp.com",
+      projectId: "msauszahlung",
+      storageBucket: "msauszahlung.appspot.com",
+      messagingSenderId: "1033439801595",
+      appId: "1:1033439801595:web:4251badc1447ed8079805e",
+      measurementId: "G-FWXF3GM505"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // Diese Eventvorlagen (gleich wie bei Auszahlungen erweitern, inkl. Sonderfällen möglich)
+    const eventTemplates = {
+      "40er Kill": 25000,
+      "50er Win": 35000,
+      "Bizwar Kill Win": 20000,
+      "Bizwar Kill Lose": 10000,
+      "Bizwar Teilnahme": 10000,
+      "Waffenfab. Kill Win": 20000,
+      "Waffenfab. Kills Lose": 10000,
+      "Waffenfab. Win": 20000,
+      "Gießerei Kills Win": 20000,
+      "Gießerei Kills Lose": 10000,
+      "Bank": 50000,
+      "Hafen Drop": 20000,
+      "EKZ/Mall Win": 75000,
+      "RP Fabrik Win": 300000,
+      "RP Fabrik Teilnahme": 0,
+      "Cayo": 100000,
+      "Sanktion": 0,
+      "Komplett Auszahlung": -1
+    };
+
+    // UI Refs
+    const eventType = document.getElementById('eventType');
+    const memberCount = document.getElementById('memberCount');
+    const screenshot = document.getElementById('screenshot');
+    const note = document.getElementById('note');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const status = document.getElementById('status');
+    const list = document.getElementById('list');
+
+    // Select füllen
+    (function fillEventTypes(){
+      const entries = Object.keys(eventTemplates).sort((a,b)=> a.localeCompare(b,"de"));
+      for (const label of entries){
+        const opt = document.createElement('option');
+        opt.value = label;
+        opt.textContent = label;
+        eventType.appendChild(opt);
+      }
+    })();
+
+    btnSubmit.onclick = submitEvent;
+
+    async function submitEvent(){
+      status.textContent = "Speichere…";
+      try{
+        const type = eventType.value.trim();
+        const cnt = parseInt(memberCount.value || "0", 10);
+        if (!type){ status.textContent = "Bitte eine Event-Art wählen."; return; }
+        if (isNaN(cnt) || cnt < 0){ status.textContent = "Anzahl Mitglieder ungültig."; return; }
+
+        // Optional Screenshot uploaden
+        let screenshotUrl = "";
+        let screenshotPath = "";
+        const file = screenshot.files && screenshot.files[0];
+        if (file){
+          // einfache Schutzvorgaben
+          if (!file.type.startsWith("image/")) { status.textContent = "Nur Bilddateien erlaubt."; return; }
+          if (file.size > 5 * 1024 * 1024) { status.textContent = "Bild zu groß (max ~5 MB)."; return; }
+
+          const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, "_");
+          const path = `eventLogs/${Date.now()}_${safeName}`;
+          const ref = storage.ref().child(path);
+          await ref.put(file, { contentType: file.type, customMetadata: { note: note.value||"" } });
+          screenshotUrl = await ref.getDownloadURL();
+          screenshotPath = path;
+        }
+
+        const payload = {
+          ts: new Date().toISOString(),
+          serverTs: firebase.firestore.FieldValue.serverTimestamp(),
+          type,
+          memberCount: cnt,
+          note: note.value || "",
+          screenshotUrl,
+          screenshotPath
+        };
+        await db.collection('eventLogs').add(payload);
+
+        // Cleanup
+        eventType.value = "";
+        memberCount.value = "";
+        screenshot.value = "";
+        note.value = "";
+        status.textContent = "Gespeichert.";
+        setTimeout(()=> status.textContent = "", 2000);
+      }catch(e){
+        console.error(e);
+        status.textContent = "Fehler: " + (e && e.message ? e.message : e);
+      }
+    }
+
+    // Liste live anzeigen
+    db.collection('eventLogs').orderBy('serverTs','desc').limit(50).onSnapshot(snap => {
+      while (list.firstChild) list.removeChild(list.firstChild);
+      snap.forEach(doc => {
+        const d = doc.data();
+        const div = document.createElement('div');
+        div.className = 'item';
+        const imgPart = d.screenshotUrl ? `<img src="${d.screenshotUrl}" alt="Screenshot">` : `<span style="color:#9ca3af;font-size:12px">Kein Bild</span>`;
+        div.innerHTML = `
+          <div class="thumb">${imgPart}</div>
+          <div>
+            <p class="title">${escapeHTML(d.type||'')}</p>
+            <div class="meta">
+              <span>Mitglieder: <b>${(d.memberCount||0)}</b></span>
+              <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
+            </div>
+            ${d.note ? `<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>` : ""}
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    });
+
+    function formatDate(x){
+      try{
+        const dt = (x instanceof Date) ? x : new Date(x);
+        return dt.toLocaleString('de-DE');
+      }catch(e){ return String(x); }
+    }
+    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])) }
+  </script>
+</body>
+</html>
