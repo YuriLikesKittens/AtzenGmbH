@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Event-Log · Einträge & Screenshots</title>
+  <title>Event-Log · Einträge & Proof-Links</title>
   <style>
     :root{
       --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -35,14 +35,15 @@
     .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
     @media (max-width:700px){.row{grid-template-columns:1fr}}
     .hint{font-size:12px;color:#9ca3af;margin-top:6px}
+    .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:12px;color:#9ca3af}
     .err{color:#fca5a5}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <h1>Event-Log · Einträge & Screenshots</h1>
-      <a class="btn" href="https://yurilikeskittens.github.io/guthaben-verwaltung/">Zur Übersicht</a>
+      <h1>Event-Log · Einträge & Proof-Links</h1>
+      <a class="btn" href="public_sync_readonly_with_rates.html">Zur Übersicht</a>
     </div>
 
     <div class="grid">
@@ -62,9 +63,9 @@
         </div>
         <div class="row">
           <div>
-            <label>Screenshot-URL (Imgur, optional)</label>
-            <input type="url" id="screenshotUrl" placeholder="https://i.imgur.com/abc123.jpg" />
-            <div class="hint">Erlaube Bild-Link (z. B. <code>https://i.imgur.com/….jpg</code>). Kein Upload nötig.</div>
+            <label>Proof-URL (optional)</label>
+            <input type="url" id="proofUrl" placeholder="https://… (Bild, Clip, Forum-Post, etc.)" />
+            <div class="hint">Beliebige URL erlaubt (Bild/Video/Beitrag). Wir zeigen ein Thumbnail, falls möglich – sonst einen Link.</div>
           </div>
           <div>
             <label>Bemerkung (optional)</label>
@@ -86,7 +87,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-    // Konfiguration (gleich wie Admin/Public)
+    // Firebase Config (wie Admin/Public)
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -108,16 +109,16 @@
       "Sanktion": 0, "Komplett Auszahlung": -1
     };
 
-    // UI Refs
+    // UI-Refs
     const eventType = document.getElementById('eventType');
     const memberCount = document.getElementById('memberCount');
-    const screenshotUrlInput = document.getElementById('screenshotUrl');
+    const proofUrlInput = document.getElementById('proofUrl');
     const note = document.getElementById('note');
     const btnSubmit = document.getElementById('btnSubmit');
     const status = document.getElementById('status');
     const list = document.getElementById('list');
 
-    // Select füllen
+    // Auswahl füllen
     (function fillEventTypes(){
       const entries = Object.keys(eventTemplates).sort((a,b)=> a.localeCompare(b,"de"));
       for (const label of entries){
@@ -130,13 +131,17 @@
 
     btnSubmit.onclick = submitEvent;
 
-    function isLikelyImgurUrl(u){
+    function isValidHttpUrl(str){
+      if (!str) return false;
       try{
-        const url = new URL(u);
-        // Erlaubt i.imgur.com Direktlinks (jpg/png/webp/gif) oder imgur.com mit i.imgur.com Proxy
-        const hostOk = /(^|\.)imgur\.com$/i.test(url.hostname);
-        const extOk = /\.(png|jpe?g|webp|gif)$/i.test(url.pathname);
-        return hostOk && (extOk || url.pathname.startsWith("/a/") || url.pathname.startsWith("/gallery/"));
+        const u = new URL(str);
+        return u.protocol === "http:" || u.protocol === "https:";
+      }catch{ return false; }
+    }
+    function isLikelyImageUrl(str){
+      try{
+        const { pathname } = new URL(str);
+        return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(pathname);
       }catch{ return false; }
     }
 
@@ -149,10 +154,9 @@
         if (!type){ status.textContent = "Bitte eine Event-Art wählen."; return; }
         if (isNaN(cnt) || cnt < 0){ status.textContent = "Anzahl Mitglieder ungültig."; return; }
 
-        // Optionaler Imgur-Link
-        let screenshotUrl = (screenshotUrlInput.value || "").trim();
-        if (screenshotUrl && !isLikelyImgurUrl(screenshotUrl)){
-          status.textContent = "Screenshot-URL scheint kein gültiger Imgur-Link zu sein.";
+        let proofUrl = (proofUrlInput.value || "").trim();
+        if (proofUrl && !isValidHttpUrl(proofUrl)){
+          status.textContent = "Bitte eine gültige URL (http/https) eingeben – oder Feld leer lassen.";
           status.classList.add("err");
           return;
         }
@@ -163,14 +167,14 @@
           type,
           memberCount: cnt,
           note: note.value || "",
-          screenshotUrl // nur URL, kein Upload
+          proofUrl // freies URL-Feld
         };
         await db.collection('eventLogs').add(payload);
 
         // Cleanup
         eventType.value = "";
         memberCount.value = "";
-        screenshotUrlInput.value = "";
+        proofUrlInput.value = "";
         note.value = "";
         status.textContent = "Gespeichert.";
         setTimeout(()=> status.textContent = "", 2000);
@@ -181,18 +185,31 @@
       }
     }
 
-    // Liste live anzeigen
+    // Liste live anzeigen (kompatibel mit alten Feldern 'screenshotUrl' & neuen 'proofUrl')
     db.collection('eventLogs').orderBy('serverTs','desc').limit(50).onSnapshot(snap => {
       while (list.firstChild) list.removeChild(list.firstChild);
       snap.forEach(doc => {
         const d = doc.data();
+        const proof = d.proofUrl || d.screenshotUrl || ""; // Rückwärtskompatibel
         const div = document.createElement('div');
         div.className = 'item';
-        const hasImg = d.screenshotUrl && typeof d.screenshotUrl === "string";
-        const imgPart = hasImg ? `<img src="${escapeAttr(d.screenshotUrl)}" alt="Screenshot">`
-                               : `<span style="color:#9ca3af;font-size:12px">Kein Bild</span>`;
+
+        // Wir versuchen ein Thumbnail; wenn das fehlschlägt, zeigen wir einen Link.
+        const canThumb = isLikelyImageUrl(proof);
+        const imgHtml = canThumb && proof
+          ? `<img src="${escapeAttr(proof)}" alt="Proof" onerror="this.replaceWith(document.createElement('span')); this.nextSibling?.remove();" />`
+          : "";
+
+        const fallbackLink = proof
+          ? `<a class="pill" href="${escapeAttr(proof)}" target="_blank" rel="noopener">Proof öffnen</a>`
+          : `<span style="color:#9ca3af;font-size:12px">Kein Proof</span>`;
+
+        const thumb = imgHtml
+          ? `<div class="thumb">${imgHtml}${fallbackLink}</div>`
+          : `<div class="thumb">${fallbackLink}</div>`;
+
         div.innerHTML = `
-          <div class="thumb">${imgPart}</div>
+          ${thumb}
           <div>
             <p class="title">${escapeHTML(d.type||'')}</p>
             <div class="meta">
