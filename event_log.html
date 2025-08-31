@@ -8,8 +8,7 @@
     :root{
       --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
       --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
-      --accent:#7c3aed; --accent2:#06b6d4;
-      --green:#22c55e; --red:#ef4444;
+      --accent:#7c3aed; --accent2:#06b6d4; --danger:#ef4444;
     }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);
@@ -47,10 +46,8 @@
            border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
     .thumb img{width:100%;height:100%;object-fit:cover;display:block}
     .content{min-width:0}
-    .title{margin:0 0 6px}
-    .evName{font-weight:800;color:var(--green)}  /* Event grün */
+    .title{font-weight:700;margin:0 0 6px}
     .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
-    .count{color:var(--red);font-weight:700}     /* Mitglieder rot */
     .hint{font-size:12px;color:#9ca3af;margin-top:6px}
     .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;
           padding:4px 8px;font-size:12px;color:#9ca3af;margin-top:6px}
@@ -61,6 +58,7 @@
             color:#fca5a5;width:32px;height:32px;border-radius:999px;cursor:pointer}
     .delbtn:hover{background:#1f2937;color:#fff}
 
+    /* Login Card */
     .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
     @media (max-width:640px){.authrow{grid-template-columns:1fr}}
   </style>
@@ -102,4 +100,194 @@
             <select id="eventType"><option value="">— Bitte wählen —</option></select>
           </div>
           <div>
-            <label>Mitglieder</label>
+            <label>Anzahl Mitglieder</label>
+            <input type="number" id="memberCount" min="0" step="1" placeholder="z. B. 12" />
+          </div>
+        </div>
+        <div class="row" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+          <div>
+            <label>Proof-URL (optional)</label>
+            <input type="url" id="proofUrl" placeholder="https://… (Bild, Clip, Forum-Post, etc.)" />
+          </div>
+          <div>
+            <label>Bemerkung (optional)</label>
+            <input type="text" id="note" placeholder="z. B. Map/Server/MatchID" />
+          </div>
+        </div>
+        <button class="btn" id="btnSubmit">Eintragen</button>
+        <p class="muted" id="status"></p>
+      </div>
+
+      <div class="card">
+        <h2>Letzte Events</h2>
+        <div id="list" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
+      authDomain: "msauszahlung.firebaseapp.com",
+      projectId: "msauszahlung",
+      storageBucket: "msauszahlung.appspot.com",
+      messagingSenderId: "1033439801595",
+      appId: "1:1033439801595:web:4251badc1447ed8079805e",
+      measurementId: "G-FWXF3GM505"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const eventTemplates = {
+      "40er Kill": 25000,"50er Win": 35000,"Bizwar Kill Win": 20000,"Bizwar Kill Lose": 10000,
+      "Bizwar Teilnahme": 10000,"Waffenfab. Kill Win": 20000,"Waffenfab. Kills Lose": 10000,"Waffenfab. Win": 20000,
+      "Gießerei Kills Win": 20000,"Gießerei Kills Lose": 10000,"Bank": 50000,"Hafen Drop": 20000,
+      "EKZ/Mall Win": 75000,"RP Fabrik Win": 300000,"RP Fabrik Teilnahme": 0,"Cayo": 100000,
+      "Sanktion": 0,"Komplett Auszahlung": -1
+    };
+
+    // --- Admin Login nur fürs Löschen ---
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('btnLogout');
+    const authState = document.getElementById('authState');
+
+    let isAdmin = false;
+    function setAdminUI(on){
+      isAdmin = !!on;
+      document.body.classList.toggle('admin', !!on);
+      btnLogin.style.display = on ? 'none' : 'inline-block';
+      btnLogout.style.display = on ? 'inline-block' : 'none';
+      authState.textContent = on ? 'Angemeldet' : 'Abgemeldet';
+    }
+
+    btnLogin.onclick = async () => {
+      authState.textContent = 'Anmeldung läuft…';
+      try{
+        await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+        await auth.signInWithEmailAndPassword(email.value, password.value);
+        setAdminUI(true);
+      }catch(e){
+        authState.textContent = e?.message || 'Login fehlgeschlagen';
+      }
+    };
+    btnLogout.onclick = async () => { await auth.signOut(); };
+
+    auth.onAuthStateChanged(user => {
+      setAdminUI(!!user);
+    });
+    // ------------------------------------
+
+    // UI Refs Event-Form
+    const eventType = document.getElementById('eventType');
+    const memberCount = document.getElementById('memberCount');
+    const proofUrlInput = document.getElementById('proofUrl');
+    const note = document.getElementById('note');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const status = document.getElementById('status');
+    const list = document.getElementById('list');
+
+    (function fillEventTypes(){
+      Object.keys(eventTemplates).sort((a,b)=>a.localeCompare(b,"de"))
+        .forEach(label=>{
+          const opt=document.createElement('option');
+          opt.value=label; opt.textContent=label; eventType.appendChild(opt);
+        });
+    })();
+
+    btnSubmit.onclick=async()=>{
+      setStatus("Speichere…");
+      try{
+        const type=eventType.value.trim();
+        const cnt=parseInt(memberCount.value||"0",10);
+        if(!type){return setStatus("Bitte eine Event-Art wählen.");}
+        if(isNaN(cnt)||cnt<0){return setStatus("Anzahl Mitglieder ungültig.");}
+        let proofUrl=(proofUrlInput.value||"").trim();
+        if(proofUrl && !(proofUrl.startsWith("http://")||proofUrl.startsWith("https://"))){
+          return setStatus("Bitte gültige URL (http/https).");
+        }
+        const payload={ts:new Date().toISOString(),serverTs:firebase.firestore.FieldValue.serverTimestamp(),
+          type,memberCount:cnt,note:note.value||"",proofUrl};
+        await db.collection('eventLogs').add(payload);
+        eventType.value=""; memberCount.value=""; proofUrlInput.value=""; note.value="";
+        setStatus("Gespeichert."); setTimeout(()=>setStatus(""),1800);
+      }catch(e){ setStatus("Fehler: "+(e.message||e)); }
+    };
+
+    // Live-Liste inkl. (admin-only) Löschen
+    db.collection('eventLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
+      const frag=document.createDocumentFragment();
+      snap.forEach(doc=>{
+        frag.appendChild(renderItem(doc.id, doc.data()));
+      });
+      list.innerHTML=""; list.appendChild(frag);
+    });
+
+    function renderItem(id, d){
+      const proof=d.proofUrl||"";
+      const el=document.createElement('div');
+      el.className='item';
+
+      // Admin X Button
+      const delBtn=document.createElement('button');
+      delBtn.className='delbtn admin-only';
+      delBtn.title='Event-Log löschen';
+      delBtn.textContent='✕';
+      delBtn.onclick=async()=>{
+        if(!isAdmin){ alert('Nicht angemeldet.'); return; }
+        const ok=confirm('Diesen Event-Log wirklich löschen?');
+        if(!ok) return;
+        try{
+          await db.collection('eventLogs').doc(id).delete();
+        }catch(e){
+          alert('Löschen fehlgeschlagen: ' + (e?.message||e));
+        }
+      };
+      el.appendChild(delBtn);
+
+      // Thumbnail/Link
+      const thumb=document.createElement('div');
+      thumb.className='thumb';
+      const isImg = isImageUrl(proof);
+      if(proof && isImg){
+        const img=document.createElement('img');
+        img.src=proof; img.alt='Proof';
+        img.onerror=()=>{ thumb.innerHTML=`<a class="pill" href="${escapeAttr(proof)}" target="_blank" rel="noopener">Proof öffnen</a>`; };
+        thumb.appendChild(img);
+      }else{
+        thumb.innerHTML = proof
+          ? `<a class="pill" href="${escapeAttr(proof)}" target="_blank" rel="noopener">Proof öffnen</a>`
+          : `<span class="pill" style="opacity:.8">Kein Proof</span>`;
+      }
+
+      const content=document.createElement('div');
+      content.className='content';
+      content.innerHTML=`
+        <p class="title">${escapeHTML(d.type||'')}</p>
+        <div class="meta">
+          <span>Mitglieder: <b>${d.memberCount||0}</b></span>
+          <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
+        </div>
+        ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
+      `;
+
+      el.appendChild(thumb);
+      el.appendChild(content);
+      return el;
+    }
+
+    /* Helpers */
+    function setStatus(msg){ status.textContent = msg; }
+    function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
+    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])); }
+    function escapeAttr(str){ return String(str).replace(/["'\\`]/g,"_"); }
+    function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname); }catch{ return false; } }
+  </script>
+</body>
+</html>
