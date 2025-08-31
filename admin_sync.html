@@ -10,10 +10,11 @@
       --accent:#7c3aed; --accent2:#06b6d4; --border:#1f2937; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(1200px 1200px at 10% -20%, #1e293b 0%, transparent 60%), radial-gradient(1000px 800px at 120% 10%, #0ea5e9 0%, transparent 45%), linear-gradient(160deg, #0b1020 0%, #0f172a 100%); color:var(--text); font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial; padding:32px 16px;}
+    body{margin:0;background:radial-gradient(1200px 1200px at 10% -20%, #1e293b 0%, transparent 60%), radial-gradient(1000px 800px at 120% 10%, #0ea5e9 0%, transparent 45%), linear-gradient(160deg, #0b1020 0%, #0f172a 100%); color:var(--text); font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial; padding:24px 16px 40px;}
     .container{max-width:1120px;margin:0 auto}
-    h1{margin:0 0 8px;font-size:clamp(22px,4vw,34px);background:linear-gradient(120deg,#fff,#a5b4fc 40%,#67e8f9 80%);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
-    .subtitle{color:var(--muted);margin:0 0 24px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+    h1{margin:0;font-size:clamp(22px,4vw,34px);background:linear-gradient(120deg,#fff,#a5b4fc 40%,#67e8f9 80%);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+    .subtitle{color:var(--muted);margin:6px 0 20px}
     .grid{display:grid;gap:18px;grid-template-columns:1.1fr .9fr}
     @media (max-width:920px){.grid{grid-template-columns:1fr}}
     .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;backdrop-filter:blur(6px);}
@@ -38,11 +39,16 @@
     .id{color:#a5b4fc;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     .auth{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
     .warn{color:#fca5a5;font-size:12px}
+    .payoutBtn{max-width:220px}
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Admin · Guthaben Verwaltung (Sync)</h1>
+    <div class="topbar">
+      <h1>Admin · Guthaben Verwaltung (Sync)</h1>
+      <!-- Button IMMER sichtbar -->
+      <a class="btn payoutBtn" id="btnToPayouts" href="#" target="_self">Zu Auszahlungen</a>
+    </div>
     <p class="subtitle">Sign-In → Mitglieder & Auszahlungen pflegen. Änderungen synchronisieren live zur öffentlichen Seite.</p>
 
     <div class="card" id="authCard">
@@ -60,8 +66,6 @@
       <div class="auth">
         <button class="btn" id="btnLogin">Anmelden</button>
         <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
-        <!-- NEU: Link zur öffentlichen Auszahlungs-Seite -->
-        <a class="btn" id="btnToPayouts" href="#" style="display:none">Zu Auszahlungen</a>
       </div>
       <p class="muted">Hinweis: E-Mail/Passwort in Firebase Authentication anlegen. <span class="warn" id="authState"></span></p>
     </div>
@@ -145,8 +149,7 @@
       measurementId: "G-FWXF3GM505"
     };
 
-    // Seite für normale Member (öffentliche Auszahlungen)
-    // -> Bitte auf deine echte URL setzen (z. B. https://deinname.github.io/public_sync.html)
+    // Öffentliche Auszahlungs-Seite (ohne Login). HIER deine echte URL eintragen:
     const PAYOUTS_URL = "https://yurilikeskittens.github.io/guthaben-verwaltung/";
 
     // Events
@@ -184,6 +187,9 @@
     const btnLogout = document.getElementById("btnLogout");
     const btnToPayouts = document.getElementById("btnToPayouts");
 
+    // Button immer klickenbar
+    btnToPayouts.href = PAYOUTS_URL;
+
     // Login: Persistenz NONE (automatisch ausgeloggt nach Reload)
     btnLogin.onclick = async () => {
       authState.textContent = "Anmeldung läuft…";
@@ -201,14 +207,11 @@
       if (user){
         btnLogin.style.display = "none";
         btnLogout.style.display = "inline-block";
-        btnToPayouts.style.display = "inline-block";
-        btnToPayouts.href = PAYOUTS_URL;
         authState.textContent = "Angemeldet";
         appEl.style.display = "";
       } else {
         btnLogin.style.display = "inline-block";
         btnLogout.style.display = "none";
-        btnToPayouts.style.display = "none";
         authState.textContent = "Abgemeldet";
         appEl.style.display = "none";
       }
