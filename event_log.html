@@ -9,6 +9,7 @@
       --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
       --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
       --accent:#7c3aed; --accent2:#06b6d4; --danger:#ef4444;
+      --green:#22c55e; --red:#ef4444;
     }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);
@@ -46,8 +47,10 @@
            border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
     .thumb img{width:100%;height:100%;object-fit:cover;display:block}
     .content{min-width:0}
-    .title{font-weight:700;margin:0 0 6px}
+    .title{margin:0 0 6px}
+    .evName{font-weight:800;color:var(--green)}  /* Event grün */
     .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    .count{color:var(--red);font-weight:700}     /* Mitglieder rot */
     .hint{font-size:12px;color:#9ca3af;margin-top:6px}
     .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;
           padding:4px 8px;font-size:12px;color:#9ca3af;margin-top:6px}
@@ -100,7 +103,7 @@
             <select id="eventType"><option value="">— Bitte wählen —</option></select>
           </div>
           <div>
-            <label>Anzahl Mitglieder</label>
+            <label>Mitglieder</label>
             <input type="number" id="memberCount" min="0" step="1" placeholder="z. B. 12" />
           </div>
         </div>
@@ -143,13 +146,19 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const eventTemplates = {
-      "40er Kill": 25000,"50er Win": 35000,"Bizwar Kill Win": 20000,"Bizwar Kill Lose": 10000,
-      "Bizwar Teilnahme": 10000,"Waffenfab. Kill Win": 20000,"Waffenfab. Kills Lose": 10000,"Waffenfab. Win": 20000,
-      "Gießerei Kills Win": 20000,"Gießerei Kills Lose": 10000,"Bank": 50000,"Hafen Drop": 20000,
-      "EKZ/Mall Win": 75000,"RP Fabrik Win": 300000,"RP Fabrik Teilnahme": 0,"Cayo": 100000,
-      "Sanktion": 0,"Komplett Auszahlung": -1
-    };
+    /* === Nur diese 10 Events auswählbar === */
+    const eventOptions = [
+      "40er",
+      "50er",
+      "Bank",
+      "Bizwar",
+      "Cayo",
+      "EKZ/Mall",
+      "Gießerei",
+      "Hafen Drop",
+      "RP Fabrik",
+      "Waffenfabrik"
+    ];
 
     // --- Admin Login nur fürs Löschen ---
     const email = document.getElementById('email');
@@ -178,10 +187,7 @@
       }
     };
     btnLogout.onclick = async () => { await auth.signOut(); };
-
-    auth.onAuthStateChanged(user => {
-      setAdminUI(!!user);
-    });
+    auth.onAuthStateChanged(user => setAdminUI(!!user));
     // ------------------------------------
 
     // UI Refs Event-Form
@@ -193,12 +199,13 @@
     const status = document.getElementById('status');
     const list = document.getElementById('list');
 
+    // Select füllen mit genau deinen 10 Events
     (function fillEventTypes(){
-      Object.keys(eventTemplates).sort((a,b)=>a.localeCompare(b,"de"))
-        .forEach(label=>{
-          const opt=document.createElement('option');
-          opt.value=label; opt.textContent=label; eventType.appendChild(opt);
-        });
+      eventType.innerHTML = '<option value="">— Bitte wählen —</option>';
+      eventOptions.forEach(label=>{
+        const opt=document.createElement('option');
+        opt.value=label; opt.textContent=label; eventType.appendChild(opt);
+      });
     })();
 
     btnSubmit.onclick=async()=>{
@@ -207,7 +214,7 @@
         const type=eventType.value.trim();
         const cnt=parseInt(memberCount.value||"0",10);
         if(!type){return setStatus("Bitte eine Event-Art wählen.");}
-        if(isNaN(cnt)||cnt<0){return setStatus("Anzahl Mitglieder ungültig.");}
+        if(isNaN(cnt)||cnt<0){return setStatus("Mitgliederzahl ungültig.");}
         let proofUrl=(proofUrlInput.value||"").trim();
         if(proofUrl && !(proofUrl.startsWith("http://")||proofUrl.startsWith("https://"))){
           return setStatus("Bitte gültige URL (http/https).");
@@ -269,9 +276,9 @@
       const content=document.createElement('div');
       content.className='content';
       content.innerHTML=`
-        <p class="title">${escapeHTML(d.type||'')}</p>
+        <p class="title"><span class="evName">${escapeHTML(d.type||'')}</span></p>
         <div class="meta">
-          <span>Mitglieder: <b>${d.memberCount||0}</b></span>
+          <span>Mitglieder: <b class="count">${(d.memberCount||0).toLocaleString('de-DE')}</b></span>
           <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
         </div>
         ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
