@@ -50,4 +50,127 @@
     .proofCell{display:flex;align-items:center;gap:8px}
     .thumb{width:56px;height:40px;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex:0 0 56px;background:#0a0f1f;display:flex;align-items:center;justify-content:center}
     .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .pill{d
+    .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:12px;color:#9ca3af}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <h1>Admin · Guthaben Verwaltung (Sync)</h1>
+      <!-- Button IMMER sichtbar -->
+      <a class="btn payoutBtn" id="btnToPayouts" href="#" target="_self">Zu Auszahlungen</a>
+    </div>
+    <p class="subtitle">Sign-In → Mitglieder & Auszahlungen pflegen. Änderungen synchronisieren live zur öffentlichen Seite.</p>
+
+    <div class="card" id="authCard">
+      <h2>Admin Login</h2>
+      <div class="row">
+        <div>
+          <label>E-Mail</label>
+          <input type="email" id="email" placeholder="admin@beispiel.de" />
+        </div>
+        <div>
+          <label>Passwort</label>
+          <input type="password" id="password" placeholder="********" />
+        </div>
+      </div>
+      <div class="auth">
+        <button class="btn" id="btnLogin">Anmelden</button>
+        <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
+      </div>
+      <p class="muted">Hinweis: E-Mail/Passwort in Firebase Authentication anlegen. <span class="warn" id="authState"></span></p>
+    </div>
+
+    <div class="grid" id="app" style="display:none">
+      <!-- Linke Spalte: Buchung/Mitglieder -->
+      <div class="card">
+        <h2>Buchung / Mitglied</h2>
+        <div class="row">
+          <div>
+            <label>Mitglied auswählen</label>
+            <select id="mitglied">
+              <option value="">— Neues Mitglied anlegen —</option>
+            </select>
+          </div>
+          <div>
+            <label>Neues Mitglied (optional)</label>
+            <input type="text" id="neuesMitglied" placeholder="Name eingeben" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Mitglieds-ID (optional)</label>
+            <input type="text" id="mitgliedId" placeholder="z. B. M001" />
+          </div>
+          <div>
+            <label>Event-Vorlage (optional)</label>
+            <select id="eventVorlage">
+              <option value="">— Kein Event —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Betrag (€) <span class="muted">(optional – wird durch Event gesetzt)</span></label>
+            <input type="number" id="betrag" step="0.01" placeholder="z. B. 20000" />
+          </div>
+          <div>
+            <label>Typ</label>
+            <select id="typ">
+              <option value="einzahlung">Einzahlung</option>
+              <option value="auszahlung">Auszahlung</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn" id="btnSave">Abschicken</button>
+        <p class="muted">Ohne Betrag wird nur das Mitglied angelegt/aktualisiert.</p>
+      </div>
+
+      <!-- Rechte Spalte: Mitglieder-Übersicht -->
+      <div class="card">
+        <h2>Übersicht</h2>
+        <div class="stats">
+          <span class="chip">Mitglieder: <b id="statMitglieder">0</b></span>
+          <span class="chip">Gesamtsaldo: <b id="statSaldo">0</b> €</span>
+        </div>
+        <div style="overflow:auto; max-height:38vh; border:1px solid var(--border); border-radius:12px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Mitglied</th>
+                <th>ID</th>
+                <th class="right">Kontostand (€)</th>
+                <th class="admin-only right">Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <p class="muted admin-only" style="margin-top:8px">Hinweis: Entfernen löscht nur das Mitglied aus der Übersicht. <b>Transaktionen bleiben erhalten</b>.</p>
+      </div>
+    </div>
+
+    <!-- NEU: Event-Logs (Admin) -->
+    <div class="card" id="eventLogsCard" style="display:none; margin-top:18px;">
+      <h2>Event-Logs (Admin)</h2>
+      <div style="overflow:auto; max-height:46vh; border:1px solid var(--border); border-radius:12px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Zeitpunkt</th>
+              <th>Event</th>
+              <th class="right">Mitglieder</th>
+              <th>Proof</th>
+              <th>Hinweis</th>
+              <th class="right">Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyEventLogs"></tbody>
+        </table>
+      </div>
+      <p class="muted">Nur Admins sehen & können hier Event-Logs löschen.</p>
+    </div>
+  </di
