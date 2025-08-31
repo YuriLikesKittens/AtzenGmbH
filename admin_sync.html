@@ -128,21 +128,20 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs (load from CDN) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script>
-    // 1) Füge hier DEINE Firebase-Konfiguration ein
-const firebaseConfig = {
-  apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
-  authDomain: "msauszahlung.firebaseapp.com",
-  projectId: "msauszahlung",
-  storageBucket: "msauszahlung.firebasestorage.app",
-  messagingSenderId: "1033439801595",
-  appId: "1:1033439801595:web:4251badc1447ed8079805e",
-  measurementId: "G-FWXF3GM505"
-};
+<!-- Firebase SDKs (CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
+    authDomain: "msauszahlung.firebaseapp.com",
+    projectId: "msauszahlung",
+    storageBucket: "msauszahlung.firebasestorage.app",
+    messagingSenderId: "1033439801595",
+    appId: "1:1033439801595:web:4251badc1447ed8079805e"
+  };
 
     // 2) Events (wie zuvor)
     const eventTemplates = {
