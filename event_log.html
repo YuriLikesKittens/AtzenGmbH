@@ -8,7 +8,7 @@
     :root{
       --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
       --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
-      --accent:#7c3aed; --accent2:#06b6d4; --danger:#ef4444;
+      --accent:#7c3aed; --accent2:#06b6d4;
     }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);
@@ -29,7 +29,7 @@
     label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
     input,select,button{width:100%;padding:12px 14px;border-radius:12px;
                         border:1px solid var(--border);background:#0b1020;
-                        color:var(--text);outline:none;transition:.2s}
+                        color:#var(--text);outline:none;transition:.2s}
     input:focus,select:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.2)}
     .btn{cursor:pointer;font-weight:700;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
          border:none;margin-top:8px;box-shadow:0 6px 16px rgba(6,182,212,.35)}
@@ -38,7 +38,7 @@
 
     /* Liste */
     .list{display:grid;grid-template-columns:1fr;gap:12px}
-    .item{position:relative;display:grid;grid-template-columns:160px 1fr;gap:14px;
+    .item{display:grid;grid-template-columns:160px 1fr;gap:14px;
           border:1px solid var(--border);border-radius:14px;padding:12px;
           background:rgba(255,255,255,.03)}
     @media (max-width:640px){.item{grid-template-columns:1fr}}
@@ -51,23 +51,13 @@
     .hint{font-size:12px;color:#9ca3af;margin-top:6px}
     .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;
           padding:4px 8px;font-size:12px;color:#9ca3af;margin-top:6px}
-
-    /* Delete button */
-    .delbtn{position:absolute;top:8px;right:8px;background:none;border:none;
-            color:#fca5a5;font-size:18px;cursor:pointer;line-height:1}
-    .delbtn:hover{color:#f87171}
-
-    /* Toast */
-    .toast{position:fixed;right:16px;bottom:16px;background:#111827cc;border:1px solid var(--border);
-           color:#e5e7eb;padding:10px 12px;border-radius:10px;box-shadow:var(--shadow);display:none}
-    .toast.show{display:block}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
       <h1>Event-Log · Einträge & Proof-Links</h1>
-      <a class="btn" href="https://yurilikeskittens.github.io/guthaben-verwaltung/">Zur Übersicht</a>
+      <a class="btn" href="public_sync_readonly_with_rates.html">Zur Übersicht</a>
     </div>
 
     <div class="grid">
@@ -104,8 +94,6 @@
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
-
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -137,7 +125,6 @@
     const btnSubmit = document.getElementById('btnSubmit');
     const status = document.getElementById('status');
     const list = document.getElementById('list');
-    const toast = document.getElementById('toast');
 
     (function fillEventTypes(){
       Object.keys(eventTemplates).sort((a,b)=>a.localeCompare(b,"de"))
@@ -163,19 +150,19 @@
         await db.collection('eventLogs').add(payload);
         eventType.value=""; memberCount.value=""; proofUrlInput.value=""; note.value="";
         setStatus("Gespeichert."); setTimeout(()=>setStatus(""),1800);
-      }catch(e){ setStatus("Fehler: "+(e.message||e)); showToast("Fehler beim Speichern: "+(e.message||e)); }
+      }catch(e){ setStatus("Fehler: "+(e.message||e)); }
     };
 
     // Live-Liste
     db.collection('eventLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
       const frag=document.createDocumentFragment();
       snap.forEach(doc=>{
-        frag.appendChild(renderItem(doc.id, doc.data()));
+        frag.appendChild(renderItem(doc.data()));
       });
       list.innerHTML=""; list.appendChild(frag);
-    }, err => { showToast("Konnte Event-Liste nicht laden: "+(err.message||err)); });
+    });
 
-    function renderItem(id, d){
+    function renderItem(d){
       const proof=d.proofUrl||"";
       const el=document.createElement('div');
       el.className='item';
@@ -210,23 +197,6 @@
         ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
       `;
 
-      const del = document.createElement('button');
-      del.className = 'delbtn';
-      del.title = "Eintrag löschen";
-      del.textContent = "×";
-      del.onclick = async () => {
-        const ok = confirm("Diesen Event-Log wirklich löschen?");
-        if (!ok) return;
-        try{
-          await db.collection('eventLogs').doc(id).delete();
-          showToast("Eintrag gelöscht.");
-        }catch(e){
-          showToast("Löschen fehlgeschlagen: " + (e.message||e));
-          console.error(e);
-        }
-      };
-
-      el.appendChild(del);
       el.appendChild(thumb);
       el.appendChild(content);
       return el;
@@ -234,7 +204,6 @@
 
     /* Helpers */
     function setStatus(msg){ status.textContent = msg; }
-    function showToast(msg){ toast.textContent = msg; toast.className="toast show"; setTimeout(()=>{toast.className="toast";}, 2400); }
     function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
     function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])); }
     function escapeAttr(str){ return String(str).replace(/["'\\`]/g,"_"); }
