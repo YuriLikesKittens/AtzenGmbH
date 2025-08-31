@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin · Guthaben Verwaltung (Sync)</title>
+  <style>
+    :root{
+      --bg: #0f172a; --panel:#111827cc; --card:#0b1220cc; --text:#e5e7eb; --muted:#9ca3af;
+      --accent:#7c3aed; --accent2:#06b6d4; --border:#1f2937; --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1200px 1200px at 10% -20%, #1e293b 0%, transparent 60%), radial-gradient(1000px 800px at 120% 10%, #0ea5e9 0%, transparent 45%), linear-gradient(160deg, #0b1020 0%, #0f172a 100%); color:var(--text); font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial; padding: 32px 16px;}
+    .container{max-width:1120px;margin:0 auto}
+    h1{margin:0 0 8px;font-size: clamp(22px, 4vw, 34px); background: linear-gradient(120deg, #fff, #a5b4fc 40%, #67e8f9 80%); -webkit-background-clip:text; background-clip:text; color:transparent; font-weight:800}
+    .subtitle{color:var(--muted);margin:0 0 24px}
+    .grid{display:grid;gap:18px; grid-template-columns: 1.1fr .9fr}
+    @media (max-width: 920px){ .grid{ grid-template-columns: 1fr; } }
+    .card{background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding:18px; backdrop-filter: blur(6px);}
+    h2{margin:0 0 12px;font-size:18px}
+    label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+    input, select, button{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#0b1020;color:var(--text);outline:none;transition:.2s}
+    input:focus, select:focus{border-color:#4c1d95; box-shadow:0 0 0 4px rgba(124,58,237,.2)}
+    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    @media (max-width:680px){.row{grid-template-columns:1fr}}
+    .btn{cursor:pointer;font-weight:700;background:linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%); border:none; margin-top:8px; box-shadow:0 6px 16px rgba(6,182,212,.35)}
+    .btn:hover{transform:translateY(-1px); filter:brightness(1.05)}
+    .btn:active{transform:translateY(0)}
+    .muted{color:var(--muted); font-size:12px}
+    .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    .chip{display:inline-flex;align-items:center;gap:8px;background:#0b1020;border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--muted)}
+    .chip b{color:#e2e8f0}
+    table{width:100%;border-collapse:collapse}
+    thead th{position:sticky;top:0;background:#0b1020;border-bottom:1px solid var(--border);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 10px;text-align:left}
+    tbody td{padding:12px 10px;border-bottom:1px dashed #1f2a44}
+    tbody tr:hover{background:rgba(124,58,237,.05)}
+    .right{text-align:right}
+    .id{color:#a5b4fc;font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .auth{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .warn{color:#fca5a5;font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin · Guthaben Verwaltung (Sync)</h1>
+    <p class="subtitle">Sign-In → Mitglieder & Auszahlungen pflegen. Änderungen synchronisieren live zur öffentlichen Seite.</p>
+
+    <div class="card" id="authCard">
+      <h2>Admin Login</h2>
+      <div class="row">
+        <div>
+          <label>E-Mail</label>
+          <input type="email" id="email" placeholder="admin@beispiel.de" />
+        </div>
+        <div>
+          <label>Passwort</label>
+          <input type="password" id="password" placeholder="••••••••" />
+        </div>
+      </div>
+      <div class="auth">
+        <button class="btn" id="btnLogin">Anmelden</button>
+        <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
+      </div>
+      <p class="muted">Hinweis: E-Mail/Passwort in Firebase Authentication anlegen. <span class="warn" id="authState"></span></p>
+    </div>
+
+    <div class="grid" id="app" style="display:none">
+      <div class="card">
+        <h2>Buchung / Mitglied</h2>
+        <div class="row">
+          <div>
+            <label>Mitglied auswählen</label>
+            <select id="mitglied">
+              <option value="">— Neues Mitglied anlegen —</option>
+            </select>
+          </div>
+          <div>
+            <label>Neues Mitglied (optional)</label>
+            <input type="text" id="neuesMitglied" placeholder="Name eingeben" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Mitglieds-ID (optional)</label>
+            <input type="text" id="mitgliedId" placeholder="z. B. M001" />
+          </div>
+          <div>
+            <label>Event-Vorlage (optional)</label>
+            <select id="eventVorlage">
+              <option value="">— Kein Event —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Betrag (€) <span class="muted">(optional – wird durch Event gesetzt)</span></label>
+            <input type="number" id="betrag" step="0.01" placeholder="z. B. 20000" />
+          </div>
+          <div>
+            <label>Typ</label>
+            <select id="typ">
+              <option value="einzahlung">Einzahlung</option>
+              <option value="auszahlung">Auszahlung</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn" id="btnSave">Abschicken</button>
+        <p class="muted">Ohne Betrag wird nur das Mitglied angelegt/aktualisiert.</p>
+      </div>
+
+      <div class="card">
+        <h2>Übersicht</h2>
+        <div class="stats">
+          <span class="chip">Mitglieder: <b id="statMitglieder">0</b></span>
+          <span class="chip">Gesamtsaldo: <b id="statSaldo">0</b> €</span>
+        </div>
+        <div style="overflow:auto; max-height: 55vh; border:1px solid var(--border); border-radius: 12px;">
+          <table>
+            <thead><tr><th>Mitglied</th><th>ID</th><th class="right">Kontostand (€)</th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs (load from CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    // 1) Füge hier DEINE Firebase-Konfiguration ein
+    const firebaseConfig = {
+      apiKey: \"PASTE_API_KEY\",
+      authDomain: \"PASTE_PROJECT_ID.firebaseapp.com\",
+      projectId: \"PASTE_PROJECT_ID\",
+      storageBucket: \"PASTE_PROJECT_ID.appspot.com\",
+      messagingSenderId: \"PASTE_SENDER_ID\",
+      appId: \"PASTE_APP_ID\"
+    };
+
+    // 2) Events (wie zuvor)
+    const eventTemplates = {
+      \"40er Kill\": 25000, \"50er Win\": 35000, \"Bizwar Kill Win\": 20000, \"Bizwar Kill Lose\": 10000, \"Bizwar Teilnahme\": 10000,
+      \"Waffenfab. Kill Win\": 20000, \"Waffenfab. Kills Lose\": 10000, \"Waffenfab. Win\": 20000,
+      \"Gießerei Kills Win\": 20000, \"Gießerei Kills Lose\": 10000, \"Bank\": 50000, \"Hafen Drop\": 20000,
+      \"EKZ/Mall Win\": 75000, \"RP Fabrik Win\": 300000, \"RP Fabrik Teilnahme\": 0, \"Cayo\": 100000
+    };
+
+    // --- Firebase Init ---
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // --- UI Refs ---
+    const authCard = document.getElementById('authCard');
+    const appEl = document.getElementById('app');
+    const authState = document.getElementById('authState');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    document.getElementById('btnLogin').onclick = async () => {
+      try{ await auth.signInWithEmailAndPassword(email.value, password.value); }
+      catch(e){ authState.textContent = e.message; }
+    };
+    document.getElementById('btnLogout').onclick = async () => { await auth.signOut(); };
+
+    auth.onAuthStateChanged(user => {
+      if (user){
+        authCard.querySelector('#btnLogin').style.display = 'none';
+        authCard.querySelector('#btnLogout').style.display = 'inline-block';
+        authState.textContent = 'Angemeldet';
+        appEl.style.display = '';
+      } else {
+        authCard.querySelector('#btnLogin').style.display = 'inline-block';
+        authCard.querySelector('#btnLogout').style.display = 'none';
+        authState.textContent = 'Abgemeldet';
+        appEl.style.display = 'none';
+      }
+    });
+
+    // --- DOM inputs ---
+    const mitgliedSel = document.getElementById('mitglied');
+    const neuesMitgliedInput = document.getElementById('neuesMitglied');
+    const mitgliedIdInput = document.getElementById('mitgliedId');
+    const eventSel = document.getElementById('eventVorlage');
+    const betragInput = document.getElementById('betrag');
+    const typSel = document.getElementById('typ');
+    const tbody = document.getElementById('tbody');
+    const statMitglieder = document.getElementById('statMitglieder');
+    const statSaldo = document.getElementById('statSaldo');
+    document.getElementById('btnSave').onclick = saveEntry;
+
+    // Fill events
+    (function initEvents(){
+      const entries = Object.entries(eventTemplates).sort((a,b)=> a[0].localeCompare(b[0],'de'));
+      for (const [label, value] of entries){
+        const opt = document.createElement('option');
+        opt.value = label;
+        opt.textContent = `${label} (${formatEUR(value)})`;
+        eventSel.appendChild(opt);
+      }
+      eventSel.addEventListener('change', ()=> {
+        const ev = eventSel.value;
+        if (ev && eventTemplates[ev] != null) betragInput.value = eventTemplates[ev];
+      });
+    })();
+
+    // Live listeners
+    let unsubMembers = null;
+    auth.onAuthStateChanged(user => {
+      if (unsubMembers) unsubMembers();
+      unsubMembers = db.collection('members').orderBy('name').onSnapshot(snap => {
+        // refresh dropdown + table
+        while (mitgliedSel.options.length > 1) mitgliedSel.remove(1);
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        let total = 0, count = 0;
+        snap.forEach(doc => {
+          const m = doc.data();
+          const opt = document.createElement('option');
+          opt.value = m.name;
+          opt.textContent = m.name;
+          mitgliedSel.appendChild(opt);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${escapeHTML(m.name)}</td><td class=\"id\">${escapeHTML(m.id || '')}</td><td class=\"right\">${toLocale(m.balance || 0)}</td>`;
+          tbody.appendChild(tr);
+          count++; total += (m.balance || 0);
+        });
+        statMitglieder.textContent = count.toString();
+        statSaldo.textContent = toLocale(round2(total));
+      });
+    });
+
+    async function ensureMember(name, idMaybe){
+      const ref = db.collection('members').doc(name);
+      const snap = await ref.get();
+      if (!snap.exists){
+        await ref.set({ name, id: idMaybe || '', balance: 0 });
+      } else if (idMaybe && !(snap.data().id)){
+        await ref.update({ id: idMaybe });
+      }
+      return ref;
+    }
+
+    async function saveEntry(){
+      let name = mitgliedSel.value;
+      const neuerName = (neuesMitgliedInput.value || '').trim();
+      const id = (mitgliedIdInput.value || '').trim();
+      if (!name && neuerName) name = neuerName;
+      if (!name){ alert('Bitte Mitglied auswählen oder neuen Namen eingeben.'); return; }
+
+      const memberRef = await ensureMember(name, id);
+
+      // Betrag
+      let amount = betragInput.value === '' ? NaN : parseFloat(betragInput.value);
+      if (isNaN(amount)){
+        const ev = eventSel.value;
+        if (ev && eventTemplates[ev] != null) amount = parseFloat(eventTemplates[ev]);
+      }
+
+      if (isNaN(amount)){
+        clearInputs();
+        return; // nur Mitglied anlegen
+      }
+
+      const type = typSel.value; // einzahlung | auszahlung
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(memberRef);
+        if (!snap.exists) throw new Error('Mitglied nicht gefunden');
+        let balance = snap.data().balance || 0;
+        balance = type === 'einzahlung' ? balance + amount : balance - amount;
+        tx.update(memberRef, { balance });
+
+        const tRef = db.collection('transactions').doc();
+        tx.set(tRef, {
+          ts: new Date().toISOString(),
+          member: name,
+          memberId: snap.data().id || id || '',
+          type,
+          event: eventSel.value || '',
+          amount,
+          newBalance: balance
+        });
+      });
+
+      clearInputs();
+    }
+
+    function clearInputs(){
+      neuesMitgliedInput.value=''; mitgliedSel.value=''; mitgliedIdInput.value='';
+      betragInput.value=''; eventSel.value=''; typSel.value='einzahlung';
+    }
+
+    function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+    function toLocale(n){ return (n||0).toLocaleString('de-DE'); }
+    function formatEUR(n){ try{return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n)}catch(e){return n.toString()} }
+    function escapeHTML(str){ return String(str).replace(/[&<>'\"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])) }
+  </script>
+</body>
+</html>
