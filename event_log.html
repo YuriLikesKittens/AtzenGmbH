@@ -143,13 +143,19 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const eventTemplates = {
-      "40er Kill": 25000,"50er Win": 35000,"Bizwar Kill Win": 20000,"Bizwar Kill Lose": 10000,
-      "Bizwar Teilnahme": 10000,"Waffenfab. Kill Win": 20000,"Waffenfab. Kills Lose": 10000,"Waffenfab. Win": 20000,
-      "Gießerei Kills Win": 20000,"Gießerei Kills Lose": 10000,"Bank": 50000,"Hafen Drop": 20000,
-      "EKZ/Mall Win": 75000,"RP Fabrik Win": 300000,"RP Fabrik Teilnahme": 0,"Cayo": 100000,
-      "Sanktion": 0,"Komplett Auszahlung": -1
-    };
+const eventTemplates = {
+  "40er": 0,
+  "50er": 0,
+  "Bank": 0,
+  "Bizwar": 0,
+  "Cayo": 0,
+  "EKZ/Mall": 0,
+  "Gießerei": 0,
+  "Hafen Drop": 0,
+  "RP Fabrik": 0,
+  "Waffenfabrik": 0
+};
+
 
     // --- Admin Login nur fürs Löschen ---
     const email = document.getElementById('email');
