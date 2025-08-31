@@ -3,37 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Übersicht & Auszahlungen (Read‑Only)</title>
+  <title>Übersicht, Transaktionen & Auszahlungstabelle (Read‑Only)</title>
   <style>
-    :root{ --bg: #0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35) }
+    :root{
+      --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
+      --accent:#7c3aed; --accent2:#06b6d4;
+    }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(160deg, #0b1020 0%, #0f172a 100%); color:var(--text); font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial; padding: 32px 16px;}
-    .container{max-width:1000px;margin:0 auto}
-    h1{margin:0 0 8px;font-size: clamp(22px, 4vw, 32px); font-weight:800}
-    .subtitle{color:var(--muted);margin:0 0 24px}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; backdrop-filter: blur(6px); margin-bottom:16px}
+    body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);color:var(--text);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;padding:24px 16px 40px;}
+    .wrap{max-width:1200px;margin:0 auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+    h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800}
+    a.btn{display:inline-block;padding:10px 14px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;text-decoration:none;font-weight:700;border:0}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px;backdrop-filter:blur(6px)}
+    .chips{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+    .chip{background:#0b1020;border:1px solid var(--border);border-radius:999px;padding:8px 12px;color:#9ca3af;font-size:13px}
     table{width:100%;border-collapse:collapse}
-    thead th{position:sticky;top:0;background:#0b1020;border-bottom:1px solid var(--border);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 10px;text-align:left}
-    tbody td{padding:12px 10px;border-bottom:1px dashed #1f2a44}
-    tbody tr:hover{background:rgba(124,58,237,.05)}
+    thead th{position:sticky;top:0;background:#0a0f1f;border-bottom:1px solid var(--border);text-transform:uppercase;font-size:12px;color:#9ca3af;padding:10px;text-align:left}
+    td{padding:10px;border-bottom:1px dashed #1f2a44}
     .right{text-align:right}
-    .id{color:#a5b4fc;font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
-    .chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-    .chip{background:#0b1020;border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-size:13px;color:#9ca3af}
-    .chip b{color:#e2e8f0}
+    .id{color:#a5b4fc;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+    @media (max-width:1100px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Übersicht & Auszahlungen</h1>
-    <p class="subtitle">Read‑only Ansicht für Mitglieder. Aktualisiert sich automatisch.</p>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>Übersicht & Transaktionen</h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn" href="event_log.html">Event-Log</a>
+        <a class="btn" id="btnBackAdmin" href="admin_sync_SINGLE_publicButton_delete.html">Zur Admin-Seite</a>
+      </div>
+    </div>
 
+    <!-- Mitglieder Übersicht -->
     <div class="card">
       <div class="chips">
         <span class="chip">Mitglieder: <b id="statMitglieder">0</b></span>
         <span class="chip">Gesamtsaldo: <b id="statSaldo">0</b> €</span>
       </div>
-      <div style="overflow:auto; max-height: 40vh; border:1px solid var(--border); border-radius: 12px;">
+      <div style="overflow:auto;max-height:38vh;border:1px solid var(--border);border-radius:12px">
         <table>
           <thead><tr><th>Mitglied</th><th>ID</th><th class="right">Kontostand (€)</th></tr></thead>
           <tbody id="tbodyMembers"></tbody>
@@ -41,14 +51,40 @@
       </div>
     </div>
 
+    <div class="grid">
+      <!-- Letzte Auszahlungen -->
+      <div class="card">
+        <h3 style="margin:0 0 8px">Letzte Auszahlungen</h3>
+        <div style="overflow:auto;max-height:45vh;border:1px solid var(--border);border-radius:12px">
+          <table>
+            <thead><tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Saldo danach</th></tr></thead>
+            <tbody id="tbodyPayouts"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Letzte Einzahlungen -->
+      <div class="card">
+        <h3 style="margin:0 0 8px">Letzte Einzahlungen</h3>
+        <div style="overflow:auto;max-height:45vh;border:1px solid var(--border);border-radius:12px">
+          <table>
+            <thead><tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Saldo danach</th></tr></thead>
+            <tbody id="tbodyDeposits"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auszahlungstabelle (Raten) -->
     <div class="card">
-      <h3 style="margin-top:0">Letzte Auszahlungen</h3>
-      <div style="overflow:auto; max-height: 40vh; border:1px solid var(--border); border-radius: 12px;">
+      <h3 style="margin:0 0 8px">Auszahlungstabelle (was wird gezahlt?)</h3>
+      <div style="overflow:auto;max-height:50vh;border:1px solid var(--border);border-radius:12px">
         <table>
-          <thead><tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Saldo danach</th></tr></thead>
-          <tbody id="tbodyPayouts"></tbody>
+          <thead><tr><th>Event</th><th class="right">Betrag (€)</th></tr></thead>
+          <tbody id="tbodyRates"></tbody>
         </table>
       </div>
+      <p class="chip" style="margin-top:8px">Hinweis: <b>Komplett Auszahlung</b> = gesamter Kontostand. <b>Sanktion</b> = Betrag wird individuell festgelegt.</p>
     </div>
   </div>
 
@@ -56,34 +92,56 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-    // Gleiche Firebase-Konfiguration wie in admin.html einfügen
-const firebaseConfig = {
-  apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
-  authDomain: "msauszahlung.firebaseapp.com",
-  projectId: "msauszahlung",
-  storageBucket: "msauszahlung.firebasestorage.app",
-  messagingSenderId: "1033439801595",
-  appId: "1:1033439801595:web:4251badc1447ed8079805e",
-  measurementId: "G-FWXF3GM505"
-};
-
-
+    // Firebase Config (gleich wie Admin)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
+      authDomain: "msauszahlung.firebaseapp.com",
+      projectId: "msauszahlung",
+      storageBucket: "msauszahlung.appspot.com",
+      messagingSenderId: "1033439801595",
+      appId: "1:1033439801595:web:4251badc1447ed8079805e",
+      measurementId: "G-FWXF3GM505"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Diese Vorlagen spiegeln die Logik deiner Admin-Seite.
+    const eventTemplates = {
+      "40er Kill": 25000,
+      "50er Win": 35000,
+      "Bizwar Kill Win": 20000,
+      "Bizwar Kill Lose": 10000,
+      "Bizwar Teilnahme": 10000,
+      "Waffenfab. Kill Win": 20000,
+      "Waffenfab. Kills Lose": 10000,
+      "Waffenfab. Win": 20000,
+      "Gießerei Kills Win": 20000,
+      "Gießerei Kills Lose": 10000,
+      "Bank": 50000,
+      "Hafen Drop": 20000,
+      "EKZ/Mall Win": 75000,
+      "RP Fabrik Win": 300000,
+      "RP Fabrik Teilnahme": 0,
+      "Cayo": 100000,
+      "Sanktion": 0,
+      "Komplett Auszahlung": -1
+    };
+
     const tbodyMembers = document.getElementById('tbodyMembers');
     const tbodyPayouts = document.getElementById('tbodyPayouts');
+    const tbodyDeposits = document.getElementById('tbodyDeposits');
+    const tbodyRates = document.getElementById('tbodyRates');
     const statMitglieder = document.getElementById('statMitglieder');
     const statSaldo = document.getElementById('statSaldo');
 
-    // Live Mitglieder
+    // Mitglieder live laden
     db.collection('members').orderBy('name').onSnapshot(snap => {
       while (tbodyMembers.firstChild) tbodyMembers.removeChild(tbodyMembers.firstChild);
       let total = 0, count = 0;
       snap.forEach(doc => {
         const m = doc.data();
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${escapeHTML(m.name)}</td><td class=\"id\">${escapeHTML(m.id || '')}</td><td class=\"right\">${toLocale(m.balance || 0)}</td>`;
+        tr.innerHTML = `<td>${escapeHTML(m.name)}</td><td class="id">${escapeHTML(m.id||'')}</td><td class="right">${toLocale(m.balance||0)}</td>`;
         tbodyMembers.appendChild(tr);
         total += (m.balance || 0); count++;
       });
@@ -91,19 +149,47 @@ const firebaseConfig = {
       statSaldo.textContent = toLocale(round2(total));
     });
 
-    // Live Auszahlungen (nur type == 'auszahlung')
-    db.collection('transactions')
-      .where('type','==','auszahlung')
-      .orderBy('ts','desc').limit(50)
-      .onSnapshot(snap => {
-        while (tbodyPayouts.firstChild) tbodyPayouts.removeChild(tbodyPayouts.firstChild);
-        snap.forEach(doc => {
-          const t = doc.data();
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${formatDate(t.ts)}</td><td>${escapeHTML(t.member)}</td><td>${escapeHTML(t.event || '')}</td><td class=\"right\">${toLocale(round2(t.amount || 0))}</td><td class=\"right\">${toLocale(round2(t.newBalance || 0))}</td>`;
-          tbodyPayouts.appendChild(tr);
-        });
+    // Transaktionen live laden (neueste zuerst, clientseitig getrennt)
+    db.collection('transactions').orderBy('ts','desc').limit(100).onSnapshot(snap => {
+      while (tbodyPayouts.firstChild) tbodyPayouts.removeChild(tbodyPayouts.firstChild);
+      while (tbodyDeposits.firstChild) tbodyDeposits.removeChild(tbodyDeposits.firstChild);
+
+      const tx = snap.docs.map(d => d.data());
+
+      tx.filter(t => (t.type||'') === 'auszahlung').forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${formatDate(t.ts)}</td>
+                        <td>${escapeHTML(t.member||'')}</td>
+                        <td>${escapeHTML(t.event||'')}</td>
+                        <td class="right">${toLocale(round2(t.amount||0))}</td>
+                        <td class="right">${toLocale(round2(t.newBalance||0))}</td>`;
+        tbodyPayouts.appendChild(tr);
       });
+
+      tx.filter(t => (t.type||'') === 'einzahlung').forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${formatDate(t.ts)}</td>
+                        <td>${escapeHTML(t.member||'')}</td>
+                        <td>${escapeHTML(t.event||'')}</td>
+                        <td class="right">${toLocale(round2(t.amount||0))}</td>
+                        <td class="right">${toLocale(round2(t.newBalance||0))}</td>`;
+        tbodyDeposits.appendChild(tr);
+      });
+    });
+
+    // Auszahlungstabelle aus eventTemplates rendern
+    (function renderRates(){
+      const rows = Object.entries(eventTemplates)
+        .sort((a,b)=> a[0].localeCompare(b[0],'de'))
+        .map(([label, value]) => {
+          let valText = "";
+          if (label === "Komplett Auszahlung" || value === -1) valText = "Gesamter Kontostand";
+          else if (label === "Sanktion" || value === 0) valText = "Individuell / nach Entscheidung";
+          else valText = toLocale(value);
+          return `<tr><td>${escapeHTML(label)}</td><td class="right">${valText}</td></tr>`;
+        }).join("");
+      tbodyRates.innerHTML = rows;
+    })();
 
     function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
     function toLocale(n){ return (n||0).toLocaleString('de-DE'); }
