@@ -8,7 +8,7 @@
     :root{
       --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
       --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
-      --accent:#7c3aed; --accent2:#06b6d4;
+      --accent:#7c3aed; --accent2:#06b6d4; --danger:#ef4444;
     }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);
@@ -35,38 +35,45 @@
          border:none;margin-top:8px;box-shadow:0 6px 16px rgba(6,182,212,.35)}
     .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
     .muted{color:var(--muted);font-size:12px}
-    .list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media (max-width:900px){.list{grid-template-columns:1fr}}
-    .item{position:relative;display:grid;grid-template-columns:140px 1fr;gap:12px;
+
+    /* Liste */
+    .list{display:grid;grid-template-columns:1fr;gap:12px}
+    .item{position:relative;display:grid;grid-template-columns:160px 1fr;gap:14px;
           border:1px solid var(--border);border-radius:14px;padding:12px;
           background:rgba(255,255,255,.03)}
-    .thumb{width:140px;height:100px;background:#0a0f1f;border:1px solid var(--border);
+    @media (max-width:640px){.item{grid-template-columns:1fr}}
+    .thumb{width:100%;height:120px;max-width:160px;background:#0a0f1f;border:1px solid var(--border);
            border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
-    .thumb img{max-width:100%;max-height:100%;display:block}
-    .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .content{min-width:0}
     .title{font-weight:700;margin:0 0 6px}
-    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-    @media (max-width:700px){.row{grid-template-columns:1fr}}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
     .hint{font-size:12px;color:#9ca3af;margin-top:6px}
     .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;
-          padding:4px 8px;font-size:12px;color:#9ca3af}
-    .err{color:#fca5a5}
-    .delbtn{position:absolute;top:6px;right:8px;background:none;border:none;color:#fca5a5;
-            font-size:18px;cursor:pointer}
+          padding:4px 8px;font-size:12px;color:#9ca3af;margin-top:6px}
+
+    /* Delete button */
+    .delbtn{position:absolute;top:8px;right:8px;background:none;border:none;
+            color:#fca5a5;font-size:18px;cursor:pointer;line-height:1}
     .delbtn:hover{color:#f87171}
+
+    /* Toast */
+    .toast{position:fixed;right:16px;bottom:16px;background:#111827cc;border:1px solid var(--border);
+           color:#e5e7eb;padding:10px 12px;border-radius:10px;box-shadow:var(--shadow);display:none}
+    .toast.show{display:block}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
       <h1>Event-Log · Einträge & Proof-Links</h1>
-      <a class="btn" href="public_sync_readonly_with_rates.html">Zur Übersicht</a>
+      <a class="btn" href="https://yurilikeskittens.github.io/guthaben-verwaltung/">Zur Übersicht</a>
     </div>
 
     <div class="grid">
       <div class="card">
         <h2>Neues Event eintragen</h2>
-        <div class="row">
+        <div class="row" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
           <div>
             <label>Art des Events</label>
             <select id="eventType"><option value="">— Bitte wählen —</option></select>
@@ -76,7 +83,7 @@
             <input type="number" id="memberCount" min="0" step="1" placeholder="z. B. 12" />
           </div>
         </div>
-        <div class="row">
+        <div class="row" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
           <div>
             <label>Proof-URL (optional)</label>
             <input type="url" id="proofUrl" placeholder="https://… (Bild, Clip, Forum-Post, etc.)" />
@@ -96,6 +103,8 @@
       </div>
     </div>
   </div>
+
+  <div id="toast" class="toast"></div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -128,6 +137,7 @@
     const btnSubmit = document.getElementById('btnSubmit');
     const status = document.getElementById('status');
     const list = document.getElementById('list');
+    const toast = document.getElementById('toast');
 
     (function fillEventTypes(){
       Object.keys(eventTemplates).sort((a,b)=>a.localeCompare(b,"de"))
@@ -138,55 +148,97 @@
     })();
 
     btnSubmit.onclick=async()=>{
-      status.textContent="Speichere…"; status.classList.remove("err");
+      setStatus("Speichere…");
       try{
         const type=eventType.value.trim();
         const cnt=parseInt(memberCount.value||"0",10);
-        if(!type){status.textContent="Bitte eine Event-Art wählen.";return;}
-        if(isNaN(cnt)||cnt<0){status.textContent="Anzahl Mitglieder ungültig.";return;}
+        if(!type){return setStatus("Bitte eine Event-Art wählen.");}
+        if(isNaN(cnt)||cnt<0){return setStatus("Anzahl Mitglieder ungültig.");}
         let proofUrl=(proofUrlInput.value||"").trim();
         if(proofUrl && !(proofUrl.startsWith("http://")||proofUrl.startsWith("https://"))){
-          status.textContent="Bitte gültige URL (http/https)"; status.classList.add("err"); return;
+          return setStatus("Bitte gültige URL (http/https).");
         }
         const payload={ts:new Date().toISOString(),serverTs:firebase.firestore.FieldValue.serverTimestamp(),
           type,memberCount:cnt,note:note.value||"",proofUrl};
         await db.collection('eventLogs').add(payload);
         eventType.value=""; memberCount.value=""; proofUrlInput.value=""; note.value="";
-        status.textContent="Gespeichert."; setTimeout(()=>status.textContent="",2000);
-      }catch(e){console.error(e);status.textContent="Fehler: "+(e.message||e);status.classList.add("err");}
+        setStatus("Gespeichert."); setTimeout(()=>setStatus(""),1800);
+      }catch(e){ setStatus("Fehler: "+(e.message||e)); showToast("Fehler beim Speichern: "+(e.message||e)); }
     };
 
-    db.collection('eventLogs').orderBy('serverTs','desc').limit(50).onSnapshot(snap=>{
-      while(list.firstChild) list.removeChild(list.firstChild);
+    // Live-Liste
+    db.collection('eventLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
+      const frag=document.createDocumentFragment();
       snap.forEach(doc=>{
-        const d=doc.data(); const proof=d.proofUrl||"";
-        const div=document.createElement('div'); div.className='item';
-        const imgOk=proof && /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(proof).pathname);
-        const imgHtml=imgOk?`<img src="${escapeAttr(proof)}" alt="Proof" />`:"";
-        const link=proof?`<a class="pill" href="${escapeAttr(proof)}" target="_blank">Proof öffnen</a>`:`<span style="color:#9ca3af;font-size:12px">Kein Proof</span>`;
-        div.innerHTML=`
-          <button class="delbtn" title="Löschen">×</button>
-          <div class="thumb">${imgHtml||link}</div>
-          <div>
-            <p class="title">${escapeHTML(d.type||'')}</p>
-            <div class="meta">
-              <span>Mitglieder: <b>${d.memberCount||0}</b></span>
-              <span>Datum: <b>${formatDate(d.serverTs?.toDate?d.serverTs.toDate():d.ts)}</b></span>
-            </div>
-            ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
-          </div>`;
-        div.querySelector('.delbtn').onclick=async()=>{
-          if(confirm("Diesen Event-Log wirklich löschen?")){
-            await db.collection('eventLogs').doc(doc.id).delete();
-          }
-        };
-        list.appendChild(div);
+        frag.appendChild(renderItem(doc.id, doc.data()));
       });
-    });
+      list.innerHTML=""; list.appendChild(frag);
+    }, err => { showToast("Konnte Event-Liste nicht laden: "+(err.message||err)); });
 
-    function formatDate(x){try{return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE')}catch{return String(x)}}
-    function escapeHTML(str){return String(str).replace(/[&<>'"]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s]))}
-    function escapeAttr(str){return String(str).replace(/["'\\`]/g,"_");}
+    function renderItem(id, d){
+      const proof=d.proofUrl||"";
+      const el=document.createElement('div');
+      el.className='item';
+
+      const imgOk = isImageUrl(proof);
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+
+      if (proof && imgOk){
+        const img = document.createElement('img');
+        img.src = proof; img.alt = "Proof";
+        img.onerror = () => { thumb.innerHTML = `<a class="pill" href="${escapeAttr(proof)}" target="_blank" rel="noopener">Proof öffnen</a>`; };
+        thumb.appendChild(img);
+        const link = document.createElement('a');
+        link.className = 'pill'; link.href = proof; link.target = "_blank"; link.rel="noopener";
+        link.textContent = "Proof öffnen";
+        thumb.appendChild(link);
+      } else {
+        thumb.innerHTML = proof
+          ? `<a class="pill" href="${escapeAttr(proof)}" target="_blank" rel="noopener">Proof öffnen</a>`
+          : `<span class="pill" style="opacity:.8">Kein Proof</span>`;
+      }
+
+      const content = document.createElement('div');
+      content.className = 'content';
+      content.innerHTML = `
+        <p class="title">${escapeHTML(d.type||'')}</p>
+        <div class="meta">
+          <span>Mitglieder: <b>${d.memberCount||0}</b></span>
+          <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
+        </div>
+        ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
+      `;
+
+      const del = document.createElement('button');
+      del.className = 'delbtn';
+      del.title = "Eintrag löschen";
+      del.textContent = "×";
+      del.onclick = async () => {
+        const ok = confirm("Diesen Event-Log wirklich löschen?");
+        if (!ok) return;
+        try{
+          await db.collection('eventLogs').doc(id).delete();
+          showToast("Eintrag gelöscht.");
+        }catch(e){
+          showToast("Löschen fehlgeschlagen: " + (e.message||e));
+          console.error(e);
+        }
+      };
+
+      el.appendChild(del);
+      el.appendChild(thumb);
+      el.appendChild(content);
+      return el;
+    }
+
+    /* Helpers */
+    function setStatus(msg){ status.textContent = msg; }
+    function showToast(msg){ toast.textContent = msg; toast.className="toast show"; setTimeout(()=>{toast.className="toast";}, 2400); }
+    function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
+    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])); }
+    function escapeAttr(str){ return String(str).replace(/["'\\`]/g,"_"); }
+    function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname); }catch{ return false; } }
   </script>
 </body>
 </html>
