@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin · Guthaben Verwaltung (Sync)</title>
+  <title>Admin · Guthaben Verwaltung (Sync + Auto-Logout)</title>
   <style>
     :root{
-      --bg:#0f172a; --panel:#111827cc; --card:#0b1220cc; --text:#e5e7eb; --muted:#9ca3af;
+      --bg:#0f172a; --card:#0b1220cc; --text:#e5e7eb; --muted:#9ca3af;
       --accent:#7c3aed; --accent2:#06b6d4; --border:#1f2937; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
     }
     *{box-sizing:border-box}
@@ -38,12 +38,17 @@
     .id{color:#a5b4fc;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     .auth{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
     .warn{color:#fca5a5;font-size:12px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .countdown{font-size:12px;color:#9ca3af}
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Admin · Guthaben Verwaltung (Sync)</h1>
-    <p class="subtitle">Sign-In → Mitglieder & Auszahlungen pflegen. Änderungen synchronisieren live zur öffentlichen Seite.</p>
+    <div class="topbar">
+      <h1>Admin · Guthaben Verwaltung (Sync)</h1>
+      <div class="countdown" id="logoutTimerInfo" title="Automatische Abmeldung nach Inaktivität"></div>
+    </div>
+    <p class="subtitle">Anmelden → Mitglieder & Auszahlungen pflegen. Änderungen synchronisieren live zur öffentlichen Seite.</p>
 
     <div class="card" id="authCard">
       <h2>Admin Login</h2>
@@ -143,7 +148,6 @@
       measurementId: "G-FWXF3GM505"
     };
 
-    // Events (keine Backslashes/„Smart Quotes“)
     const eventTemplates = {
       "40er Kill": 25000,
       "50er Win": 35000,
@@ -168,29 +172,80 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // Auth-Persistenz: NONE = In-Memory (Logout bei Reload)
+    auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+
     // --- UI Refs ---
     const authCard = document.getElementById("authCard");
     const appEl = document.getElementById("app");
     const authState = document.getElementById("authState");
+    const logoutTimerInfo = document.getElementById("logoutTimerInfo");
     const email = document.getElementById("email");
     const password = document.getElementById("password");
     document.getElementById("btnLogin").onclick = async () => {
+      authState.textContent = "Anmeldung läuft…";
       try { await auth.signInWithEmailAndPassword(email.value, password.value); }
       catch (e) { authState.textContent = e && e.message ? e.message : "Login fehlgeschlagen"; }
     };
     document.getElementById("btnLogout").onclick = async () => { await auth.signOut(); };
 
+    // Inaktivitäts-Logout (5 Minuten)
+    const MAX_IDLE_MS = 5 * 60 * 1000;
+    let idleTimer = null;
+    let countdownInterval = null;
+    function startIdleTimer(){
+      stopIdleTimer();
+      const start = Date.now();
+      idleTimer = setTimeout(() => auth.signOut(), MAX_IDLE_MS);
+      updateCountdown(); // initial
+      countdownInterval = setInterval(updateCountdown, 1000);
+      window.addEventListener("mousemove", resetIdleTimer, { passive:true });
+      window.addEventListener("keydown", resetIdleTimer);
+      window.addEventListener("click", resetIdleTimer, { passive:true });
+      window.addEventListener("touchstart", resetIdleTimer, { passive:true });
+      window.addEventListener("scroll", resetIdleTimer, { passive:true });
+      function updateCountdown(){
+        const left = Math.max(0, MAX_IDLE_MS - (Date.now() - start));
+        const s = Math.ceil(left/1000);
+        logoutTimerInfo.textContent = "Auto-Logout in " + s + "s";
+      }
+      function resetIdleTimer(){
+        clearTimeout(idleTimer);
+        clearInterval(countdownInterval);
+        startIdleTimer();
+      }
+    }
+    function stopIdleTimer(){
+      clearTimeout(idleTimer);
+      clearInterval(countdownInterval);
+      logoutTimerInfo.textContent = "";
+      window.removeEventListener("mousemove", startIdleTimer);
+      window.removeEventListener("keydown", startIdleTimer);
+      window.removeEventListener("click", startIdleTimer);
+      window.removeEventListener("touchstart", startIdleTimer);
+      window.removeEventListener("scroll", startIdleTimer);
+    }
+
+    // --- State Handling ---
     auth.onAuthStateChanged(user => {
       if (user){
-        authCard.querySelector("#btnLogin").style.display = "none";
-        authCard.querySelector("#btnLogout").style.display = "inline-block";
+        // Login UI ausblenden, nur Admin-UI zeigen
+        authCard.style.display = "none";
+        document.getElementById("btnLogout").style.display = "inline-block";
+        document.getElementById("btnLogin").style.display = "none";
         authState.textContent = "Angemeldet";
         appEl.style.display = "";
+        initAppListeners();
+        startIdleTimer();
       } else {
-        authCard.querySelector("#btnLogin").style.display = "inline-block";
-        authCard.querySelector("#btnLogout").style.display = "none";
-        authState.textContent = "Abgemeldet";
+        // Admin-UI ausblenden, Login zeigen
         appEl.style.display = "none";
+        authCard.style.display = "";
+        document.getElementById("btnLogin").style.display = "inline-block";
+        document.getElementById("btnLogout").style.display = "none";
+        authState.textContent = "Abgemeldet";
+        stopIdleTimer();
+        teardownAppListeners();
       }
     });
 
@@ -212,7 +267,7 @@
       for (const [label, value] of entries){
         const opt = document.createElement("option");
         opt.value = label;
-        opt.textContent = `${label} (${formatEUR(value)})`;
+        opt.textContent = `${label} (${formatEUR(value)})`
         eventSel.appendChild(opt);
       }
       eventSel.addEventListener("change", () => {
@@ -221,12 +276,11 @@
       });
     })();
 
-    // Live listeners
+    // Live members listener (abonnieren/abbestellen je nach Login)
     let unsubMembers = null;
-    auth.onAuthStateChanged(user => {
+    function initAppListeners(){
       if (unsubMembers) unsubMembers();
       unsubMembers = db.collection("members").orderBy("name").onSnapshot(snap => {
-        // refresh dropdown + table
         while (mitgliedSel.options.length > 1) mitgliedSel.remove(1);
         while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
         let total = 0, count = 0;
@@ -244,7 +298,10 @@
         statMitglieder.textContent = count.toString();
         statSaldo.textContent = toLocale(round2(total));
       });
-    });
+    }
+    function teardownAppListeners(){
+      if (unsubMembers){ unsubMembers(); unsubMembers = null; }
+    }
 
     async function ensureMember(name, idMaybe){
       const ref = db.collection("members").doc(name);
@@ -266,13 +323,11 @@
 
       const memberRef = await ensureMember(name, id);
 
-      // Betrag
       let amount = betragInput.value === "" ? NaN : parseFloat(betragInput.value);
       if (isNaN(amount)){
         const ev = eventSel.value;
         if (ev && eventTemplates[ev] != null) amount = parseFloat(eventTemplates[ev]);
       }
-
       if (isNaN(amount)){
         clearInputs();
         return; // nur Mitglied anlegen
