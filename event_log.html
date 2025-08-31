@@ -9,6 +9,7 @@
       --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
       --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
       --accent:#7c3aed; --accent2:#06b6d4; --danger:#ef4444;
+      --green:#22c55e; --red:#ef4444;
     }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);
@@ -46,8 +47,10 @@
            border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
     .thumb img{width:100%;height:100%;object-fit:cover;display:block}
     .content{min-width:0}
-    .title{font-weight:700;margin:0 0 6px}
+    .title{margin:0 0 6px}
+    .evName{font-weight:800;color:var(--green)}  /* Event grün */
     .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    .count{color:var(--red);font-weight:700}     /* Mitglieder rot */
     .hint{font-size:12px;color:#9ca3af;margin-top:6px}
     .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;
           padding:4px 8px;font-size:12px;color:#9ca3af;margin-top:6px}
@@ -100,7 +103,7 @@
             <select id="eventType"><option value="">— Bitte wählen —</option></select>
           </div>
           <div>
-            <label>Anzahl Mitglieder</label>
+            <label>Mitglieder</label>
             <input type="number" id="memberCount" min="0" step="1" placeholder="z. B. 12" />
           </div>
         </div>
@@ -143,19 +146,13 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-const eventTemplates = {
-  "40er": 0,
-  "50er": 0,
-  "Bank": 0,
-  "Bizwar": 0,
-  "Cayo": 0,
-  "EKZ/Mall": 0,
-  "Gießerei": 0,
-  "Hafen Drop": 0,
-  "RP Fabrik": 0,
-  "Waffenfabrik": 0
-};
+    /* === Nur diese 10 Events auswählbar === */
+    const eventOptions = [
+      "40er","50er","Bank","Bizwar","Cayo","EKZ/Mall","Gießerei","Hafen Drop","RP Fabrik","Waffenfabrik"
+    ];
 
+    /* === Discord Webhook === */
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1411843316135493794/7tK42nAVe0zp_JiqHiuG2A4nXdt7_caT7UCrhTgm1utVOV_pqMRxnhDzHM-T_PMZENyj";
 
     // --- Admin Login nur fürs Löschen ---
     const email = document.getElementById('email');
@@ -184,13 +181,10 @@ const eventTemplates = {
       }
     };
     btnLogout.onclick = async () => { await auth.signOut(); };
-
-    auth.onAuthStateChanged(user => {
-      setAdminUI(!!user);
-    });
+    auth.onAuthStateChanged(user => setAdminUI(!!user));
     // ------------------------------------
 
-    // UI Refs Event-Form
+    // UI Refs
     const eventType = document.getElementById('eventType');
     const memberCount = document.getElementById('memberCount');
     const proofUrlInput = document.getElementById('proofUrl');
@@ -199,13 +193,19 @@ const eventTemplates = {
     const status = document.getElementById('status');
     const list = document.getElementById('list');
 
-    (function fillEventTypes(){
-      Object.keys(eventTemplates).sort((a,b)=>a.localeCompare(b,"de"))
-        .forEach(label=>{
-          const opt=document.createElement('option');
-          opt.value=label; opt.textContent=label; eventType.appendChild(opt);
-        });
-    })();
+    // Dropdown auf die 10 Events setzen
+    function populateEventSelect() {
+      while (eventType.firstChild) eventType.removeChild(eventType.firstChild);
+      const ph = document.createElement('option');
+      ph.value = ""; ph.textContent = "— Bitte wählen —";
+      eventType.appendChild(ph);
+      for (const label of eventOptions) {
+        const opt = document.createElement('option');
+        opt.value = label; opt.textContent = label;
+        eventType.appendChild(opt);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', populateEventSelect);
 
     btnSubmit.onclick=async()=>{
       setStatus("Speichere…");
@@ -213,16 +213,30 @@ const eventTemplates = {
         const type=eventType.value.trim();
         const cnt=parseInt(memberCount.value||"0",10);
         if(!type){return setStatus("Bitte eine Event-Art wählen.");}
-        if(isNaN(cnt)||cnt<0){return setStatus("Anzahl Mitglieder ungültig.");}
+        if(!eventOptions.includes(type)){return setStatus("Ungültiges Event.");}
+        if(isNaN(cnt)||cnt<0){return setStatus("Mitgliederzahl ungültig.");}
         let proofUrl=(proofUrlInput.value||"").trim();
         if(proofUrl && !(proofUrl.startsWith("http://")||proofUrl.startsWith("https://"))){
           return setStatus("Bitte gültige URL (http/https).");
         }
+
         const payload={ts:new Date().toISOString(),serverTs:firebase.firestore.FieldValue.serverTimestamp(),
           type,memberCount:cnt,note:note.value||"",proofUrl};
+
+        // 1) Firestore speichern
         await db.collection('eventLogs').add(payload);
-        eventType.value=""; memberCount.value=""; proofUrlInput.value=""; note.value="";
-        setStatus("Gespeichert."); setTimeout(()=>setStatus(""),1800);
+
+        // 2) Discord Webhook (Embed)
+        try{
+          await sendDiscordLog(payload);
+        }catch(e){
+          console.warn("Discord-Webhook Fehler:", e);
+          // nicht hart fehlschlagen – Log ist gespeichert
+        }
+
+        populateEventSelect(); memberCount.value=""; proofUrlInput.value=""; note.value="";
+        setStatus("Gespeichert & an Discord gesendet.");
+        setTimeout(()=>setStatus(""),2000);
       }catch(e){ setStatus("Fehler: "+(e.message||e)); }
     };
 
@@ -275,9 +289,9 @@ const eventTemplates = {
       const content=document.createElement('div');
       content.className='content';
       content.innerHTML=`
-        <p class="title">${escapeHTML(d.type||'')}</p>
+        <p class="title"><span class="evName">${escapeHTML(d.type||'')}</span></p>
         <div class="meta">
-          <span>Mitglieder: <b>${d.memberCount||0}</b></span>
+          <span>Mitglieder: <b class="count">${(d.memberCount||0).toLocaleString('de-DE')}</b></span>
           <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
         </div>
         ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
@@ -286,6 +300,55 @@ const eventTemplates = {
       el.appendChild(thumb);
       el.appendChild(content);
       return el;
+    }
+
+    /* ===== Discord Webhook Sender ===== */
+    async function sendDiscordLog({type, memberCount, note, proofUrl, ts}){
+      const isImg = isImageUrl(proofUrl||"");
+      const embed = {
+        title: `Neues Event: ${type}`,
+        description: (note || "").trim() || undefined,
+        color: 0x22c55e, // grün
+        timestamp: new Date(ts || Date.now()).toISOString(),
+        fields: [
+          { name: "Event", value: type, inline: true },
+          { name: "Mitglieder", value: String(memberCount||0), inline: true },
+          ...(proofUrl ? [{ name: "Proof", value: proofUrl, inline: false }] : [])
+        ],
+        thumbnail: isImg ? { url: proofUrl } : undefined,
+        footer: { text: "MS Auszahlungen · Event-Log" }
+      };
+
+      const body = {
+        username: "MS Auszahlungen",
+        avatar_url: "https://i.imgur.com/FXyY7qC.png", // optional, kann ersetzt werden
+        embeds: [embed]
+      };
+
+      // Versuch mit normalem CORS
+      try{
+        const r = await fetch(DISCORD_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        // Discord antwortet oft 204, das ist ok
+        if (!r.ok && r.status !== 204) {
+          throw new Error(`HTTP ${r.status}`);
+        }
+      }catch(err){
+        // Fallback: no-cors (still sends, aber keine Response lesbar)
+        try{
+          await fetch(DISCORD_WEBHOOK, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+        }catch(e2){
+          console.warn("Webhook no-cors Fallback fehlgeschlagen:", e2);
+        }
+      }
     }
 
     /* Helpers */
