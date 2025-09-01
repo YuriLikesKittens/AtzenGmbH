@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Plantage-Log</title>
+  <style>
+    :root{
+      --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
+      --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
+      --accent:#7c3aed; --accent2:#06b6d4;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);
+         color:var(--text);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;
+         padding:24px 16px 40px;}
+    .wrap{max-width:1000px;margin:0 auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+    h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800}
+    a.btn,button.btn{display:inline-block;padding:10px 14px;border-radius:12px;
+          background:linear-gradient(135deg,var(--accent),var(--accent2));
+          color:#fff;text-decoration:none;font-weight:700;border:0;cursor:pointer}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+          border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
+          padding:18px;margin-bottom:16px;backdrop-filter:blur(6px)}
+    label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+    input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);
+          background:#0b1020;color:var(--text);outline:none}
+    input:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.2)}
+    .grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}}
+    .list{display:grid;gap:12px}
+    .item{border:1px solid var(--border);border-radius:12px;padding:12px;background:rgba(255,255,255,.03)}
+    .meta{color:var(--muted);font-size:12px;margin-top:4px}
+    .plantage-img{width:100%;max-height:250px;object-fit:cover;border-radius:12px;margin-bottom:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>Plantage-Log</h1>
+      <a class="btn" href="index.html">Zur Übersicht</a>
+    </div>
+
+    <!-- Übersicht -->
+    <div class="card">
+      <h2>Übersicht</h2>
+      <img src="https://via.placeholder.com/900x250?text=Plantage+Bild" alt="Plantage" class="plantage-img">
+      <p><b>Plantage Nr.:</b> <span id="plantageNummer">1</span></p>
+    </div>
+
+    <!-- Eingabe -->
+    <div class="card">
+      <h2>Neuen Eintrag hinzufügen</h2>
+      <div class="grid">
+        <div>
+          <label>Name</label>
+          <input type="text" id="name" placeholder="Name eingeben" />
+        </div>
+        <div>
+          <label>ID</label>
+          <input type="text" id="mitgliedId" placeholder="z. B. M001" />
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <label>Proof-URL (Imgur)</label>
+        <input type="url" id="proofUrl" placeholder="https://imgur.com/..." />
+        <a href="https://imgur.com/upload" target="_blank" class="btn" style="margin-top:8px;display:inline-block">Zu Imgur Upload</a>
+      </div>
+      <button class="btn" id="btnSave" style="margin-top:12px">Eintragen</button>
+      <p id="status" style="color:var(--muted);font-size:12px"></p>
+    </div>
+
+    <!-- Logs -->
+    <div class="card">
+      <h2>Logs</h2>
+      <div id="list" class="list"></div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
+      authDomain: "msauszahlung.firebaseapp.com",
+      projectId: "msauszahlung",
+      storageBucket: "msauszahlung.appspot.com",
+      messagingSenderId: "1033439801595",
+      appId: "1:1033439801595:web:4251badc1447ed8079805e",
+      measurementId: "G-FWXF3GM505"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const nameInput = document.getElementById('name');
+    const idInput = document.getElementById('mitgliedId');
+    const proofUrlInput = document.getElementById('proofUrl');
+    const btnSave = document.getElementById('btnSave');
+    const status = document.getElementById('status');
+    const list = document.getElementById('list');
+
+    btnSave.onclick = async () => {
+      status.textContent = "Speichere...";
+      try {
+        const name = (nameInput.value||"").trim();
+        const id = (idInput.value||"").trim();
+        const proofUrl = (proofUrlInput.value||"").trim();
+
+        if(!name || !id){ status.textContent="Bitte Name und ID ausfüllen."; return; }
+
+        const payload = {
+          name, id, proofUrl,
+          ts: new Date().toISOString(),
+          serverTs: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await db.collection('plantageLogs').add(payload);
+
+        nameInput.value=""; idInput.value=""; proofUrlInput.value="";
+        status.textContent="Gespeichert."; setTimeout(()=>status.textContent="",1500);
+      } catch(e){
+        console.error(e);
+        status.textContent="Fehler: "+(e.message||e);
+      }
+    };
+
+    // Live Logs laden
+    db.collection('plantageLogs').orderBy('serverTs','desc').limit(50).onSnapshot(snap=>{
+      list.innerHTML="";
+      snap.forEach(doc=>{
+        const d=doc.data();
+        const div=document.createElement('div');
+        div.className="item";
+        div.innerHTML=`
+          <p><b>${escapeHTML(d.name||"")}</b> (${escapeHTML(d.id||"")})</p>
+          ${d.proofUrl? `<p><a href="${escapeAttr(d.proofUrl)}" target="_blank">Proof ansehen</a></p>`:""}
+          <div class="meta">${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</div>
+        `;
+        list.appendChild(div);
+      });
+    });
+
+    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[s])); }
+    function escapeAttr(str){ return String(str).replace(/["'\\`]/g,"_"); }
+    function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString("de-DE"); }catch(e){ return String(x);} }
+  </script>
+</body>
+</html>
