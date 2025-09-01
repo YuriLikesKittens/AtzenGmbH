@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Übersicht, Transaktionen & Auszahlungstabelle (Read‑Only)</title>
+  <title>Übersicht, Transaktionen & Auszahlungstabelle (Read-Only)</title>
   <style>
     :root{
       --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -33,6 +33,7 @@
       <h1>Übersicht & Transaktionen</h1>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn" href="event_log.html">Event-Log</a>
+        <a class="btn" href="plantage_log.html">Plantage-Log</a> <!-- NEU -->
         <a class="btn" id="btnBackAdmin" href="https://yurilikeskittens.github.io/guthaben-verwaltung/admin_sync.html">Zur Admin-Seite</a>
       </div>
     </div>
@@ -46,7 +47,7 @@
       <div style="overflow:auto;max-height:38vh;border:1px solid var(--border);border-radius:12px">
         <table>
           <thead><tr><th>Mitglied</th><th>ID</th><th class="right">Kontostand (€)</th></tr></thead>
-          <tbody id="tbodyMembers"></tbody>
+        <tbody id="tbodyMembers"></tbody>
         </table>
       </div>
     </div>
@@ -193,8 +194,4 @@
 
     function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
     function toLocale(n){ return (n||0).toLocaleString('de-DE'); }
-    function formatDate(ts){ try{return new Date(ts).toLocaleString('de-DE')}catch(e){return ts} }
-    function escapeHTML(str){ return String(str).replace(/[&<>'\"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])) }
-  </script>
-</body>
-</html>
+    function formatDa
