@@ -64,6 +64,10 @@
     /* Login Card */
     .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
     @media (max-width:640px){.authrow{grid-template-columns:1fr}}
+    /* Link-Button unter dem Proof-Feld */
+    .linkbtn{display:inline-block;margin-top:6px;border:1px solid var(--border);border-radius:10px;
+             padding:6px 10px;text-decoration:none;color:#e5e7eb}
+    .linkbtn:hover{background:#111827}
   </style>
 </head>
 <body>
@@ -111,6 +115,9 @@
           <div>
             <label>Proof-URL (optional)</label>
             <input type="url" id="proofUrl" placeholder="https://… (Bild, Clip, Forum-Post, etc.)" />
+            <!-- NEU: schneller Link zu Imgur Upload -->
+            <a class="linkbtn" href="https://imgur.com/upload" target="_blank" rel="noopener">Bild bei Imgur hochladen ↗</a>
+            <div class="hint">Lade das Bild bei Imgur hoch und füge den Link hier ein.</div>
           </div>
           <div>
             <label>Bemerkung (optional)</label>
@@ -146,13 +153,13 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    /* === Nur diese 10 Events auswählbar === */
+    /* Nur diese 10 Events auswählbar */
     const eventOptions = [
       "40er","50er","Bank","Bizwar","Cayo","EKZ/Mall","Gießerei","Hafen Drop","RP Fabrik","Waffenfabrik"
     ];
 
-    /* === Discord Webhook === */
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1411850377560592527/2V4Xmj0iJeLIsDUVkz9ow9KEFdvhU9cffPcQqZtJUfOmkFoBzj5kBAaYSn9zXhO17ocJ";
+    /* Discord Webhook */
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1411843316135493794/7tK42nAVe0zp_JiqHiuG2A4nXdt7_caT7UCrhTgm1utVOV_pqMRxnhDzHM-T_PMZENyj";
 
     // --- Admin Login nur fürs Löschen ---
     const email = document.getElementById('email');
@@ -231,7 +238,6 @@
           await sendDiscordLog(payload);
         }catch(e){
           console.warn("Discord-Webhook Fehler:", e);
-          // nicht hart fehlschlagen – Log ist gespeichert
         }
 
         populateEventSelect(); memberCount.value=""; proofUrlInput.value=""; note.value="";
@@ -321,23 +327,18 @@
 
       const body = {
         username: "MS Auszahlungen",
-        avatar_url: "https://i.imgur.com/ssxG9mf.jpeg", // optional, kann ersetzt werden
+        avatar_url: "https://i.imgur.com/FXyY7qC.png",
         embeds: [embed]
       };
 
-      // Versuch mit normalem CORS
       try{
         const r = await fetch(DISCORD_WEBHOOK, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
         });
-        // Discord antwortet oft 204, das ist ok
-        if (!r.ok && r.status !== 204) {
-          throw new Error(`HTTP ${r.status}`);
-        }
+        if (!r.ok && r.status !== 204) throw new Error(`HTTP ${r.status}`);
       }catch(err){
-        // Fallback: no-cors (still sends, aber keine Response lesbar)
         try{
           await fetch(DISCORD_WEBHOOK, {
             method: "POST",
