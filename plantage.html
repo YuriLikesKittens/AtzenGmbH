@@ -8,7 +8,7 @@
     :root{
       --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
       --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
-      --accent:#7c3aed; --accent2:#06b6d4;
+      --accent:#7c3aed; --accent2:#06b6d4; --danger:#ef4444;
     }
     *{box-sizing:border-box}
     body{
@@ -21,12 +21,14 @@
     .wrap{max-width:1100px;margin:0 auto}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
     h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800}
+
     /* Buttons wie Event-Log */
-    a.btn{
+    a.btn, button.btn{
       display:inline-block;padding:10px 14px;border-radius:12px;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
-      color:#fff;text-decoration:none;font-weight:700;border:0
+      color:#fff;text-decoration:none;font-weight:700;border:0;cursor:pointer
     }
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
     .btnrow{display:flex;gap:8px;flex-wrap:wrap}
 
     .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
@@ -46,10 +48,23 @@
     input:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.2)}
     .plantage-img{width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin-bottom:8px}
     .list{display:grid;grid-template-columns:1fr;gap:12px}
-    .item{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+    .item{position:relative;border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
     .meta{color:var(--muted);font-size:12px;margin-top:4px}
 
-    /* Link-Button unter dem Proof-Feld – wie im Event-Log */
+    /* Admin sichtbar */
+    .admin-only{display:none}
+    body.admin .admin-only{display:block}
+    .delbtn{
+      position:absolute;top:8px;right:8px;background:#0b1020;border:1px solid var(--border);
+      color:#fca5a5;width:32px;height:32px;border-radius:999px;cursor:pointer
+    }
+    .delbtn:hover{background:#1f2937;color:#fff}
+
+    /* Login Card */
+    .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    @media (max-width:640px){.authrow{grid-template-columns:1fr}}
+
+    /* Imgur Link-Button unter Proof-Feld */
     .linkbtn{
       display:inline-block;margin-top:6px;border:1px solid var(--border);border-radius:10px;
       padding:6px 10px;text-decoration:none;color:#e5e7eb
@@ -65,6 +80,27 @@
         <a class="btn" href="index.html">Zur Übersicht</a>
         <a class="btn" href="event_log.html">Zum Event-Log</a>
       </div>
+    </div>
+
+    <!-- Admin Login nur fürs Löschen -->
+    <div class="card" id="authCard" style="margin-bottom:16px">
+      <h2>Admin Login (nur zum Löschen)</h2>
+      <div class="authrow">
+        <div>
+          <label>E-Mail</label>
+          <input type="email" id="email" placeholder="admin@beispiel.de" />
+        </div>
+        <div>
+          <label>Passwort</label>
+          <input type="password" id="password" placeholder="********" />
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn" id="btnLogin">Anmelden</button>
+        <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
+        <span class="meta" id="authState"></span>
+      </div>
+      <p class="meta" style="margin-top:6px">Hinweis: Login wird nicht gespeichert – nach Reload wieder abgemeldet.</p>
     </div>
 
     <!-- Übersicht -->
@@ -93,7 +129,7 @@
         <a class="linkbtn" href="https://imgur.com/upload" target="_blank" rel="noopener">Bild bei Imgur hochladen ↗</a>
       </div>
       <div style="margin-top:12px">
-        <a class="btn" id="btnSave" href="#" onclick="return false;">Eintragen</a>
+        <button class="btn" id="btnSave">Eintragen</button>
         <p class="meta" id="status"></p>
       </div>
     </div>
@@ -105,10 +141,12 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
+    /* === Firebase === */
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -118,11 +156,41 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
-    // doppelte Init abfangen (falls global schon geladen)
-    try{ firebase.initializeApp(firebaseConfig); }catch(e){ if(!/already exists/i.test(String(e))) throw e; }
-
+    // sichere Init (falls mehrfach eingebunden)
+    try { firebase.initializeApp(firebaseConfig); } catch (e) { if(!/already exists/i.test(String(e))) throw e; }
+    const auth = firebase.auth();
     const db = firebase.firestore();
 
+    /* === Admin Login nur fürs Löschen === */
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('btnLogout');
+    const authState = document.getElementById('authState');
+    let isAdmin = false;
+
+    function setAdminUI(on){
+      isAdmin = !!on;
+      document.body.classList.toggle('admin', !!on);
+      btnLogin.style.display = on ? 'none' : 'inline-block';
+      btnLogout.style.display = on ? 'inline-block' : 'none';
+      authState.textContent = on ? 'Angemeldet' : 'Abgemeldet';
+    }
+
+    btnLogin.onclick = async () => {
+      authState.textContent = 'Anmeldung läuft…';
+      try{
+        await auth.setPersistence(firebase.auth.Auth.Persistence.NONE); // nach Reload ausgeloggt
+        await auth.signInWithEmailAndPassword(email.value, password.value);
+        setAdminUI(true);
+      }catch(e){
+        authState.textContent = e?.message || 'Login fehlgeschlagen';
+      }
+    };
+    btnLogout.onclick = async () => { await auth.signOut(); };
+    auth.onAuthStateChanged(user => setAdminUI(!!user));
+
+    /* === Formular / UI Refs === */
     const nameInput = document.getElementById('name');
     const idInput = document.getElementById('mitgliedId');
     const proofUrlInput = document.getElementById('proofUrl');
@@ -130,7 +198,8 @@
     const status = document.getElementById('status');
     const list = document.getElementById('list');
 
-    btnSave.addEventListener('click', async () => {
+    /* === Eintrag speichern (öffentlich) === */
+    btnSave.onclick = async () => {
       status.textContent = "Speichere…";
       try {
         const name = (nameInput.value||"").trim();
@@ -160,24 +229,47 @@
         console.error(e);
         status.textContent = "Fehler: " + (e.message || e);
       }
-    });
+    };
 
-    // Live-Logs
+    /* === Logs live anzeigen === */
     db.collection('plantageLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
       list.innerHTML = "";
       snap.forEach(doc=>{
         const d = doc.data();
-        const el = document.createElement('div');
-        el.className = 'item';
-        el.innerHTML = `
-          <p><b>${escapeHTML(d.name||"")}</b> (${escapeHTML(d.id||"")})</p>
-          ${d.proofUrl ? `<p><a href="${escapeAttr(d.proofUrl)}" target="_blank" rel="noopener">Proof ansehen</a></p>` : ""}
-          <div class="meta">${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</div>
-        `;
-        list.appendChild(el);
+        list.appendChild(renderItem(doc.id, d));
       });
     });
 
+    function renderItem(id, d){
+      const el = document.createElement('div');
+      el.className = 'item';
+
+      // Admin X (nur sichtbar wenn eingeloggt)
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delbtn admin-only';
+      delBtn.title = 'Log löschen';
+      delBtn.textContent = '✕';
+      delBtn.onclick = async () => {
+        if(!isAdmin){ alert('Nicht angemeldet.'); return; }
+        const ok = confirm('Diesen Plantage-Log wirklich löschen?');
+        if(!ok) return;
+        try{
+          await db.collection('plantageLogs').doc(id).delete();
+        }catch(e){
+          alert('Löschen fehlgeschlagen: ' + (e?.message || e));
+        }
+      };
+      el.appendChild(delBtn);
+
+      el.innerHTML += `
+        <p><b>${escapeHTML(d.name||"")}</b> (${escapeHTML(d.id||"")})</p>
+        ${d.proofUrl ? `<p><a href="${escapeAttr(d.proofUrl)}" target="_blank" rel="noopener">Proof ansehen</a></p>` : ""}
+        <div class="meta">${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</div>
+      `;
+      return el;
+    }
+
+    /* === Helpers === */
     function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
     function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
     function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
