@@ -3,119 +3,165 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MS-13 Familien Website DE01 · Hauptseite</title>
+  <title>MS Verwaltung · Landingpage</title>
   <style>
-    :root {
-      --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af;
-      --accent:#7c3aed; --accent2:#06b6d4;
-      --radius:16px; --shadow:0 8px 20px rgba(0,0,0,.35);
+    :root{
+      --bg:#0b1020; --bg2:#0f172a; --text:#e5e7eb; --muted:#9ca3af;
+      --accent:#7c3aed; --accent2:#06b6d4; --radius:18px; --border:#1f2937;
+      --shadow: 0 14px 36px rgba(0,0,0,.45);
     }
     *{box-sizing:border-box;margin:0;padding:0}
-    body {
+    html,body{height:100%}
+    body{
       font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial;
-      background:#0f172a;
-      color: var(--text);
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% -10%, #1e293b 0%, transparent 55%),
+        radial-gradient(1000px 900px at 120% 10%, #0ea5e9 0%, transparent 50%),
+        linear-gradient(160deg,var(--bg) 0%, var(--bg2) 100%);
+      display:flex; flex-direction:column;
+      overflow-x:hidden;
     }
-    canvas.bg {
-      position:fixed;top:0;left:0;width:100%;height:100%;
-      z-index:-1;background:radial-gradient(circle at 30% 20%, #1e293b, #0f172a 70%);
+    canvas.bg{position:fixed;inset:0;width:100%;height:100%;z-index:-1}
+
+    .wrap{max-width:1200px;margin:0 auto;padding:24px 16px 40px;flex:1;width:100%}
+
+    /* Hero */
+    .hero{
+      position:relative; border-radius:24px; overflow:hidden;
+      box-shadow: var(--shadow); border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      margin-bottom:20px;
     }
-    .wrap {
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      padding:20px;
-      text-align:center;
+    .hero img{
+      width:100%; height:320px; object-fit:cover; display:block;
+      filter:saturate(1.05) contrast(1.05);
     }
-    h1 {
-      font-size: clamp(28px, 5vw, 42px);
-      margin-bottom: 30px;
-      font-weight: 800;
-      background: linear-gradient(120deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    @media (max-width:720px){ .hero img{height:220px} }
+    .hero::after{
+      content:""; position:absolute; inset:0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.55) 70%),
+        radial-gradient(80% 60% at 80% 0%, rgba(124,58,237,.25), transparent 60%);
+      pointer-events:none;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      max-width: 900px;
-      margin: 0 auto;
-      width:100%;
+    .hero-content{
+      position:absolute; inset:auto 0 0 0; padding:18px 20px;
+      display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;
     }
-    .card {
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border-radius: var(--radius);
-      padding: 30px 20px;
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255,255,255,.1);
-      cursor: pointer;
-      transition: transform .25s, box-shadow .25s;
+    .brand{
+      display:flex; align-items:center; gap:12px
     }
-    .card:hover {
-      transform: translateY(-6px) scale(1.02);
-      box-shadow: 0 12px 28px rgba(0,0,0,.45);
+    .logo{
+      width:44px; height:44px; border-radius:14px;
+      background: radial-gradient(120% 120% at 20% 20%, #94a3b8 0%, #0ea5e9 35%, transparent 36%),
+                  linear-gradient(135deg, #312e81 0%, #7c3aed 50%, #06b6d4 100%);
+      box-shadow:0 8px 24px rgba(6,182,212,.35), inset 0 0 18px rgba(255,255,255,.15);
+      border:1px solid rgba(255,255,255,.1)
     }
-    .card h2 {
-      font-size: 20px;
-      margin-bottom: 8px;
-      font-weight: 700;
+    .title{margin:0;font-size:clamp(22px,4vw,34px);font-weight:900;letter-spacing:.3px}
+    .subtitle{margin:2px 0 0;color:#d1d5db}
+
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(135deg, var(--accent), var(--accent2));
+      color:#fff; font-weight:800; letter-spacing:.2px; text-decoration:none; cursor:pointer;
+      box-shadow:0 8px 20px rgba(6,182,212,.35); transition: transform .2s ease, filter .2s ease;
     }
-    .card p {
-      font-size: 14px;
-      color: var(--muted);
+    .btn:hover{ transform: translateY(-1px); filter:brightness(1.05) }
+
+    /* Cards grid */
+    .grid{display:grid; gap:18px; grid-template-columns:repeat(2, minmax(260px,1fr)); margin-top:22px}
+    @media (max-width:900px){ .grid{ grid-template-columns: 1fr; } }
+    .card{
+      position:relative; border-radius:var(--radius); padding:22px;
+      background:
+        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.05), rgba(255,255,255,.02)),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border); backdrop-filter: blur(6px);
+      transform-style: preserve-3d; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
+      box-shadow:0 10px 30px rgba(0,0,0,.35); overflow:hidden;
     }
-    a {
-      text-decoration: none;
-      color: inherit;
+    .card::before{
+      content:""; position:absolute; inset:-2px; border-radius: inherit;
+      background:
+        repeating-linear-gradient(0deg, rgba(124,58,237,.10) 0px, rgba(124,58,237,.10) 1px, transparent 1px, transparent 18px),
+        repeating-linear-gradient(90deg, rgba(6,182,212,.10) 0px, rgba(6,182,212,.10) 1px, transparent 1px, transparent 18px);
+      pointer-events:none; opacity:.45; transform: translateZ(-30px);
     }
-    footer {
-      text-align:center;
-      padding:12px;
-      font-size:13px;
-      color:var(--muted);
-      background:rgba(0,0,0,.2);
+    .card::after{
+      content:""; position:absolute; inset: -40%; background:
+        radial-gradient(500px 220px at var(--mx,50%) var(--my,50%), rgba(96,165,250,.18), transparent 60%);
+      pointer-events:none; mix-blend-mode: screen; opacity:.7; transform: translateZ(20px);
+      transition: opacity .2s ease;
     }
+    .card:hover{ border-color: rgba(124,58,237,.45); box-shadow:0 14px 36px rgba(6,182,212,.35), 0 0 0 1px rgba(124,58,237,.25) inset; }
+    .card h2{margin:0 0 6px; font-size:20px}
+    .card p{margin:0; color:var(--muted)}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    .linkcard{text-decoration:none; color:inherit}
+
+    /* footer */
+    footer{margin-top:24px; text-align:center; color:var(--muted); font-size:13px; padding:10px}
   </style>
 </head>
 <body>
   <canvas class="bg"></canvas>
   <div class="wrap">
-    <h1>MS Verwaltung · Landingpage</h1>
-    <div class="grid">
-      <a href="overview.html">
-        <div class="card">
-          <h2>💰 Auszahlungen</h2>
-          <p>Übersicht & Transaktionen ansehen</p>
+    <!-- HERO mit Bild -->
+    <section class="hero" data-tilt>
+      <!-- Direktlink zu Imgur-Bild (i.imgur.com) -->
+      <img src="https://i.imgur.com/N7W2wfd.png" alt="MS Verwaltung Hero">
+      <div class="hero-content">
+        <div class="brand">
+          <div class="logo"></div>
+          <div>
+            <h1 class="title">MS · Auszahlungen & Logs</h1>
+            <p class="subtitle">Wähle aus, wohin du willst – alles synchron in Echtzeit.</p>
+          </div>
         </div>
+        <div class="btnrow">
+          <a class="btn" href="overview.html">Übersicht</a>
+          <a class="btn" href="plantage_log.html">Plantage-Log</a>
+          <a class="btn" href="event_log.html">Event-Log</a>
+          <a class="btn" href="admin_sync.html">Admin</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interaktive Karten -->
+    <div class="grid" id="grid">
+      <a class="card linkcard" href="overview.html" data-tilt>
+        <h2>Übersicht & Transaktionen</h2>
+        <p>Live-Kontenstände, Einzahlungen & Auszahlungen – öffentlich lesbar.</p>
+        <div class="actions"><span class="btn">Öffnen</span></div>
       </a>
-      <a href="plantage_log.html">
-        <div class="card">
-          <h2>🌱 Plantagen Log</h2>
-          <p>Logs der Plantagen verwalten</p>
-        </div>
+
+      <a class="card linkcard" href="plantage_log.html" data-tilt>
+        <h2>Plantage-Log</h2>
+        <p>Einträge mit Name, ID & Proof-Link. Öffentlich eintragen, Löschen nur mit Admin-Login.</p>
+        <div class="actions"><span class="btn">Zum Plantage-Log</span></div>
       </a>
-      <a href="admin_sync.html">
-        <div class="card">
-          <h2>🔑 Admin Login</h2>
-          <p>Mitglieder & Guthaben verwalten</p>
-        </div>
+
+      <a class="card linkcard" href="event_log.html" data-tilt>
+        <h2>Event-Log</h2>
+        <p>Events schnell erfassen – mit Proof-URL & Discord-Webhook-Benachrichtigung.</p>
+        <div class="actions"><span class="btn">Zum Event-Log</span></div>
       </a>
-      <a href="event_log.html">
-        <div class="card">
-          <h2>📌 Event Log</h2>
-          <p>Events dokumentieren & Proofs einsehen</p>
-        </div>
+
+      <a class="card linkcard" href="admin_sync.html" data-tilt>
+        <h2>Admin</h2>
+        <p>Mitglieder pflegen, Ein-/Auszahlungen buchen, Live-Sync zur öffentlichen Seite.</p>
+        <div class="actions"><span class="btn">Zum Admin-Login</span></div>
       </a>
     </div>
-  </div>
-  <footer>Made by Alvaro SolanoHebel | 20367</footer>
 
+    <footer>Made by Alvaro SolanoHebel | 20367</footer>
+  </div>
+
+  <!-- Parallax wireframe background -->
   <script>
     const canvas = document.querySelector("canvas.bg");
     const ctx = canvas.getContext("2d");
@@ -136,29 +182,53 @@
       }
     }
     let mouse={x:0,y:0};
-    window.addEventListener("mousemove",e=>{
-      mouse.x=e.clientX;mouse.y=e.clientY;
-    });
+    window.addEventListener("mousemove",e=>{ mouse.x=e.clientX; mouse.y=e.clientY; }, {passive:true});
     function draw(){
       ctx.clearRect(0,0,w,h);
-      ctx.strokeStyle="rgba(124,58,237,0.35)";
-      ctx.lineWidth=1;
       points.forEach(p=>{
-        const dx=mouse.x-p.ox;
-        const dy=mouse.y-p.oy;
-        const dist=Math.sqrt(dx*dx+dy*dy);
-        const force=Math.max(0,(200-dist)/200);
+        const dx=mouse.x-p.ox, dy=mouse.y-p.oy;
+        const dist=Math.hypot(dx,dy);
+        const force=Math.max(0,(220-dist)/220);
         p.x=p.ox - dx*0.05*force;
         p.y=p.oy - dy*0.05*force;
+        // points
         ctx.beginPath();
-        ctx.arc(p.x,p.y,1.8,0,Math.PI*2);
-        ctx.fillStyle="rgba(6,182,212,0.6)";
+        ctx.arc(p.x,p.y,1.6,0,Math.PI*2);
+        ctx.fillStyle="rgba(6,182,212,0.55)";
         ctx.fill();
       });
+      // grid lines (subtle)
+      ctx.strokeStyle="rgba(124,58,237,0.18)";
+      ctx.lineWidth=1;
+      const s=80;
+      for(let x=0;x<w;x+=s){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+      for(let y=0;y<h;y+=s){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
       requestAnimationFrame(draw);
     }
-    resize();
-    draw();
+    resize(); draw();
+
+    // 3D tilt for hero & cards
+    const tiltEls = document.querySelectorAll('[data-tilt]');
+    const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
+    tiltEls.forEach(el=>{
+      let raf=null;
+      el.addEventListener('mousemove',e=>{
+        const r=el.getBoundingClientRect();
+        const x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+        const rx=clamp((.5-y)*8,-8,8), ry=clamp((x-.5)*12,-12,12);
+        el.style.setProperty('--mx', `${x*100}%`);
+        el.style.setProperty('--my', `${y*100}%`);
+        if(raf) cancelAnimationFrame(raf);
+        raf=requestAnimationFrame(()=>{
+          el.style.transform=`perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+        });
+      });
+      el.addEventListener('mouseleave',()=>{
+        if(raf) cancelAnimationFrame(raf);
+        el.style.transform='perspective(900px) rotateX(0deg) rotateY(0deg)';
+        el.style.setProperty('--mx','50%'); el.style.setProperty('--my','50%');
+      });
+    });
   </script>
 </body>
 </html>
