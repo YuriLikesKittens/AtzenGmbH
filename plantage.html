@@ -70,6 +70,7 @@
       padding:6px 10px;text-decoration:none;color:#e5e7eb
     }
     .linkbtn:hover{background:#111827}
+    .public-note{color:var(--muted);font-size:12px;margin-top:6px}
   </style>
 </head>
 <body>
@@ -110,7 +111,7 @@
       <p><b>Plantage Nr.:</b> <span id="plantageNummer">1</span></p>
     </div>
 
-    <!-- Eingabe -->
+    <!-- Eingabe (öffentlich) -->
     <div class="card" style="margin-bottom:16px">
       <h2>Neuen Eintrag hinzufügen</h2>
       <div class="grid" style="margin-bottom:12px">
@@ -130,6 +131,7 @@
       </div>
       <div style="margin-top:12px">
         <button class="btn" id="btnSave">Eintragen</button>
+        <p class="public-note">Öffentlich: Jeder kann hier eintragen. (Admin-Login nur zum Löschen nötig.)</p>
         <p class="meta" id="status"></p>
       </div>
     </div>
@@ -198,7 +200,7 @@
     const status = document.getElementById('status');
     const list = document.getElementById('list');
 
-    /* === Eintrag speichern (öffentlich) === */
+    /* === Eintrag speichern (öffentlich, KEINE Admin-Prüfung) === */
     btnSave.onclick = async () => {
       status.textContent = "Speichere…";
       try {
@@ -228,6 +230,13 @@
       } catch(e){
         console.error(e);
         status.textContent = "Fehler: " + (e.message || e);
+        // Tipp für Rules:
+        // Wenn hier PERMISSION_DENIED erscheint, erlaube public create in Firestore-Rules:
+        // match /databases/{db}/documents/plantageLogs/{doc} {
+        //   allow read: if true;
+        //   allow create: if true;              // öffentlich erstellen
+        //   allow delete, update: if request.auth != null; // nur Admins
+        // }
       }
     };
 
