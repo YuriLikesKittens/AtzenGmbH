@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MS Verwaltung · Landingpage</title>
+  <style>
+    :root {
+      --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af;
+      --accent:#7c3aed; --accent2:#06b6d4;
+      --radius:16px; --shadow:0 8px 20px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body {
+      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial;
+      background: radial-gradient(circle at 30% 20%, #1e293b, #0f172a 70%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+    .wrap {
+      text-align: center;
+    }
+    h1 {
+      font-size: clamp(28px, 5vw, 42px);
+      margin-bottom: 30px;
+      font-weight: 800;
+      background: linear-gradient(120deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-radius: var(--radius);
+      padding: 30px 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.1);
+      cursor: pointer;
+      transition: transform .25s, box-shadow .25s;
+    }
+    .card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 12px 28px rgba(0,0,0,.45);
+    }
+    .card h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .card p {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>MS Verwaltung · Landingpage</h1>
+    <div class="grid">
+      <a href="overview.html">
+        <div class="card">
+          <h2>💰 Auszahlungen</h2>
+          <p>Übersicht & Transaktionen ansehen</p>
+        </div>
+      </a>
+      <a href="plantage_log.html">
+        <div class="card">
+          <h2>🌱 Plantagen Log</h2>
+          <p>Logs der Plantagen verwalten</p>
+        </div>
+      </a>
+      <a href="admin_sync.html">
+        <div class="card">
+          <h2>🔑 Admin Login</h2>
+          <p>Mitglieder & Guthaben verwalten</p>
+        </div>
+      </a>
+      <a href="event_log.html">
+        <div class="card">
+          <h2>📌 Event Log</h2>
+          <p>Events dokumentieren & Proofs einsehen</p>
+        </div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
