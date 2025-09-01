@@ -25,6 +25,7 @@
     .id{color:#a5b4fc;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
     @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+    .warn{color:#fca5a5;font-size:12px;margin-top:6px}
   </style>
 </head>
 <body>
@@ -33,7 +34,7 @@
       <h1>Übersicht & Transaktionen</h1>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn" href="event_log.html">Event-Log</a>
-        <a class="btn" href="plantage_log.html">Plantage-Log</a> <!-- NEU -->
+        <a class="btn" href="plantage_log.html">Plantage-Log</a>
         <a class="btn" id="btnBackAdmin" href="https://yurilikeskittens.github.io/guthaben-verwaltung/admin_sync.html">Zur Admin-Seite</a>
       </div>
     </div>
@@ -46,10 +47,13 @@
       </div>
       <div style="overflow:auto;max-height:38vh;border:1px solid var(--border);border-radius:12px">
         <table>
-          <thead><tr><th>Mitglied</th><th>ID</th><th class="right">Kontostand (€)</th></tr></thead>
-        <tbody id="tbodyMembers"></tbody>
+          <thead>
+            <tr><th>Mitglied</th><th>ID</th><th class="right">Kontostand (€)</th></tr>
+          </thead>
+          <tbody id="tbodyMembers"></tbody>
         </table>
       </div>
+      <div id="errMembers" class="warn" style="display:none"></div>
     </div>
 
     <div class="grid">
@@ -58,10 +62,13 @@
         <h3 style="margin:0 0 8px">Letzte Auszahlungen</h3>
         <div style="overflow:auto;max-height:45vh;border:1px solid var(--border);border-radius:12px">
           <table>
-            <thead><tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Saldo danach</th></tr></thead>
+            <thead>
+              <tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Saldo danach</th></tr>
+            </thead>
             <tbody id="tbodyPayouts"></tbody>
           </table>
         </div>
+        <div id="errPayouts" class="warn" style="display:none"></div>
       </div>
 
       <!-- Letzte Einzahlungen -->
@@ -69,10 +76,13 @@
         <h3 style="margin:0 0 8px">Letzte Einzahlungen</h3>
         <div style="overflow:auto;max-height:45vh;border:1px solid var(--border);border-radius:12px">
           <table>
-            <thead><tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Saldo danach</th></tr></thead>
+            <thead>
+              <tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Saldo danach</th></tr>
+            </thead>
             <tbody id="tbodyDeposits"></tbody>
           </table>
         </div>
+        <div id="errDeposits" class="warn" style="display:none"></div>
       </div>
     </div>
 
@@ -90,10 +100,17 @@
   </div>
 
   <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" defer></script>
+
   <script>
-    // Firebase Config (gleich wie Admin)
+  // Warten bis Scripts geladen sind
+  window.addEventListener('load', () => {
+    if (!window.firebase) {
+      console.error('Firebase nicht geladen.');
+      return;
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -103,10 +120,15 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
-    firebase.initializeApp(firebaseConfig);
+    try {
+      firebase.initializeApp(firebaseConfig);
+    } catch (e) {
+      // Doppelte Initialisierung ignorieren
+      if (!/already exists/i.test(String(e))) throw e;
+    }
     const db = firebase.firestore();
 
-    // Diese Vorlagen spiegeln die Logik deiner Admin-Seite.
+    // ⚙️ Vorlagen (wie Admin-Seite)
     const eventTemplates = {
       "40er Kill": 25000,
       "50er Win": 35000,
@@ -128,59 +150,82 @@
       "Komplett Auszahlung": -1
     };
 
-    const tbodyMembers = document.getElementById('tbodyMembers');
-    const tbodyPayouts = document.getElementById('tbodyPayouts');
+    // UI Refs
+    const tbodyMembers  = document.getElementById('tbodyMembers');
+    const tbodyPayouts  = document.getElementById('tbodyPayouts');
     const tbodyDeposits = document.getElementById('tbodyDeposits');
-    const tbodyRates = document.getElementById('tbodyRates');
-    const statMitglieder = document.getElementById('statMitglieder');
-    const statSaldo = document.getElementById('statSaldo');
+    const tbodyRates    = document.getElementById('tbodyRates');
+    const statMitglieder= document.getElementById('statMitglieder');
+    const statSaldo     = document.getElementById('statSaldo');
+    const errMembers    = document.getElementById('errMembers');
+    const errPayouts    = document.getElementById('errPayouts');
+    const errDeposits   = document.getElementById('errDeposits');
 
-    // Mitglieder live laden
-    db.collection('members').orderBy('name').onSnapshot(snap => {
-      while (tbodyMembers.firstChild) tbodyMembers.removeChild(tbodyMembers.firstChild);
-      let total = 0, count = 0;
-      snap.forEach(doc => {
-        const m = doc.data();
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${escapeHTML(m.name)}</td><td class="id">${escapeHTML(m.id||'')}</td><td class="right">${toLocale(m.balance||0)}</td>`;
-        tbodyMembers.appendChild(tr);
-        total += (m.balance || 0); count++;
-      });
-      statMitglieder.textContent = count.toString();
-      statSaldo.textContent = toLocale(round2(total));
-    });
+    // Mitglieder live
+    try {
+      db.collection('members').orderBy('name')
+        .onSnapshot(snap => {
+          // clear
+          tbodyMembers.innerHTML = '';
+          let total = 0, count = 0;
+          snap.forEach(doc => {
+            const m = doc.data();
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${escapeHTML(m.name)}</td>
+              <td class="id">${escapeHTML(m.id||'')}</td>
+              <td class="right">${toLocale(m.balance||0)}</td>`;
+            tbodyMembers.appendChild(tr);
+            total += (m.balance||0); count++;
+          });
+          statMitglieder.textContent = String(count);
+          statSaldo.textContent = toLocale(round2(total));
+          errMembers.style.display = 'none';
+        }, err => {
+          errMembers.textContent = "Fehler beim Laden der Mitglieder: " + (err.message||err);
+          errMembers.style.display = '';
+        });
+    } catch (e) {
+      errMembers.textContent = "Init-Fehler Mitglieder: " + (e.message||e);
+      errMembers.style.display = '';
+    }
 
-    // Transaktionen live laden (neueste zuerst, clientseitig getrennt)
-    db.collection('transactions').orderBy('ts','desc').limit(100).onSnapshot(snap => {
-      while (tbodyPayouts.firstChild) tbodyPayouts.removeChild(tbodyPayouts.firstChild);
-      while (tbodyDeposits.firstChild) tbodyDeposits.removeChild(tbodyDeposits.firstChild);
+    // Transaktionen live (letzte 100), getrennt in Auszahlung/Einzahlung
+    try {
+      db.collection('transactions').orderBy('ts','desc').limit(100)
+        .onSnapshot(snap => {
+          tbodyPayouts.innerHTML = '';
+          tbodyDeposits.innerHTML = '';
+          snap.forEach(doc => {
+            const t = doc.data();
+            const row = `
+              <td>${formatDate(t.ts)}</td>
+              <td>${escapeHTML(t.member||'')}</td>
+              <td>${escapeHTML(t.event||'')}</td>
+              <td class="right">${toLocale(round2(t.amount||0))}</td>
+              <td class="right">${toLocale(round2(t.newBalance||0))}</td>`;
+            if ((t.type||'') === 'auszahlung') {
+              const tr = document.createElement('tr'); tr.innerHTML = row; tbodyPayouts.appendChild(tr);
+            } else if ((t.type||'') === 'einzahlung') {
+              const tr = document.createElement('tr'); tr.innerHTML = row; tbodyDeposits.appendChild(tr);
+            }
+          });
+          errPayouts.style.display = 'none';
+          errDeposits.style.display = 'none';
+        }, err => {
+          errPayouts.textContent = "Fehler beim Laden der Auszahlungen: " + (err.message||err);
+          errPayouts.style.display = '';
+          errDeposits.textContent = "Fehler beim Laden der Einzahlungen: " + (err.message||err);
+          errDeposits.style.display = '';
+        });
+    } catch (e) {
+      errPayouts.textContent = "Init-Fehler Transaktionen: " + (e.message||e);
+      errPayouts.style.display = '';
+    }
 
-      const tx = snap.docs.map(d => d.data());
-
-      tx.filter(t => (t.type||'') === 'auszahlung').forEach(t => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${formatDate(t.ts)}</td>
-                        <td>${escapeHTML(t.member||'')}</td>
-                        <td>${escapeHTML(t.event||'')}</td>
-                        <td class="right">${toLocale(round2(t.amount||0))}</td>
-                        <td class="right">${toLocale(round2(t.newBalance||0))}</td>`;
-        tbodyPayouts.appendChild(tr);
-      });
-
-      tx.filter(t => (t.type||'') === 'einzahlung').forEach(t => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${formatDate(t.ts)}</td>
-                        <td>${escapeHTML(t.member||'')}</td>
-                        <td>${escapeHTML(t.event||'')}</td>
-                        <td class="right">${toLocale(round2(t.amount||0))}</td>
-                        <td class="right">${toLocale(round2(t.newBalance||0))}</td>`;
-        tbodyDeposits.appendChild(tr);
-      });
-    });
-
-    // Auszahlungstabelle aus eventTemplates rendern
+    // Auszahlungstabelle rendern
     (function renderRates(){
-      const rows = Object.entries(eventTemplates)
+      const html = Object.entries(eventTemplates)
         .sort((a,b)=> a[0].localeCompare(b[0],'de'))
         .map(([label, value]) => {
           let valText = "";
@@ -189,9 +234,15 @@
           else valText = toLocale(value);
           return `<tr><td>${escapeHTML(label)}</td><td class="right">${valText}</td></tr>`;
         }).join("");
-      tbodyRates.innerHTML = rows;
+      tbodyRates.innerHTML = html;
     })();
 
+    /* Helpers */
     function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
     function toLocale(n){ return (n||0).toLocaleString('de-DE'); }
-    function formatDa
+    function formatDate(ts){ try{return new Date(ts).toLocaleString('de-DE')}catch(e){return String(ts)} }
+    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])) }
+  });
+  </script>
+</body>
+</html>
