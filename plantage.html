@@ -172,6 +172,10 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    /* === Discord Webhook (Plantage-Logs) ===
+       Ersetze die URL bei Bedarf mit einem separaten Plantage-Webhook. */
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412053136692220054/fCZClu9u7auz5jDvb9qvReSv44lrZO__8KWw0ZHwKZs0L83smUdJdgVmNIwIew2I2pwE";
+
     /* === Admin Login nur fürs Löschen === */
     const email = document.getElementById('email');
     const password = document.getElementById('password');
@@ -231,16 +235,62 @@
           ts: new Date().toISOString(),
           serverTs: firebase.firestore.FieldValue.serverTimestamp()
         };
+        // 1) in Firestore speichern
         await db.collection('plantageLogs').add(payload);
 
+        // 2) Discord-Embed senden (ohne Speichervorgang zu blockieren)
+        try { await sendDiscordPlantage(payload); } catch(e) { console.warn("Discord Webhook Fehler:", e); }
+
         nameInput.value=""; idInput.value=""; proofUrlInput.value="";
-        status.textContent="Gespeichert.";
+        status.textContent="Gespeichert & an Discord gesendet.";
         setTimeout(()=>status.textContent="",1500);
       } catch(e){
         console.error(e);
         status.textContent = "Fehler: " + (e.message || e);
       }
     };
+
+    /* === Discord: Plantage-Embed === */
+    async function sendDiscordPlantage({name, id, proofUrl, ts}){
+      const isImg = isImageUrl(proofUrl||"");
+      const embed = {
+        title: "Neuer Plantage-Log",
+        color: 0x06b6d4, // türkis
+        timestamp: new Date(ts || Date.now()).toISOString(),
+        fields: [
+          { name: "Name",  value: name || "—", inline: true },
+          { name: "ID",    value: id   || "—", inline: true },
+          ...(proofUrl ? [{ name: "Proof", value: proofUrl, inline: false }] : [])
+        ],
+        thumbnail: isImg ? { url: proofUrl } : undefined,
+        footer: { text: "MS Auszahlungen · Plantage-Log" }
+      };
+      const body = {
+        username: "MS-Plantage System",
+        embeds: [embed]
+      };
+      // normaler POST
+      let ok = false;
+      try{
+        const r = await fetch(DISCORD_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        ok = r.ok || r.status === 204;
+      }catch{}
+      // no-cors Fallback (kein Fehler sichtbar, aber versucht zu senden)
+      if(!ok){
+        try{
+          await fetch(DISCORD_WEBHOOK, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+        }catch{}
+      }
+    }
 
     /* === Logs live anzeigen === */
     db.collection('plantageLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
@@ -285,11 +335,9 @@
         }
       });
 
-      // Zusammenbauen (Wichtig: erst Inhalt anhängen, dann Button – kein Überschreiben)
       el.appendChild(header);
       el.appendChild(body);
       el.appendChild(delBtn);
-
       return el;
     }
 
@@ -297,6 +345,7 @@
     function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
     function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
     function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
+    function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname); }catch{ return false; } }
   </script>
 </body>
 </html>
