@@ -1,51 +1,210 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="custom"><!-- <- entferne data-theme oder setze auf 'custom', wenn du unten deinen Look pflegst -->
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin · Guthaben Verwaltung (Sync)</title>
+
   <style>
+    /* ===========================
+       DESIGN-TOKENS (Default)
+       =========================== */
     :root{
-      --bg:#0f172a; --panel:#111827cc; --card:#0b1220cc; --text:#e5e7eb; --muted:#9ca3af;
-      --accent:#7c3aed; --accent2:#06b6d4; --border:#1f2937; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
-      --danger:#ef4444;
+      /* Flächen & Rahmen */
+      --bg:            #0f172a;
+      --surface-1:     #111827cc;   /* Panels */
+      --surface-2:     #0b1220cc;   /* Cards / Inputs */
+      --border:        #1f2937;
+      --shadow-elev:   0 10px 30px rgba(0,0,0,.35);
+      --radius-lg:     16px;
+      --radius-md:     12px;
+      --radius-pill:   999px;
+
+      /* Typo & Status */
+      --text:          #e5e7eb;
+      --text-muted:    #9ca3af;
+      --success:       #22c55e;
+      --warning:       #f59e0b;
+      --danger:        #ef4444;
+
+      /* Akzente */
+      --accent:        #7c3aed;
+      --accent-2:      #06b6d4;
+
+      /* Fokusringe */
+      --focus-ring:    rgba(124,58,237,.22);
+
+      /* Typografie */
+      --font-ui: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+      /* Abstände */
+      --space-1: 6px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 18px;
+      --space-6: 20px;
+      --space-7: 24px;
+      --space-8: 32px;
     }
-    *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(1200px 1200px at 10% -20%, #1e293b 0%, transparent 60%), radial-gradient(1000px 800px at 120% 10%, #0ea5e9 0%, transparent 45%), linear-gradient(160deg, #0b1020 0%, #0f172a 100%); color:var(--text); font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial; padding:24px 16px 40px;}
-    .container{max-width:1120px;margin:0 auto}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
-    h1{margin:0;font-size:clamp(22px,4vw,34px);background:linear-gradient(120deg,#fff,#a5b4fc 40%,#67e8f9 80%);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
-    .subtitle{color:var(--muted);margin:6px 0 20px}
-    .grid{display:grid;gap:18px;grid-template-columns:1.1fr .9fr}
-    @media (max-width:920px){.grid{grid-template-columns:1fr}}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;backdrop-filter:blur(6px);}
-    h2{margin:0 0 12px;font-size:18px}
-    label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-    input,select,button,a.btn{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#0b1020;color:var(--text);outline:none;transition:.2s;display:inline-block;text-align:center;text-decoration:none}
-    input:focus,select:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.2)}
-    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-    @media (max-width:680px){.row{grid-template-columns:1fr}}
-    .btn{cursor:pointer;font-weight:700;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);border:none;margin-top:8px;box-shadow:0 6px 16px rgba(6,182,212,.35)}
-    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
-    .btn:active{transform:translateY(0)}
-    .btn-danger{background:linear-gradient(135deg,var(--danger) 0%, #f97316 100%); box-shadow:0 6px 16px rgba(239,68,68,.35)}
-    .muted{color:var(--muted);font-size:12px}
-    .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-    .chip{display:inline-flex;align-items:center;gap:8px;background:#0b1020;border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--muted)}
-    .chip b{color:#e2e8f0}
-    table{width:100%;border-collapse:collapse}
-    thead th{position:sticky;top:0;background:#0b1020;border-bottom:1px solid var(--border);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 10px;text-align:left}
-    tbody td{padding:12px 10px;border-bottom:1px dashed #1f2a44;vertical-align:middle}
-    tbody tr:hover{background:rgba(124,58,237,.05)}
-    .right{text-align:right}
-    .id{color:#a5b4fc;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-    .auth{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-    .warn{color:#fca5a5;font-size:12px}
-    .payoutBtn{max-width:220px}
-    .admin-only{display:none}
-    body.admin .admin-only{display:table-cell}
-    .xbtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;border:1px solid var(--border);background:#0b1020;cursor:pointer}
-    .xbtn:hover{background:#1f2937}
+
+    /* ===========================
+       DEIN DESIGN (optional)
+       Überschreibe hier Variablen.
+       Setze am <html> data-theme="custom"
+       =========================== */
+    [data-theme="custom"]{
+      /* Beispielwerte – tausche sie gegen deine Tokens aus */
+      --bg:          #0b0f1a;
+      --surface-1:   rgba(14,18,27,.72);
+      --surface-2:   rgba(9,13,22,.78);
+      --border:      #1a2333;
+      --accent:      #8b5cf6;   /* Primär */
+      --accent-2:    #22d3ee;   /* Sekundär */
+      --text:        #eef2ff;
+      --text-muted:  #9aa3b2;
+      --danger:      #ef4444;
+      --radius-lg:   18px;
+      --radius-md:   12px;
+      --shadow-elev: 0 12px 40px rgba(0,0,0,.42);
+      --focus-ring:  rgba(139,92,246,.25);
+    }
+
+    /* ===========================
+       BASIS
+       =========================== */
+    *{ box-sizing:border-box }
+    html, body { height:100% }
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:var(--font-ui);
+      padding: var(--space-7) var(--space-4) 40px;
+      background:
+        radial-gradient(1200px 1200px at 10% -20%, #1e293b 0%, transparent 60%),
+        radial-gradient(1000px 800px  at 120% 10%,  #0ea5e9 0%, transparent 45%),
+        linear-gradient(160deg, #0b1020 0%, var(--bg) 100%);
+    }
+    .container{ max-width:1120px; margin:0 auto }
+
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:var(--space-3);
+      margin-bottom: var(--space-2);
+    }
+    h1{
+      margin:0;
+      font-size:clamp(22px,4vw,34px);
+      letter-spacing:.2px;
+      font-weight:800;
+      background:linear-gradient(120deg,#fff,#a5b4fc 40%,#67e8f9 80%);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .subtitle{ color:var(--text-muted); margin:6px 0 var(--space-6) }
+
+    /* Layout */
+    .grid{ display:grid; gap:18px; grid-template-columns:1.1fr .9fr }
+    @media (max-width:920px){ .grid{ grid-template-columns:1fr } }
+
+    /* Card */
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-elev);
+      padding: var(--space-5);
+      backdrop-filter: blur(6px);
+    }
+    h2{ margin:0 0 var(--space-3); font-size:18px; font-weight:700 }
+
+    /* Form */
+    label{
+      font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted);
+      display:block; margin-bottom:6px;
+    }
+    input, select, button, a.btn{
+      width:100%;
+      padding:12px 14px;
+      border-radius: var(--radius-md);
+      border:1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      outline:none; transition:.18s ease;
+      display:inline-block; text-align:center; text-decoration:none;
+    }
+    input::placeholder{ color:color-mix(in srgb, var(--text-muted) 85%, white 15%) }
+    input:focus, select:focus{
+      border-color: color-mix(in srgb, var(--accent) 70%, black 30%);
+      box-shadow: 0 0 0 4px var(--focus-ring);
+    }
+    .row{ display:grid; gap:12px; grid-template-columns:1fr 1fr }
+    @media (max-width:680px){ .row{ grid-template-columns:1fr } }
+
+    /* Buttons */
+    .btn{
+      cursor:pointer; font-weight:700; border:none; margin-top:8px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-2) 60%, black 40%);
+      will-change: transform, filter;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.05) }
+    .btn:active{ transform: translateY(0) }
+    .btn[disabled]{ opacity:.5; cursor:not-allowed; filter:none; transform:none }
+    .btn-danger{
+      background: linear-gradient(135deg, var(--danger) 0%, #f97316 100%);
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--danger) 55%, black 45%);
+    }
+    .payoutBtn{ max-width:220px }
+
+    /* Secondary action icon button */
+    .xbtn{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:32px; height:32px; border-radius: var(--radius-pill);
+      border:1px solid var(--border); background: var(--surface-2); cursor:pointer;
+      transition:.18s ease;
+    }
+    .xbtn:hover{ background: #1f2937 }
+
+    .muted{ color:var(--text-muted); font-size:12px }
+    .warn{ color:#fca5a5; font-size:12px }
+
+    /* Stats */
+    .stats{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      background: var(--surface-2);
+      border:1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding:8px 12px; font-size:13px; color:var(--text-muted)
+    }
+    .chip b{ color:#e2e8f0 }
+
+    /* Table */
+    table{ width:100%; border-collapse:collapse }
+    thead th{
+      position:sticky; top:0; z-index:1;
+      background: var(--surface-2);
+      border-bottom:1px solid var(--border);
+      font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);
+      padding:12px 10px; text-align:left;
+    }
+    tbody td{
+      padding:12px 10px; border-bottom:1px dashed #1f2a44; vertical-align:middle;
+    }
+    tbody tr:hover{ background: color-mix(in srgb, var(--accent) 12%, transparent) }
+    .right{ text-align:right }
+    .id{ color:#a5b4fc; font-family:var(--font-mono) }
+
+    /* Admin-only Spalte wie zuvor */
+    .admin-only{ display:none }
+    body.admin .admin-only{ display:table-cell }
+
+    /* Scroll-Container für Tabelle */
+    .table-shell{
+      overflow:auto; max-height:55vh;
+      border:1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
   </style>
 </head>
 <body>
@@ -69,7 +228,7 @@
           <input type="password" id="password" placeholder="********" />
         </div>
       </div>
-      <div class="auth">
+      <div class="auth" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <button class="btn" id="btnLogin">Anmelden</button>
         <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
       </div>
@@ -129,7 +288,7 @@
           <span class="chip">Mitglieder: <b id="statMitglieder">0</b></span>
           <span class="chip">Gesamtsaldo: <b id="statSaldo">0</b> €</span>
         </div>
-        <div style="overflow:auto; max-height:55vh; border:1px solid var(--border); border-radius:12px;">
+        <div class="table-shell">
           <table>
             <thead>
               <tr>
@@ -188,7 +347,6 @@
       "Sanktion": 0,
       "Komplett Auszahlung": -1
     };
-
 
     // --- Firebase Init ---
     firebase.initializeApp(firebaseConfig);
