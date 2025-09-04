@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DE01 · Familie MS-13 </title>
-  <meta name="description" content="MS · Auszahlungen & Logs – Landingpage mit futuristischem Neon‑Design.">
+  <meta name="description" content="MS · Auszahlungen & Logs – Landingpage mit futuristischem Neon-Design.">
   <meta name="theme-color" content="#7c3aed">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +35,11 @@
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
 
-    /* Animated holo grid in the back */
+    /* === Partikel-Netz Hintergrund === */
+    .net-bg{position:fixed; inset:0; pointer-events:none; z-index:0}
+    .net-bg canvas{width:100%; height:100%; display:block}
+
+    /* Animated holo grid in the back (liegt ÜBER dem Netz) */
     .grid-bg{position:fixed; inset:0; pointer-events:none; opacity:.25; mix-blend-mode:screen;
       background:
         linear-gradient(transparent 0 49%, rgba(255,255,255,.08) 49% 51%, transparent 51% 100%),
@@ -91,7 +95,7 @@
     }
     @media (max-width:720px){ .hero img{height:240px} }
     .hero::after{
-      content:\"\"; position:absolute; inset:0;
+      content:""; position:absolute; inset:0;
       background:
         linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.55) 70%),
         radial-gradient(80% 60% at 80% 0%, color-mix(in lab, var(--accent) 40%, transparent), transparent 60%);
@@ -119,7 +123,7 @@
       box-shadow:0 14px 36px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.04); overflow:hidden;
     }
     .card::before{
-      content:\"\"; position:absolute; inset:-2px; border-radius: inherit;
+      content:""; position:absolute; inset:-2px; border-radius: inherit;
       background:
         conic-gradient(from 0deg at 50% 50%, color-mix(in lab, var(--accent) 65%, transparent) 0 10%, transparent 12% 40%, color-mix(in lab, var(--accent2) 65%, transparent) 42% 52%, transparent 54% 90%, color-mix(in lab, var(--accent) 65%, transparent) 92% 100%);
       pointer-events:none; filter: blur(20px) saturate(1.6); opacity:.35;
@@ -128,7 +132,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg) translateZ(-30px) } }
     .card::after{
-      content:\"\"; position:absolute; inset: -40%; background:
+      content:""; position:absolute; inset: -40%; background:
         radial-gradient(500px 220px at var(--mx,50%) var(--my,50%), rgba(96,165,250,.18), transparent 60%);
       pointer-events:none; mix-blend-mode: screen; opacity:.7; transform: translateZ(20px);
       transition: opacity .2s ease;
@@ -145,6 +149,10 @@
   </style>
 </head>
 <body>
+  <!-- Partikel-Netz (liegt unter allem) -->
+  <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
+
+  <!-- Holo-Grid darüber -->
   <div class="grid-bg" aria-hidden="true"></div>
 
   <div class="wrap">
@@ -158,7 +166,6 @@
 
     <!-- HERO mit Bild -->
 <section class="hero" data-tilt>
-  <!-- Direktlink zu Imgur-Bild (i.imgur.com) -->
   <img src="https://i.imgur.com/N7W2wfd.png" alt="MS Verwaltung Hero" loading="lazy">
   <div class="hero-content">
     <div class="brand">
@@ -170,7 +177,6 @@
     </div>
   </div>
 </section>
-
 
     <!-- Interaktive Karten -->
     <div class="grid" id="grid">
@@ -203,21 +209,23 @@
   </div>
 
   <script>
-    // Accent variants, saved in localStorage
-    const ACCENTS = ["#7c3aed", "#06b6d4", "#22c55e", "#f97316", "#e11d48"];
-    const swatch = document.getElementById('swatch');
-    const btn = document.getElementById('accentBtn');
-    let idx = Number(localStorage.getItem('msv_accent_idx') || 0) % ACCENTS.length;
-    const apply = () => {
-      const c = ACCENTS[idx % ACCENTS.length];
-      document.documentElement.style.setProperty('--accent', c);
-      swatch.style.background = c;
-      localStorage.setItem('msv_accent_idx', idx);
-    };
-    btn.addEventListener('click', () => { idx++; apply(); });
-    apply();
+    /* === Accent-Fix: Nur anwenden, wenn Elemente existieren === */
+    (function(){
+      const ACCENTS = ["#7c3aed", "#06b6d4", "#22c55e", "#f97316", "#e11d48"];
+      const swatch = document.getElementById('swatch');
+      const btn = document.getElementById('accentBtn');
+      let idx = Number(localStorage.getItem('msv_accent_idx') || 0) % ACCENTS.length;
+      function apply(){
+        const c = ACCENTS[idx % ACCENTS.length];
+        document.documentElement.style.setProperty('--accent', c);
+        if (swatch) swatch.style.background = c;
+        localStorage.setItem('msv_accent_idx', idx);
+      }
+      if (btn) btn.addEventListener('click', ()=>{ idx++; apply(); });
+      apply();
+    })();
 
-    // 3D tilt for hero & cards + mouse‑light
+    /* === 3D tilt für Hero & Cards + Mouse-Light === */
     const tiltEls = document.querySelectorAll('[data-tilt]');
     const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
     tiltEls.forEach(el=>{
@@ -239,6 +247,84 @@
         el.style.setProperty('--mx','50%'); el.style.setProperty('--my','50%');
       });
     });
+
+    /* === Partikel-Netz (Canvas) === */
+    (function(){
+      const canvas = document.getElementById('netCanvas');
+      const ctx = canvas.getContext('2d');
+      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1)); // limit für Performance
+      let particles = [];
+      let w = 0, h = 0;
+
+      function resize(){
+        w = canvas.clientWidth;
+        h = canvas.clientHeight;
+        canvas.width = Math.floor(w * DPR);
+        canvas.height = Math.floor(h * DPR);
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+
+        // Dichte anhand Fläche, mit Grenzen
+        const targetCount = Math.round((w*h)/9000);
+        const max = window.matchMedia('(max-width: 900px)').matches ? 70 : 120;
+        const min = 40;
+        const count = Math.max(min, Math.min(max, targetCount));
+
+        if (particles.length > count) particles.length = count;
+        while (particles.length < count){
+          particles.push(makeParticle());
+        }
+      }
+
+      function makeParticle(){
+        return {
+          x: Math.random()*w,
+          y: Math.random()*h,
+          vx: (Math.random()*2-1)*0.25,
+          vy: (Math.random()*2-1)*0.25,
+          r: Math.random()*1.2 + 0.6
+        };
+      }
+
+      function step(){
+        ctx.clearRect(0,0,w,h);
+
+        // Punkte
+        ctx.beginPath();
+        particles.forEach(p=>{
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < -20 || p.x > w+20) p.vx *= -1;
+          if (p.y < -20 || p.y > h+20) p.vy *= -1;
+          ctx.moveTo(p.x + p.r, p.y);
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        });
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fill();
+
+        // Linien
+        const MAX_D = 140; // Maximale Distanz für Verbindung
+        for (let i=0;i<particles.length;i++){
+          for (let j=i+1;j<particles.length;j++){
+            const a = particles[i], b = particles[j];
+            const dx = a.x-b.x, dy = a.y-b.y;
+            const d2 = dx*dx + dy*dy;
+            if (d2 < MAX_D*MAX_D){
+              const alpha = 1 - Math.sqrt(d2)/MAX_D;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(255,255,255,${alpha*0.15})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(step);
+      }
+
+      window.addEventListener('resize', resize, {passive:true});
+      resize();
+      requestAnimationFrame(step);
+    })();
   </script>
 </body>
 </html>
