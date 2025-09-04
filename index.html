@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DE01 · Familie MS-13 </title>
+  <title>DE01 · Familie MS-13</title>
   <meta name="description" content="MS · Auszahlungen & Logs – Landingpage mit futuristischem Neon-Design.">
   <meta name="theme-color" content="#7c3aed">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,15 +11,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#05060a;
-      --bg2:#0b1020;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --accent:#7c3aed; /* Lila */
+      /* fix hellere Grundtöne */
+      --bg:#0b0f1a;      /* statt #05060a */
+      --bg2:#111828;     /* statt #0b1020 */
+      --text:#f3f4f6;    /* heller */
+      --muted:#cbd5e1;
+      --accent:#7c3aed;  /* Lila */
       --accent2:#06b6d4; /* Cyan */
       --radius:20px;
-      --stroke: rgba(255,255,255,.14);
-      --panel: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.16);
+      --panel: rgba(255,255,255,.08);
       --shadow: 0 18px 42px rgba(124,58,237,.22), inset 0 0 0 1px var(--stroke);
     }
     *{box-sizing:border-box;margin:0;padding:0}
@@ -27,8 +28,8 @@
     body{
       color:var(--text);
       background:
-        radial-gradient(1200px 800px at 10% 10%, rgba(124,58,237,.14), transparent 40%),
-        radial-gradient(800px 600px at 90% 20%, rgba(6,182,212,.13), transparent 45%),
+        radial-gradient(1200px 800px at 10% 10%, rgba(124,58,237,.16), transparent 40%),
+        radial-gradient(800px 600px at 90% 20%, rgba(6,182,212,.15), transparent 45%),
         radial-gradient(1000px 700px at 80% 90%, rgba(34,197,94,.12), transparent 45%),
         linear-gradient(160deg,var(--bg) 0%, var(--bg2) 100%);
       overflow-x:hidden;
@@ -39,11 +40,11 @@
     .net-bg{position:fixed; inset:0; pointer-events:none; z-index:0}
     .net-bg canvas{width:100%; height:100%; display:block}
 
-    /* Animated holo grid in the back (liegt ÜBER dem Netz) */
-    .grid-bg{position:fixed; inset:0; pointer-events:none; opacity:.25; mix-blend-mode:screen;
+    /* Holo-Grid darüber (minimal kräftiger) */
+    .grid-bg{position:fixed; inset:0; pointer-events:none; opacity:.35; mix-blend-mode:screen;
       background:
-        linear-gradient(transparent 0 49%, rgba(255,255,255,.08) 49% 51%, transparent 51% 100%),
-        linear-gradient(90deg, transparent 0 49%, rgba(255,255,255,.08) 49% 51%, transparent 51% 100%);
+        linear-gradient(transparent 0 49%, rgba(255,255,255,.10) 49% 51%, transparent 51% 100%),
+        linear-gradient(90deg, transparent 0 49%, rgba(255,255,255,.10) 49% 51%, transparent 51% 100%);
       background-size: 40px 40px, 40px 40px;
       transform: perspective(800px) rotateX(55deg) scale(1.2);
       transform-origin: top center;
@@ -54,10 +55,8 @@
 
     .wrap{max-width:1200px;margin:0 auto;padding:24px 16px 40px;position:relative;z-index:1}
 
-    /* Top nav / controls */
-    .topbar{
-      display:flex; align-items:center; gap:12px; justify-content:space-between; margin-bottom:16px;
-    }
+    /* Topbar */
+    .topbar{display:flex; align-items:center; gap:12px; justify-content:space-between; margin-bottom:16px;}
     .brand-row{display:flex; align-items:center; gap:12px}
     .logo{
       width:44px; height:44px; border-radius:14px;
@@ -77,27 +76,25 @@
       transition: transform .2s ease, filter .2s ease, box-shadow .2s ease, border-color .2s ease;
     }
     .btn:hover{ transform: translateY(-1px); filter:brightness(1.05); box-shadow:0 14px 36px rgba(124,58,237,.30) }
-    .btn.ghost{
-      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-      color:var(--text);
-    }
+    .btn.ghost{ background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); color:var(--text); }
 
     /* Hero */
     .hero{
       position:relative; border-radius:24px; overflow:hidden;
       box-shadow: var(--shadow); border:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       margin-bottom:20px;
     }
     .hero img{
       width:100%; height:360px; object-fit:cover; display:block;
-      filter:saturate(1.05) contrast(1.05);
+      filter:saturate(1.05) contrast(1.05) brightness(1.02);
     }
     @media (max-width:720px){ .hero img{height:240px} }
+    /* HELLERES Overlay */
     .hero::after{
       content:""; position:absolute; inset:0;
       background:
-        linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.55) 70%),
+        linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.35) 70%),
         radial-gradient(80% 60% at 80% 0%, color-mix(in lab, var(--accent) 40%, transparent), transparent 60%);
       pointer-events:none;
     }
@@ -108,16 +105,14 @@
     .title{margin:0;font-size:clamp(22px,4vw,34px);font-weight:900;letter-spacing:.3px;font-family: Orbitron, Inter}
     .subtitle{margin:2px 0 0;color:#d1d5db}
 
-    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
-
-    /* Cards grid */
+    /* Cards */
     .grid{display:grid; gap:18px; grid-template-columns:repeat(2, minmax(260px,1fr)); margin-top:22px}
     @media (max-width:900px){ .grid{ grid-template-columns: 1fr; } }
     .card{
       position:relative; border-radius:var(--radius); padding:22px;
       background:
-        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.05), rgba(255,255,255,.02)),
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.07), rgba(255,255,255,.03)),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid var(--stroke); backdrop-filter: blur(8px) saturate(1.2);
       transform-style: preserve-3d; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
       box-shadow:0 14px 36px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.04); overflow:hidden;
@@ -126,15 +121,15 @@
       content:""; position:absolute; inset:-2px; border-radius: inherit;
       background:
         conic-gradient(from 0deg at 50% 50%, color-mix(in lab, var(--accent) 65%, transparent) 0 10%, transparent 12% 40%, color-mix(in lab, var(--accent2) 65%, transparent) 42% 52%, transparent 54% 90%, color-mix(in lab, var(--accent) 65%, transparent) 92% 100%);
-      pointer-events:none; filter: blur(20px) saturate(1.6); opacity:.35;
+      pointer-events:none; filter: blur(20px) saturate(1.6); opacity:.38;
       transform: translateZ(-30px);
       animation: spin 18s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg) translateZ(-30px) } }
     .card::after{
       content:""; position:absolute; inset: -40%; background:
-        radial-gradient(500px 220px at var(--mx,50%) var(--my,50%), rgba(96,165,250,.18), transparent 60%);
-      pointer-events:none; mix-blend-mode: screen; opacity:.7; transform: translateZ(20px);
+        radial-gradient(500px 220px at var(--mx,50%) var(--my,50%), rgba(96,165,250,.2), transparent 60%);
+      pointer-events:none; mix-blend-mode: screen; opacity:.75; transform: translateZ(20px);
       transition: opacity .2s ease;
     }
     .card:hover{ border-color: color-mix(in lab, var(--accent) 45%, var(--stroke)); box-shadow:0 16px 40px rgba(6,182,212,.35), 0 0 0 1px rgba(124,58,237,.25) inset; }
@@ -145,13 +140,11 @@
 
     /* footer */
     footer{margin-top:24px; text-align:center; color:var(--muted); font-size:13px; padding:10px}
-
   </style>
 </head>
 <body>
-  <!-- Partikel-Netz (liegt unter allem) -->
+  <!-- Partikel-Netz unter allem -->
   <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
-
   <!-- Holo-Grid darüber -->
   <div class="grid-bg" aria-hidden="true"></div>
 
@@ -161,27 +154,26 @@
         <div class="logo" aria-hidden="true"></div>
         <div class="site-title">MS Verwaltung</div>
       </div>
-      <!-- Accent-Switcher entfernt -->
     </div>
 
-    <!-- HERO mit Bild -->
-<section class="hero" data-tilt>
-  <img src="https://i.imgur.com/N7W2wfd.png" alt="MS Verwaltung Hero" loading="lazy">
-  <div class="hero-content">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div>
-        <h1 class="title">MS · Auszahlungen &amp; Logs</h1>
-        <p class="subtitle">Wähle aus, wohin du willst – alles synchron in Echtzeit.</p>
+    <!-- HERO -->
+    <section class="hero" data-tilt>
+      <img src="https://i.imgur.com/N7W2wfd.png" alt="MS Verwaltung Hero" loading="lazy">
+      <div class="hero-content">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1 class="title">MS · Auszahlungen &amp; Logs</h1>
+            <p class="subtitle">Wähle aus, wohin du willst – alles synchron in Echtzeit.</p>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-    <!-- Interaktive Karten -->
+    <!-- Karten -->
     <div class="grid" id="grid">
       <a class="card linkcard" href="auszahlung.html" data-tilt>
-        <h2>Auszahlungen - &amp; Einzahlungen </h2>
+        <h2>Auszahlungen - &amp; Einzahlungen</h2>
         <p>Hier findet Ihr eure Auszahlungen und das aktuelle Guthaben.</p>
         <div class="actions"><span class="btn">Zur Übersicht</span></div>
       </a>
@@ -209,7 +201,7 @@
   </div>
 
   <script>
-    /* === Accent-Fix: Nur anwenden, wenn Elemente existieren === */
+    /* === (Optionaler) Accent-Fix: nur anwenden, wenn Elemente existieren === */
     (function(){
       const ACCENTS = ["#7c3aed", "#06b6d4", "#22c55e", "#f97316", "#e11d48"];
       const swatch = document.getElementById('swatch');
@@ -225,7 +217,7 @@
       apply();
     })();
 
-    /* === 3D tilt für Hero & Cards + Mouse-Light === */
+    /* === 3D tilt + Mouse-Light === */
     const tiltEls = document.querySelectorAll('[data-tilt]');
     const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
     tiltEls.forEach(el=>{
@@ -248,11 +240,11 @@
       });
     });
 
-    /* === Partikel-Netz (Canvas) === */
+    /* === Partikel-Netz (Canvas) – fix hell === */
     (function(){
       const canvas = document.getElementById('netCanvas');
       const ctx = canvas.getContext('2d');
-      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1)); // limit für Performance
+      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
       let particles = [];
       let w = 0, h = 0;
 
@@ -263,10 +255,10 @@
         canvas.height = Math.floor(h * DPR);
         ctx.setTransform(DPR,0,0,DPR,0,0);
 
-        // Dichte anhand Fläche, mit Grenzen
+        // Dichte anhand Fläche (mit Grenzen)
         const targetCount = Math.round((w*h)/9000);
-        const max = window.matchMedia('(max-width: 900px)').matches ? 70 : 120;
-        const min = 40;
+        const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
+        const min = 50;
         const count = Math.max(min, Math.min(max, targetCount));
 
         if (particles.length > count) particles.length = count;
@@ -285,6 +277,10 @@
         };
       }
 
+      let MAX_D = 160;     // weiter, damit mehr Linien sichtbar sind
+      let DOT_A = 0.85;    // hellere Punkte
+      let LINK_A = 0.22;   // kräftigere Linien
+
       function step(){
         ctx.clearRect(0,0,w,h);
 
@@ -297,11 +293,10 @@
           ctx.moveTo(p.x + p.r, p.y);
           ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
         });
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
         ctx.fill();
 
         // Linien
-        const MAX_D = 140; // Maximale Distanz für Verbindung
         for (let i=0;i<particles.length;i++){
           for (let j=i+1;j<particles.length;j++){
             const a = particles[i], b = particles[j];
@@ -312,7 +307,7 @@
               ctx.beginPath();
               ctx.moveTo(a.x, a.y);
               ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(255,255,255,${alpha*0.15})`;
+              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
               ctx.lineWidth = 1;
               ctx.stroke();
             }
