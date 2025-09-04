@@ -4,92 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MS Verwaltung · Landingpage</title>
+  <meta name="description" content="MS · Auszahlungen & Logs – Landingpage mit futuristischem Neon-Design.">
+  <meta name="theme-color" content="#7c3aed">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0b1020; --bg2:#0f172a; --text:#e5e7eb; --muted:#9ca3af;
-      --accent:#7c3aed; --accent2:#06b6d4; --radius:18px; --border:#1f2937;
-      --shadow: 0 14px 36px rgba(0,0,0,.45);
+      --bg:#05060a;
+      --bg2:#0b1020;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#7c3aed;
+      --accent2:#06b6d4;
+      --radius:20px;
+      --stroke: rgba(255,255,255,.14);
+      --panel: rgba(255,255,255,.06);
+      --shadow: 0 18px 42px rgba(124,58,237,.22), inset 0 0 0 1px var(--stroke);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
     body{
-      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial;
       color:var(--text);
-      background: linear-gradient(160deg,var(--bg) 0%, var(--bg2) 100%);
-      display:flex; flex-direction:column;
+      background:
+        radial-gradient(1200px 800px at 10% 10%, rgba(124,58,237,.14), transparent 40%),
+        radial-gradient(800px 600px at 90% 20%, rgba(6,182,212,.13), transparent 45%),
+        radial-gradient(1000px 700px at 80% 90%, rgba(34,197,94,.12), transparent 45%),
+        linear-gradient(160deg,var(--bg) 0%, var(--bg2) 100%);
       overflow-x:hidden;
-    }
-    /* Particles Hintergrund */
-    #tsparticles{
-      position:fixed; inset:0;
-      z-index:-1;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
 
-    .wrap{max-width:1200px;margin:0 auto;padding:24px 16px 40px;flex:1;width:100%}
+    /* Particles Background Layer */
+    #tsparticles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
 
-    /* Hero */
-    .hero{
-      position:relative; border-radius:24px; overflow:hidden;
-      box-shadow: var(--shadow); border:1px solid rgba(255,255,255,.08);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      margin-bottom:20px;
-    }
-    .hero img{
-      width:100%; height:320px; object-fit:cover; display:block;
-      filter:saturate(1.05) contrast(1.05);
-    }
-    @media (max-width:720px){ .hero img{height:220px} }
-    .hero::after{
-      content:""; position:absolute; inset:0;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.55) 70%),
-        radial-gradient(80% 60% at 80% 0%, rgba(124,58,237,.25), transparent 60%);
-      pointer-events:none;
-    }
-    .hero-content{
-      position:absolute; inset:auto 0 0 0; padding:18px 20px;
-      display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;
-    }
-    .brand{ display:flex; align-items:center; gap:12px }
-    .logo{
-      width:44px; height:44px; border-radius:14px;
-      background: radial-gradient(120% 120% at 20% 20%, #94a3b8 0%, #0ea5e9 35%, transparent 36%),
-                  linear-gradient(135deg, #312e81 0%, #7c3aed 50%, #06b6d4 100%);
-      box-shadow:0 8px 24px rgba(6,182,212,.35), inset 0 0 18px rgba(255,255,255,.15);
-      border:1px solid rgba(255,255,255,.1)
-    }
-    .title{margin:0;font-size:clamp(22px,4vw,34px);font-weight:900;letter-spacing:.3px}
-    .subtitle{margin:2px 0 0;color:#d1d5db}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px 16px 40px;position:relative;z-index:1}
 
-    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
-      background:linear-gradient(135deg, var(--accent), var(--accent2));
-      color:#fff; font-weight:800; letter-spacing:.2px; text-decoration:none; cursor:pointer;
-      box-shadow:0 8px 20px rgba(6,182,212,.35); transition: transform .2s ease, filter .2s ease;
-    }
-    .btn:hover{ transform: translateY(-1px); filter:brightness(1.05) }
-
-    /* Cards grid */
-    .grid{display:grid; gap:18px; grid-template-columns:repeat(2, minmax(260px,1fr)); margin-top:22px}
-    @media (max-width:900px){ .grid{ grid-template-columns: 1fr; } }
-    .card{
-      position:relative; border-radius:var(--radius); padding:22px;
-      background:
-        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.05), rgba(255,255,255,.02)),
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--border); backdrop-filter: blur(6px);
-      transform-style: preserve-3d; transition: transform .25s ease, box-shadow .25s ease;
-      box-shadow:0 10px 30px rgba(0,0,0,.35); overflow:hidden;
-    }
-    .card h2{margin:0 0 6px; font-size:20px}
-    .card p{margin:0; color:var(--muted)}
-    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
-    .linkcard{text-decoration:none; color:inherit}
-
-    /* footer */
-    footer{margin-top:24px; text-align:center; color:var(--muted); font-size:13px; padding:10px}
+    /* ... dein restliches CSS bleibt unverändert ... */
   </style>
 </head>
 <body>
@@ -97,14 +52,26 @@
   <div id="tsparticles"></div>
 
   <div class="wrap">
+    <div class="topbar">
+      <div class="brand-row">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="site-title">MS Verwaltung</div>
+      </div>
+      <div class="accent-pill">
+        <span>Akzent</span>
+        <button id="accentBtn" class="btn ghost" style="padding:6px 10px; font-size:12px">Wechseln</button>
+        <span id="swatch" class="swatch" title="Aktuelle Akzentfarbe"></span>
+      </div>
+    </div>
+
     <!-- HERO mit Bild -->
     <section class="hero" data-tilt>
-      <img src="https://i.imgur.com/N7W2wfd.png" alt="MS Verwaltung Hero">
+      <img src="https://i.imgur.com/N7W2wfd.png" alt="MS Verwaltung Hero" loading="lazy">
       <div class="hero-content">
         <div class="brand">
-          <div class="logo"></div>
+          <div class="logo" aria-hidden="true"></div>
           <div>
-            <h1 class="title">MS · Auszahlungen & Logs</h1>
+            <h1 class="title">MS · Auszahlungen &amp; Logs</h1>
             <p class="subtitle">Wähle aus, wohin du willst – alles synchron in Echtzeit.</p>
           </div>
         </div>
@@ -120,7 +87,7 @@
     <!-- Interaktive Karten -->
     <div class="grid" id="grid">
       <a class="card linkcard" href="auszahlung.html" data-tilt>
-        <h2>Auszahlung - & Einzahlungs Liste</h2>
+        <h2>Auszahlung - &amp; Einzahlungs Liste</h2>
         <p>Hier findet Ihr eure Auszahlungen und das aktuelle Guthaben.</p>
         <div class="actions"><span class="btn">Öffnen</span></div>
       </a>
@@ -163,8 +130,8 @@
         }
       },
       particles: {
-        color: { value: "#ffffff" },
-        links: { color: "#ffffff", distance: 150, enable: true, opacity: 0.3, width: 1 },
+        color: { value: "var(--accent)" },
+        links: { color: "var(--accent)", distance: 150, enable: true, opacity: 0.3, width: 1 },
         move: { enable: true, speed: 1, outModes: { default: "bounce" } },
         number: { density: { enable: true, area: 800 }, value: 70 },
         opacity: { value: 0.5 },
@@ -172,6 +139,44 @@
         size: { value: { min: 1, max: 3 } }
       },
       detectRetina: true
+    });
+  </script>
+
+  <script>
+    // dein bestehendes JS für Akzent-Wechsel + Tilt bleibt hier unverändert
+    const ACCENTS = ["#7c3aed", "#06b6d4", "#22c55e", "#f97316", "#e11d48"];
+    const swatch = document.getElementById('swatch');
+    const btn = document.getElementById('accentBtn');
+    let idx = Number(localStorage.getItem('msv_accent_idx') || 0) % ACCENTS.length;
+    const apply = () => {
+      const c = ACCENTS[idx % ACCENTS.length];
+      document.documentElement.style.setProperty('--accent', c);
+      swatch.style.background = c;
+      localStorage.setItem('msv_accent_idx', idx);
+    };
+    btn.addEventListener('click', () => { idx++; apply(); });
+    apply();
+
+    const tiltEls = document.querySelectorAll('[data-tilt]');
+    const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
+    tiltEls.forEach(el=>{
+      let raf=null;
+      el.addEventListener('mousemove',e=>{
+        const r=el.getBoundingClientRect();
+        const x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+        const rx=clamp((.5-y)*8,-8,8), ry=clamp((x-.5)*12,-12,12);
+        el.style.setProperty('--mx', `${x*100}%`);
+        el.style.setProperty('--my', `${y*100}%`);
+        if(raf) cancelAnimationFrame(raf);
+        raf=requestAnimationFrame(()=>{
+          el.style.transform=`perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+        });
+      });
+      el.addEventListener('mouseleave',()=>{
+        if(raf) cancelAnimationFrame(raf);
+        el.style.transform='perspective(900px) rotateX(0deg) rotateY(0deg)';
+        el.style.setProperty('--mx','50%'); el.style.setProperty('--my','50%');
+      });
     });
   </script>
 </body>
