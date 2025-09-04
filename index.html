@@ -197,8 +197,31 @@
       </a>
     </div>
 
-    <footer>Made by Alvaro SolanoHebel | 20367</footer>
-  </div>
+<footer style="
+  margin-top:24px;
+  text-align:center;
+  font-size:13px;
+  padding:10px;
+  font-weight:600;
+  background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  animation: rgbMove 6s linear infinite;
+  background-size: 300% 100%;
+">
+  Made by Alvaro SolanoHebel | 20367
+</footer>
+
+<style>
+@keyframes rgbMove {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+</style>
+
 
   <script>
     /* === (Optionaler) Accent-Fix: nur anwenden, wenn Elemente existieren === */
