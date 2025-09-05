@@ -11,13 +11,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      /* fix hellere Grundtöne */
-      --bg:#0b0f1a;      /* statt #05060a */
-      --bg2:#111828;     /* statt #0b1020 */
-      --text:#f3f4f6;    /* heller */
+      --bg:#0b0f1a;
+      --bg2:#111828;
+      --text:#f3f4f6;
       --muted:#cbd5e1;
-      --accent:#7c3aed;  /* Lila */
-      --accent2:#06b6d4; /* Cyan */
+      --accent:#7c3aed;
+      --accent2:#06b6d4;
       --radius:20px;
       --stroke: rgba(255,255,255,.16);
       --panel: rgba(255,255,255,.08);
@@ -40,7 +39,7 @@
     .net-bg{position:fixed; inset:0; pointer-events:none; z-index:0}
     .net-bg canvas{width:100%; height:100%; display:block}
 
-    /* Holo-Grid darüber (minimal kräftiger) */
+    /* Holo-Grid darüber */
     .grid-bg{position:fixed; inset:0; pointer-events:none; opacity:.35; mix-blend-mode:screen;
       background:
         linear-gradient(transparent 0 49%, rgba(255,255,255,.10) 49% 51%, transparent 51% 100%),
@@ -78,7 +77,7 @@
     .btn:hover{ transform: translateY(-1px); filter:brightness(1.05); box-shadow:0 14px 36px rgba(124,58,237,.30) }
     .btn.ghost{ background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); color:var(--text); }
 
-    /* Hero – Bild ohne Beschnitt in fixem Frame */
+    /* Hero – Clean ohne Balken: fixiertes Seitenverhältnis + cover */
     .hero{
       position:relative;
       border-radius:24px;
@@ -88,30 +87,31 @@
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       margin-bottom:20px;
 
-      /* Neu: fixe Rahmenhöhe + Centering */
-      height:360px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background-color: #0c1220; /* falls seitliche Balken entstehen */
+      /* wichtig: Ratio statt fixer Höhe */
+      aspect-ratio: 21 / 9;   /* Desktop: sehr breit */
+      min-height: 260px;      /* falls Viewports extrem schmal werden */
     }
     .hero img{
-      /* Neu: passt das komplette Bild in den Frame, kein Beschnitt */
       width:100%;
       height:100%;
-      object-fit:contain;
       display:block;
-      filter:saturate(1.05) contrast(1.05) brightness(1.02);
+      object-fit: cover;        /* füllt den Frame, kein Balken */
+      object-position: 50% 40%; /* Fokus leicht nach oben – anpassbar */
+      filter:saturate(1.05) contrast(1.05) brightness(1.02));
     }
-    @media (max-width:720px){
-      .hero{height:240px;}     /* Frame wird kleiner */
-      .hero img{height:100%;}
+    /* Auf kleineren Screens etwas höheres Verhältnis für bessere Bildwirkung */
+    @media (max-width: 900px){
+      .hero{ aspect-ratio: 16 / 9; }
     }
-    /* Overlay bleibt, aber ist dezent */
+    @media (max-width: 600px){
+      .hero{ aspect-ratio: 4 / 3; }
+    }
+
+    /* dezentes Overlay */
     .hero::after{
       content:""; position:absolute; inset:0;
       background:
-        linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.35) 70%),
+        linear-gradient(180deg, rgba(0,0,0,.14) 0%, rgba(0,0,0,.28) 70%),
         radial-gradient(80% 60% at 80% 0%, color-mix(in lab, var(--accent) 40%, transparent), transparent 60%);
       pointer-events:none;
     }
@@ -160,9 +160,9 @@
   </style>
 </head>
 <body>
-  <!-- Partikel-Netz unter allem -->
+  <!-- Partikel-Netz -->
   <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
-  <!-- Holo-Grid darüber -->
+  <!-- Holo-Grid -->
   <div class="grid-bg" aria-hidden="true"></div>
 
   <div class="wrap">
@@ -237,9 +237,8 @@
 }
 </style>
 
-
   <script>
-    /* === (Optionaler) Accent-Fix: nur anwenden, wenn Elemente existieren === */
+    /* Accent-Fix (optional) */
     (function(){
       const ACCENTS = ["#7c3aed", "#06b6d4", "#22c55e", "#f97316", "#e11d48"];
       const swatch = document.getElementById('swatch');
@@ -255,7 +254,7 @@
       apply();
     })();
 
-    /* === 3D tilt + Mouse-Light === */
+    /* 3D tilt + Mouse-Light */
     const tiltEls = document.querySelectorAll('[data-tilt]');
     const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
     tiltEls.forEach(el=>{
@@ -278,7 +277,7 @@
       });
     });
 
-    /* === Partikel-Netz (Canvas) – fix hell === */
+    /* Partikel-Netz (Canvas) – fix hell */
     (function(){
       const canvas = document.getElementById('netCanvas');
       const ctx = canvas.getContext('2d');
@@ -293,16 +292,13 @@
         canvas.height = Math.floor(h * DPR);
         ctx.setTransform(DPR,0,0,DPR,0,0);
 
-        // Dichte anhand Fläche (mit Grenzen)
         const targetCount = Math.round((w*h)/9000);
         const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
         const min = 50;
         const count = Math.max(min, Math.min(max, targetCount));
 
         if (particles.length > count) particles.length = count;
-        while (particles.length < count){
-          particles.push(makeParticle());
-        }
+        while (particles.length < count){ particles.push(makeParticle()); }
       }
 
       function makeParticle(){
@@ -315,14 +311,11 @@
         };
       }
 
-      let MAX_D = 160;     // weiter, damit mehr Linien sichtbar sind
-      let DOT_A = 0.85;    // hellere Punkte
-      let LINK_A = 0.22;   // kräftigere Linien
+      let MAX_D = 160;  let DOT_A = 0.85;  let LINK_A = 0.22;
 
       function step(){
         ctx.clearRect(0,0,w,h);
 
-        // Punkte
         ctx.beginPath();
         particles.forEach(p=>{
           p.x += p.vx; p.y += p.vy;
@@ -334,7 +327,6 @@
         ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
         ctx.fill();
 
-        // Linien
         for (let i=0;i<particles.length;i++){
           for (let j=i+1;j<particles.length;j++){
             const a = particles[i], b = particles[j];
