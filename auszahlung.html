@@ -454,7 +454,7 @@
   </script>
 
   <script>
-    /* Partikel-Netz (Canvas) */
+     /* Partikel-Netz (Canvas) – fix hell */
     (function(){
       const canvas = document.getElementById('netCanvas');
       const ctx = canvas.getContext('2d');
@@ -474,25 +474,52 @@
         const min = 50;
         const count = Math.max(min, Math.min(max, targetCount));
 
-        particles = Array.from({length:count}, ()=>({
-          x: Math.random()*w, y: Math.random()*h,
-          vx: (Math.random()*2-1)*0.25, vy: (Math.random()*2-1)*0.25,
-          r: Math.random()*1.2 + 0.6
-        }));
+        if (particles.length > count) particles.length = count;
+        while (particles.length < count){ particles.push(makeParticle()); }
       }
+
+      function makeParticle(){
+        return {
+          x: Math.random()*w,
+          y: Math.random()*h,
+          vx: (Math.random()*2-1)*0.25,
+          vy: (Math.random()*2-1)*0.25,
+          r: Math.random()*1.2 + 0.6
+        };
+      }
+
+      let MAX_D = 160;  let DOT_A = 0.85;  let LINK_A = 0.22;
 
       function step(){
         ctx.clearRect(0,0,w,h);
+
         ctx.beginPath();
-        for(const p of particles){
+        particles.forEach(p=>{
           p.x += p.vx; p.y += p.vy;
           if (p.x < -20 || p.x > w+20) p.vx *= -1;
           if (p.y < -20 || p.y > h+20) p.vy *= -1;
           ctx.moveTo(p.x + p.r, p.y);
           ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        }
-        ctx.fillStyle = `rgba(255,255,255,.85)`;
+        });
+        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
         ctx.fill();
+
+        for (let i=0;i<particles.length;i++){
+          for (let j=i+1;j<particles.length;j++){
+            const a = particles[i], b = particles[j];
+            const dx = a.x-b.x, dy = a.y-b.y;
+            const d2 = dx*dx + dy*dy;
+            if (d2 < MAX_D*MAX_D){
+              const alpha = 1 - Math.sqrt(d2)/MAX_D;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
         requestAnimationFrame(step);
       }
 
