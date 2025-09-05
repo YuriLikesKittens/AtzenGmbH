@@ -118,6 +118,19 @@
       50%  { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
+
+    /* --- Popup (Overlay) --- */
+    #adminPopup{
+      display:none; position:fixed; inset:0; z-index:999;
+      background:rgba(0,0,0,.6); backdrop-filter:blur(4px);
+      align-items:center; justify-content:center;
+    }
+    .adminPopup-card{
+      width:90%; max-width:420px; border-radius:16px;
+      background:#111827; border:1px solid var(--stroke);
+      box-shadow:0 18px 42px rgba(0,0,0,.5);
+      padding:22px;
+    }
   </style>
 </head>
 <body>
@@ -129,7 +142,31 @@
       <h1>Plantage-Log</h1>
       <div class="btnrow">
         <a class="btn" href="index.html">Zur Übersicht</a>
-        <a class="btn" id="btnAdminLogin" href="admin_sync.html">Admin-Login</a>
+        <!-- Admin-Login öffnet Popup -->
+        <button class="btn" id="btnAdminLogin">Admin-Login</button>
+      </div>
+    </div>
+
+    <!-- Popup-Login -->
+    <div id="adminPopup">
+      <div class="adminPopup-card">
+        <h2 style="margin:0 0 14px;font-size:18px">Admin Login</h2>
+        <div class="authrow" style="margin-bottom:12px">
+          <div>
+            <label>E-Mail</label>
+            <input type="email" id="email" placeholder="admin@beispiel.de" />
+          </div>
+          <div>
+            <label>Passwort</label>
+            <input type="password" id="password" placeholder="********" />
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="btnLogin">Anmelden</button>
+          <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
+          <button class="btn" id="btnClosePopup" style="background:#6b7280">Schließen</button>
+        </div>
+        <p class="meta" id="authState" style="margin-top:8px"></p>
       </div>
     </div>
 
@@ -167,9 +204,6 @@
       <h2>Logs</h2>
       <div id="list" class="list"></div>
     </div>
-
-    <footer>Made by Alvaro SolanoHebel | 20367</footer>
-  </div>
 
   <!-- Partikel-Netz -->
   <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
@@ -365,6 +399,7 @@
   
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
     const firebaseConfig = {
@@ -378,9 +413,10 @@
     };
     try { firebase.initializeApp(firebaseConfig); } 
     catch(e){ if(!/already exists/i.test(String(e))) throw e; }
+    const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412053136692220054/fCZClu9u7auz5jDvb9qvReSv44lrZO__8KWw0ZHwKZs0L83smUdJdgVmNIwIew2I2pwE"; // 👈 ersetzen
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412053136692220054/fCZClu9u7auz5jDvb9qvReSv44lrZO__8KWw0ZHwKZs0L83smUdJdgVmNIwIew2I2pwE"; // 👈 ggf. ersetzen
 
     const nameInput = document.getElementById('name');
     const idInput = document.getElementById('mitgliedId');
@@ -389,6 +425,42 @@
     const status = document.getElementById('status');
     const list = document.getElementById('list');
 
+    // Popup UI
+    const btnAdminLogin = document.getElementById('btnAdminLogin');
+    const adminPopup = document.getElementById('adminPopup');
+    const btnClosePopup = document.getElementById('btnClosePopup');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('btnLogout');
+    const authState = document.getElementById('authState');
+
+    btnAdminLogin.addEventListener('click', ()=>{ adminPopup.style.display = 'flex'; });
+    btnClosePopup.addEventListener('click', ()=>{ adminPopup.style.display = 'none'; });
+    adminPopup.addEventListener('click', (e)=>{ if(e.target === adminPopup) adminPopup.style.display='none'; });
+
+    function setAdminUI(on){
+      document.body.classList.toggle('admin', !!on);
+      if(btnLogin) btnLogin.style.display = on ? 'none' : 'inline-block';
+      if(btnLogout) btnLogout.style.display = on ? 'inline-block' : 'none';
+      if(authState) authState.textContent = on ? 'Angemeldet' : 'Abgemeldet';
+    }
+
+    btnLogin?.addEventListener('click', async () => {
+      authState.textContent = 'Anmeldung läuft…';
+      try{
+        await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+        await auth.signInWithEmailAndPassword(email.value, password.value);
+        setAdminUI(true);
+      }catch(e){
+        authState.textContent = e?.message || 'Login fehlgeschlagen';
+      }
+    });
+    btnLogout?.addEventListener('click', async () => { await auth.signOut(); });
+
+    auth.onAuthStateChanged(user => setAdminUI(!!user));
+
+    // Formular speichern + Discord-WebHook
     btnSave.onclick = async () => {
       status.textContent = "Speichere…";
       try {
