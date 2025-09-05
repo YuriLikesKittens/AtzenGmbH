@@ -171,6 +171,198 @@
     <footer>Made by Alvaro SolanoHebel | 20367</footer>
   </div>
 
+  <!-- Partikel-Netz -->
+  <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
+  <!-- Holo-Grid -->
+  <div class="grid-bg" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand-row">
+        <div class="site-title">DE01 · Familie MS-13</div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero" data-tilt>
+      <img src="https://i.imgur.com/N7W2wfd.png" alt="DE01 · Familie MS-13" loading="lazy">
+      <div class="hero-content">
+        <div class="brand">
+          <div>
+            <h1 class="title"></h1>
+            <p class="subtitle"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Karten -->
+    <div class="grid" id="grid">
+      <a class="card linkcard" href="auszahlung.html" data-tilt>
+        <h2>Auszahlungen - &amp; Einzahlungen</h2>
+        <p>Hier findet Ihr eure Auszahlungen und das aktuelle Guthaben.</p>
+        <div class="actions"><span class="btn">Zur Übersicht</span></div>
+      </a>
+
+      <a class="card linkcard" href="plantage.html" data-tilt>
+        <h2>Plantage-Log</h2>
+        <p>Hier könnt ihr Plantage-LOG abschicken.</p>
+        <div class="actions"><span class="btn">Zum Plantage-Log</span></div>
+      </a>
+
+      <a class="card linkcard" href="event_log.html" data-tilt>
+        <h2>Event-Log</h2>
+        <p>Events können hier eingesendet werden und werden im Discord automatisch gepostet.</p>
+        <div class="actions"><span class="btn">Zum Event-Log</span></div>
+      </a>
+
+      <a class="card linkcard" href="admin_sync.html" data-tilt>
+        <h2>Leaderschaft Panel</h2>
+        <p>Hier verwaltet die Leaderschaft eure Auszahlungen und euer aktuelles Guthaben.</p>
+        <div class="actions"><span class="btn">Zum Admin-Login</span></div>
+      </a>
+    </div>
+
+<footer style="
+  margin-top:24px;
+  text-align:center;
+  font-size:13px;
+  padding:10px;
+  font-weight:600;
+  background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  animation: rgbMove 6s linear infinite;
+  background-size: 300% 100%;
+">
+  Made by Alvaro SolanoHebel | 20367
+</footer>
+
+<style>
+@keyframes rgbMove {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+</style>
+
+  <script>
+    /* Accent-Fix (optional) */
+    (function(){
+      const ACCENTS = ["#7c3aed", "#06b6d4", "#22c55e", "#f97316", "#e11d48"];
+      const swatch = document.getElementById('swatch');
+      const btn = document.getElementById('accentBtn');
+      let idx = Number(localStorage.getItem('msv_accent_idx') || 0) % ACCENTS.length;
+      function apply(){
+        const c = ACCENTS[idx % ACCENTS.length];
+        document.documentElement.style.setProperty('--accent', c);
+        if (swatch) swatch.style.background = c;
+        localStorage.setItem('msv_accent_idx', idx);
+      }
+      if (btn) btn.addEventListener('click', ()=>{ idx++; apply(); });
+      apply();
+    })();
+
+    /* 3D tilt + Mouse-Light */
+    const tiltEls = document.querySelectorAll('[data-tilt]');
+    const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
+    tiltEls.forEach(el=>{
+      let raf=null;
+      el.addEventListener('mousemove',e=>{
+        const r=el.getBoundingClientRect();
+        const x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+        const rx=clamp((.5-y)*8,-8,8), ry=clamp((x-.5)*12,-12,12);
+        el.style.setProperty('--mx', `${x*100}%`);
+        el.style.setProperty('--my', `${y*100}%`);
+        if(raf) cancelAnimationFrame(raf);
+        raf=requestAnimationFrame(()=>{
+          el.style.transform=`perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+        });
+      });
+      el.addEventListener('mouseleave',()=>{
+        if(raf) cancelAnimationFrame(raf);
+        el.style.transform='perspective(900px) rotateX(0deg) rotateY(0deg)';
+        el.style.setProperty('--mx','50%'); el.style.setProperty('--my','50%');
+      });
+    });
+
+    /* Partikel-Netz (Canvas) – fix hell */
+    (function(){
+      const canvas = document.getElementById('netCanvas');
+      const ctx = canvas.getContext('2d');
+      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      let particles = [];
+      let w = 0, h = 0;
+
+      function resize(){
+        w = canvas.clientWidth;
+        h = canvas.clientHeight;
+        canvas.width = Math.floor(w * DPR);
+        canvas.height = Math.floor(h * DPR);
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+
+        const targetCount = Math.round((w*h)/9000);
+        const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
+        const min = 50;
+        const count = Math.max(min, Math.min(max, targetCount));
+
+        if (particles.length > count) particles.length = count;
+        while (particles.length < count){ particles.push(makeParticle()); }
+      }
+
+      function makeParticle(){
+        return {
+          x: Math.random()*w,
+          y: Math.random()*h,
+          vx: (Math.random()*2-1)*0.25,
+          vy: (Math.random()*2-1)*0.25,
+          r: Math.random()*1.2 + 0.6
+        };
+      }
+
+      let MAX_D = 160;  let DOT_A = 0.85;  let LINK_A = 0.22;
+
+      function step(){
+        ctx.clearRect(0,0,w,h);
+
+        ctx.beginPath();
+        particles.forEach(p=>{
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < -20 || p.x > w+20) p.vx *= -1;
+          if (p.y < -20 || p.y > h+20) p.vy *= -1;
+          ctx.moveTo(p.x + p.r, p.y);
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        });
+        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
+        ctx.fill();
+
+        for (let i=0;i<particles.length;i++){
+          for (let j=i+1;j<particles.length;j++){
+            const a = particles[i], b = particles[j];
+            const dx = a.x-b.x, dy = a.y-b.y;
+            const d2 = dx*dx + dy*dy;
+            if (d2 < MAX_D*MAX_D){
+              const alpha = 1 - Math.sqrt(d2)/MAX_D;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(step);
+      }
+
+      window.addEventListener('resize', resize, {passive:true});
+      resize();
+      requestAnimationFrame(step);
+    })();
+  </script>
+  
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
