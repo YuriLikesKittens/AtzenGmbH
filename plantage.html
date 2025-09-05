@@ -119,9 +119,6 @@
     }
     .delbtn:hover{background:#1f2937;color:#fff}
 
-    /* Sonstiges */
-    .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-    @media (max-width:640px){.authrow{grid-template-columns:1fr}}
     .linkbtn{display:inline-block;margin-top:6px;border:1px solid var(--stroke);border-radius:10px;
       padding:6px 10px;text-decoration:none;color:#e5e7eb}
     .linkbtn:hover{background:#111827}
@@ -168,8 +165,6 @@
     .modal .row{display:grid; gap:12px; grid-template-columns:1fr}
     .modal .actions{display:flex; gap:8px; margin-top:12px; align-items:center; flex-wrap:wrap}
     .small{font-size:12px; color:var(--muted)}
-    /* Alte Login-Karte ausblenden, da Modal genutzt wird */
-    #authCard{ display:none; }
   </style>
 </head>
 <body>
@@ -225,9 +220,7 @@
     </div>
 
     <!-- Footer -->
-    <footer>
-      Made by Alvaro SolanoHebel | 20367
-    </footer>
+    <footer>Made by Alvaro SolanoHebel | 20367</footer>
   </div>
 
   <!-- Admin-Login Modal -->
@@ -269,15 +262,12 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
-    // sichere Init
     try { firebase.initializeApp(firebaseConfig); } catch (e) { if (!/already exists/i.test(String(e))) throw e; }
     const auth = firebase.auth();
     const db   = firebase.firestore();
-
-    /* === Admin Session global (LOCAL) === */
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
 
-    /* === Modal Steuerung === */
+    /* === Admin-Modal === */
     const modal = document.getElementById('adminModal');
     const openBtn = document.getElementById('openAdminLogin');
     const closeBtn = document.getElementById('closeAdminModal');
@@ -287,15 +277,8 @@
     const btnOut  = document.getElementById('modalBtnLogout');
     const stateEl = document.getElementById('modalAuthState');
 
-    function openModal(){
-      modal.classList.add('open');
-      modal.setAttribute('aria-hidden','false');
-      setTimeout(()=>emailEl?.focus(), 50);
-    }
-    function closeModal(){
-      modal.classList.remove('open');
-      modal.setAttribute('aria-hidden','true');
-    }
+    function openModal(){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); setTimeout(()=>emailEl?.focus(),50); }
+    function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
     openBtn?.addEventListener('click', openModal);
     closeBtn?.addEventListener('click', closeModal);
     modal?.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
@@ -307,7 +290,6 @@
       btnOut.style.display = on ? 'inline-flex' : 'none';
       stateEl.textContent  = on ? `Angemeldet${user?.email?`: ${user.email}`:''}` : 'Abgemeldet';
     }
-
     btnIn.addEventListener('click', async ()=>{
       stateEl.textContent = 'Anmeldung läuft…';
       try{
@@ -322,7 +304,6 @@
       try{ await auth.signOut(); stateEl.textContent = 'Abgemeldet.'; }
       catch(e){ stateEl.textContent = e?.message || 'Fehler beim Abmelden'; }
     });
-
     auth.onAuthStateChanged(user => setAdminUI(!!user, user));
 
     /* === Formular / UI Refs === */
@@ -333,7 +314,10 @@
     const status  = document.getElementById('status');
     const list    = document.getElementById('list');
 
-    /* === Eintrag speichern (öffentlich) === */
+    /* === Discord Webhook === */
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412053136692220054/fCZClu9u7auz5Jdvb9qvReSv44lrZO__8KWw0ZHwKZs0L83smUdJdgVmNIwIew2I2pwE";
+
+    /* === Eintrag speichern (öffentlich) + Discord senden === */
     btnSave.onclick = async () => {
       status.textContent = "Speichere…";
       try {
@@ -345,16 +329,29 @@
           status.textContent = "Bitte Name und ID ausfüllen.";
           return;
         }
+        if (proofUrl && !(proofUrl.startsWith("http://") || proofUrl.startsWith("https://"))) {
+          status.textContent = "Bitte gültige URL (http/https).";
+          return;
+        }
+
         const payload = {
           name, id, proofUrl,
           ts: new Date().toISOString(),
           serverTs: firebase.firestore.FieldValue.serverTimestamp()
         };
+
+        // 1) Firestore
         await db.collection('plantageLogs').add(payload);
 
+        // 2) Discord senden (ohne Speichervorgang zu blockieren)
+        try { await sendDiscordPlantage(payload); }
+        catch(e){ console.warn("Discord Webhook Fehler:", e); }
+
+        // UI reset
         nameInput.value=""; idInput.value=""; proofUrlInput.value="";
-        status.textContent="Gespeichert.";
-        setTimeout(()=>status.textContent="",1500);
+        status.textContent="Gespeichert & an Discord gesendet.";
+        setTimeout(()=>status.textContent="",2000);
+
       } catch(e){
         console.error(e);
         status.textContent = "Fehler: " + (e.message || e);
@@ -407,10 +404,84 @@
       return el;
     }
 
+    /* === Discord Embed Sender === */
+    async function sendDiscordPlantage({name, id, proofUrl, ts}){
+      const isImg = isImageUrl(proofUrl||"");
+      const nowIso = new Date(ts || Date.now()).toISOString();
+
+      // Schöner Titel & Beschreibung
+      const title = "🌱 Neuer Plantage-Eintrag";
+      const description =
+        `**Name:** ${escapeMd(name||"—")}\n`+
+        `**ID:** \`${escapeMd(id||"—")}\`\n`+
+        (proofUrl ? `**Proof:** ${proofUrl}` : "*Kein Proof angegeben*");
+
+      const embed = {
+        title,
+        description,
+        color: 0x06b6d4,                // Türkis
+        timestamp: nowIso,
+        author: {
+          name: "MS-13 · Plantage System",
+          icon_url: "https://i.imgur.com/N7W2wfd.png"
+        },
+        thumbnail: isImg ? { url: proofUrl } : undefined,
+        image: (isImg ? { url: proofUrl } : undefined),
+        footer: {
+          text: "Automatische Benachrichtigung • MS Auszahlungen",
+          icon_url: "https://i.imgur.com/N7W2wfd.png"
+        },
+        fields: [
+          { name: "Status", value: "Erfolgreich gespeichert ✅", inline: true },
+          { name: "Zeit",   value: new Date().toLocaleString('de-DE'), inline: true }
+        ]
+      };
+
+      const body = {
+        username: "MS-Plantage System",
+        avatar_url: "https://i.imgur.com/N7W2wfd.png",
+        allowed_mentions: { parse: [] }, // niemanden auto-mentionen
+        embeds: [embed]
+      };
+
+      // 1) normaler POST
+      let ok = false;
+      try{
+        const r = await fetch(DISCORD_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        ok = r.ok || r.status === 204;
+      }catch(e){
+        console.warn("Webhook POST error:", e);
+      }
+
+      // 2) Fallback (no-cors) – „fire and forget“
+      if(!ok){
+        try{
+          await fetch(DISCORD_WEBHOOK, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+        }catch(e){
+          console.warn("Webhook no-cors fallback error:", e);
+        }
+      }
+    }
+
     /* === Helpers === */
     function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
     function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
     function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
+    function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname); }catch{ return false; } }
+
+    // Discord-Markdown Escaping für Felder
+    function escapeMd(s){
+      return String(s).replace(/([*_`~>|\\])/g, "\\$1");
+    }
   </script>
 
   <script>
