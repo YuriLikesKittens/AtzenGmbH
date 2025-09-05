@@ -34,6 +34,7 @@
       padding:24px 16px 40px;
     }
 
+    /* Hintergrund */
     .net-bg{position:fixed; inset:0; pointer-events:none; z-index:0}
     .net-bg canvas{width:100%; height:100%; display:block}
     .grid-bg{position:fixed; inset:0; pointer-events:none; opacity:.35; mix-blend-mode:screen;
@@ -97,28 +98,6 @@
     .logBody{font-size:14px}
     .meta{color:var(--muted);font-size:12px;margin-top:6px}
 
-    .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-    @media (max-width:640px){.authrow{grid-template-columns:1fr}}
-    .linkbtn{display:inline-block;margin-top:6px;border:1px solid var(--stroke);border-radius:10px;
-      padding:6px 10px;text-decoration:none;color:#e5e7eb}
-    .linkbtn:hover{background:#111827}
-    .public-note{color:var(--muted);font-size:12px;margin-top:6px}
-
-    footer{margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
-      background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      color: transparent;
-      animation: rgbMove 6s linear infinite;
-      background-size: 300% 100%;
-    }
-    @keyframes rgbMove {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
     /* --- Popup (Overlay) --- */
     #adminPopup{
       display:none; position:fixed; inset:0; z-index:999;
@@ -134,6 +113,7 @@
   </style>
 </head>
 <body>
+  <!-- EINMALIGER Hintergrund -->
   <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
   <div class="grid-bg" aria-hidden="true"></div>
 
@@ -170,12 +150,14 @@
       </div>
     </div>
 
+    <!-- Übersicht -->
     <div class="card">
       <h2>Übersicht</h2>
       <img src="https://i.imgur.com/4x2R4SP.png" alt="Plantage" class="plantage-img">
       <p><b>Plantage Nr.:</b> <span id="plantageNummer">62</span></p>
     </div>
 
+    <!-- Eingabe -->
     <div class="card">
       <h2>Neuen Eintrag hinzufügen</h2>
       <div class="grid" style="margin-bottom:12px">
@@ -200,63 +182,13 @@
       </div>
     </div>
 
+    <!-- Logs -->
     <div class="card">
       <h2>Logs</h2>
       <div id="list" class="list"></div>
     </div>
-
-  <!-- Partikel-Netz -->
-  <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
-  <!-- Holo-Grid -->
-  <div class="grid-bg" aria-hidden="true"></div>
-
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand-row">
-        <div class="site-title">DE01 · Familie MS-13</div>
-      </div>
-    </div>
-
-    <!-- HERO -->
-    <section class="hero" data-tilt>
-      <img src="https://i.imgur.com/N7W2wfd.png" alt="DE01 · Familie MS-13" loading="lazy">
-      <div class="hero-content">
-        <div class="brand">
-          <div>
-            <h1 class="title"></h1>
-            <p class="subtitle"></p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Karten -->
-    <div class="grid" id="grid">
-      <a class="card linkcard" href="auszahlung.html" data-tilt>
-        <h2>Auszahlungen - &amp; Einzahlungen</h2>
-        <p>Hier findet Ihr eure Auszahlungen und das aktuelle Guthaben.</p>
-        <div class="actions"><span class="btn">Zur Übersicht</span></div>
-      </a>
-
-      <a class="card linkcard" href="plantage.html" data-tilt>
-        <h2>Plantage-Log</h2>
-        <p>Hier könnt ihr Plantage-LOG abschicken.</p>
-        <div class="actions"><span class="btn">Zum Plantage-Log</span></div>
-      </a>
-
-      <a class="card linkcard" href="event_log.html" data-tilt>
-        <h2>Event-Log</h2>
-        <p>Events können hier eingesendet werden und werden im Discord automatisch gepostet.</p>
-        <div class="actions"><span class="btn">Zum Event-Log</span></div>
-      </a>
-
-      <a class="card linkcard" href="admin_sync.html" data-tilt>
-        <h2>Leaderschaft Panel</h2>
-        <p>Hier verwaltet die Leaderschaft eure Auszahlungen und euer aktuelles Guthaben.</p>
-        <div class="actions"><span class="btn">Zum Admin-Login</span></div>
-      </a>
-    </div>
-
+  </div>
+  
 <footer style="
   margin-top:24px;
   text-align:center;
@@ -273,135 +205,12 @@
 ">
   Made by Alvaro SolanoHebel | 20367
 </footer>
-
-<style>
-@keyframes rgbMove {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-</style>
-
-  <script>
-    /* Accent-Fix (optional) */
-    (function(){
-      const ACCENTS = ["#7c3aed", "#06b6d4", "#22c55e", "#f97316", "#e11d48"];
-      const swatch = document.getElementById('swatch');
-      const btn = document.getElementById('accentBtn');
-      let idx = Number(localStorage.getItem('msv_accent_idx') || 0) % ACCENTS.length;
-      function apply(){
-        const c = ACCENTS[idx % ACCENTS.length];
-        document.documentElement.style.setProperty('--accent', c);
-        if (swatch) swatch.style.background = c;
-        localStorage.setItem('msv_accent_idx', idx);
-      }
-      if (btn) btn.addEventListener('click', ()=>{ idx++; apply(); });
-      apply();
-    })();
-
-    /* 3D tilt + Mouse-Light */
-    const tiltEls = document.querySelectorAll('[data-tilt]');
-    const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
-    tiltEls.forEach(el=>{
-      let raf=null;
-      el.addEventListener('mousemove',e=>{
-        const r=el.getBoundingClientRect();
-        const x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
-        const rx=clamp((.5-y)*8,-8,8), ry=clamp((x-.5)*12,-12,12);
-        el.style.setProperty('--mx', `${x*100}%`);
-        el.style.setProperty('--my', `${y*100}%`);
-        if(raf) cancelAnimationFrame(raf);
-        raf=requestAnimationFrame(()=>{
-          el.style.transform=`perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-        });
-      });
-      el.addEventListener('mouseleave',()=>{
-        if(raf) cancelAnimationFrame(raf);
-        el.style.transform='perspective(900px) rotateX(0deg) rotateY(0deg)';
-        el.style.setProperty('--mx','50%'); el.style.setProperty('--my','50%');
-      });
-    });
-
-    /* Partikel-Netz (Canvas) – fix hell */
-    (function(){
-      const canvas = document.getElementById('netCanvas');
-      const ctx = canvas.getContext('2d');
-      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      let particles = [];
-      let w = 0, h = 0;
-
-      function resize(){
-        w = canvas.clientWidth;
-        h = canvas.clientHeight;
-        canvas.width = Math.floor(w * DPR);
-        canvas.height = Math.floor(h * DPR);
-        ctx.setTransform(DPR,0,0,DPR,0,0);
-
-        const targetCount = Math.round((w*h)/9000);
-        const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
-        const min = 50;
-        const count = Math.max(min, Math.min(max, targetCount));
-
-        if (particles.length > count) particles.length = count;
-        while (particles.length < count){ particles.push(makeParticle()); }
-      }
-
-      function makeParticle(){
-        return {
-          x: Math.random()*w,
-          y: Math.random()*h,
-          vx: (Math.random()*2-1)*0.25,
-          vy: (Math.random()*2-1)*0.25,
-          r: Math.random()*1.2 + 0.6
-        };
-      }
-
-      let MAX_D = 160;  let DOT_A = 0.85;  let LINK_A = 0.22;
-
-      function step(){
-        ctx.clearRect(0,0,w,h);
-
-        ctx.beginPath();
-        particles.forEach(p=>{
-          p.x += p.vx; p.y += p.vy;
-          if (p.x < -20 || p.x > w+20) p.vx *= -1;
-          if (p.y < -20 || p.y > h+20) p.vy *= -1;
-          ctx.moveTo(p.x + p.r, p.y);
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        });
-        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
-        ctx.fill();
-
-        for (let i=0;i<particles.length;i++){
-          for (let j=i+1;j<particles.length;j++){
-            const a = particles[i], b = particles[j];
-            const dx = a.x-b.x, dy = a.y-b.y;
-            const d2 = dx*dx + dy*dy;
-            if (d2 < MAX_D*MAX_D){
-              const alpha = 1 - Math.sqrt(d2)/MAX_D;
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-          }
-        }
-        requestAnimationFrame(step);
-      }
-
-      window.addEventListener('resize', resize, {passive:true});
-      resize();
-      requestAnimationFrame(step);
-    })();
-  </script>
-  
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
+    /* === Firebase === */
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -411,29 +220,31 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
-    try { firebase.initializeApp(firebaseConfig); } 
+    try { firebase.initializeApp(firebaseConfig); }
     catch(e){ if(!/already exists/i.test(String(e))) throw e; }
     const auth = firebase.auth();
-    const db = firebase.firestore();
+    const db   = firebase.firestore();
 
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412053136692220054/fCZClu9u7auz5jDvb9qvReSv44lrZO__8KWw0ZHwKZs0L83smUdJdgVmNIwIew2I2pwE"; // 👈 ggf. ersetzen
+    /* === Discord Webhook === */
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412053136692220054/fCZClu9u7auz5jDvb9qvReSv44lrZO__8KWw0ZHwKZs0L83smUdJdgVmNIwIew2I2pwE";
 
-    const nameInput = document.getElementById('name');
-    const idInput = document.getElementById('mitgliedId');
+    /* === UI Refs === */
+    const nameInput   = document.getElementById('name');
+    const idInput     = document.getElementById('mitgliedId');
     const proofUrlInput = document.getElementById('proofUrl');
-    const btnSave = document.getElementById('btnSave');
-    const status = document.getElementById('status');
-    const list = document.getElementById('list');
+    const btnSave     = document.getElementById('btnSave');
+    const status      = document.getElementById('status');
+    const list        = document.getElementById('list');
 
     // Popup UI
     const btnAdminLogin = document.getElementById('btnAdminLogin');
-    const adminPopup = document.getElementById('adminPopup');
+    const adminPopup    = document.getElementById('adminPopup');
     const btnClosePopup = document.getElementById('btnClosePopup');
-    const email = document.getElementById('email');
-    const password = document.getElementById('password');
-    const btnLogin = document.getElementById('btnLogin');
-    const btnLogout = document.getElementById('btnLogout');
-    const authState = document.getElementById('authState');
+    const email         = document.getElementById('email');
+    const password      = document.getElementById('password');
+    const btnLogin      = document.getElementById('btnLogin');
+    const btnLogout     = document.getElementById('btnLogout');
+    const authState     = document.getElementById('authState');
 
     btnAdminLogin.addEventListener('click', ()=>{ adminPopup.style.display = 'flex'; });
     btnClosePopup.addEventListener('click', ()=>{ adminPopup.style.display = 'none'; });
@@ -441,11 +252,10 @@
 
     function setAdminUI(on){
       document.body.classList.toggle('admin', !!on);
-      if(btnLogin) btnLogin.style.display = on ? 'none' : 'inline-block';
+      if(btnLogin)  btnLogin.style.display  = on ? 'none' : 'inline-block';
       if(btnLogout) btnLogout.style.display = on ? 'inline-block' : 'none';
-      if(authState) authState.textContent = on ? 'Angemeldet' : 'Abgemeldet';
+      if(authState) authState.textContent   = on ? 'Angemeldet' : 'Abgemeldet';
     }
-
     btnLogin?.addEventListener('click', async () => {
       authState.textContent = 'Anmeldung läuft…';
       try{
@@ -457,10 +267,9 @@
       }
     });
     btnLogout?.addEventListener('click', async () => { await auth.signOut(); });
-
     auth.onAuthStateChanged(user => setAdminUI(!!user));
 
-    // Formular speichern + Discord-WebHook
+    /* === Speichern + Discord senden === */
     btnSave.onclick = async () => {
       status.textContent = "Speichere…";
       try {
@@ -469,7 +278,7 @@
         const proofUrl = (proofUrlInput.value||"").trim();
 
         if(!name || !id){
-          status.textContent = "Bitte Name und ID ausfüllen.";
+          status.textContent = "Bitte Name und ID ausfühlen.";
           return;
         }
 
@@ -514,7 +323,6 @@
         });
         ok = r.ok || r.status === 204;
       }catch{}
-
       if(!ok){
         try{
           await fetch(DISCORD_WEBHOOK, {
@@ -529,6 +337,7 @@
 
     function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif)$/i.test(new URL(u).pathname); }catch{return false;} }
 
+    /* === Live-List === */
     db.collection('plantageLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
       list.innerHTML = "";
       snap.forEach(doc=>{
@@ -539,12 +348,87 @@
           <div class="logHeader">${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</div>
           <div class="logBody">
             <b>${escapeHTML(d.name||"")}</b> (${escapeHTML(d.id||"")})<br>
-            ${d.proofUrl ? `<a href="${escapeAttr(d.proofUrl)}" target="_blank">Proof ansehen</a>` : `<i>Kein Proof</i>`}
+            ${d.proofUrl ? `<a href="${escapeAttr(d.proofUrl)}" target="_blank" rel="noopener">Proof ansehen</a>` : `<i>Kein Proof</i>`}
           </div>`;
         list.appendChild(el);
       });
     });
 
+    /* === Hintergrund-Particles === */
+    (function(){
+      const canvas = document.getElementById('netCanvas');
+      const ctx = canvas.getContext('2d');
+      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      let particles = [];
+      let w = 0, h = 0;
+
+      function resize(){
+        w = canvas.clientWidth;
+        h = canvas.clientHeight;
+        canvas.width = Math.floor(w * DPR);
+        canvas.height = Math.floor(h * DPR);
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+
+        const targetCount = Math.round((w*h)/9000);
+        const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
+        const min = 50;
+        const count = Math.max(min, Math.min(max, targetCount));
+
+        if (particles.length > count) particles.length = count;
+        while (particles.length < count){ particles.push(makeParticle()); }
+      }
+
+      function makeParticle(){
+        return {
+          x: Math.random()*w,
+          y: Math.random()*h,
+          vx: (Math.random()*2-1)*0.25,
+          vy: (Math.random()*2-1)*0.25,
+          r: Math.random()*1.2 + 0.6
+        };
+      }
+
+      let MAX_D = 160, DOT_A = 0.85, LINK_A = 0.22;
+
+      function step(){
+        ctx.clearRect(0,0,w,h);
+
+        ctx.beginPath();
+        particles.forEach(p=>{
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < -20 || p.x > w+20) p.vx *= -1;
+          if (p.y < -20 || p.y > h+20) p.vy *= -1;
+          ctx.moveTo(p.x + p.r, p.y);
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        });
+        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
+        ctx.fill();
+
+        for (let i=0;i<particles.length;i++){
+          for (let j=i+1;j<particles.length;j++){
+            const a = particles[i], b = particles[j];
+            const dx = a.x-b.x, dy = a.y-b.y;
+            const d2 = dx*dx + dy*dy;
+            if (d2 < MAX_D*MAX_D){
+              const alpha = 1 - Math.sqrt(d2)/MAX_D;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(step);
+      }
+
+      window.addEventListener('resize', resize, {passive:true});
+      resize();
+      requestAnimationFrame(step);
+    })();
+
+    /* === Helpers === */
     function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
     function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
     function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
