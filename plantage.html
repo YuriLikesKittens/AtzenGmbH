@@ -234,22 +234,145 @@
 ">
   Made by Alvaro SolanoHebel | 20367
 </footer>
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script>
-        /* === Firebase === */
-    const firebaseConfig = {
-      apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
-      authDomain: "msauszahlung.firebaseapp.com",
-      projectId: "msauszahlung",
-      storageBucket: "msauszahlung.appspot.com",
-      messagingSenderId: "1033439801595",
-      appId: "1:1033439801595:web:4251badc1447ed8079805e",
-      measurementId: "G-FWXF3GM505"
-    };
-  </script>
+  
+    
+    <!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  /* === Firebase Config === */
+  const firebaseConfig = {
+    apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
+    authDomain: "msauszahlung.firebaseapp.com",
+    projectId: "msauszahlung",
+    storageBucket: "msauszahlung.appspot.com",
+    messagingSenderId: "1033439801595",
+    appId: "1:1033439801595:web:4251badc1447ed8079805e",
+    measurementId: "G-FWXF3GM505"
+  };
+
+  // sichere Init (Fehler „already exists“ abfangen)
+  try { firebase.initializeApp(firebaseConfig); }
+  catch (e) { if (!/already exists/i.test(String(e))) throw e; }
+
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  /* === Admin Login nur zum Löschen === */
+  const email = document.getElementById('email');
+  const password = document.getElementById('password');
+  const btnLogin = document.getElementById('btnLogin');
+  const btnLogout = document.getElementById('btnLogout');
+  const authState = document.getElementById('authState');
+  let isAdmin = false;
+
+  function setAdminUI(on){
+    isAdmin = !!on;
+    document.body.classList.toggle('admin', !!on);
+    btnLogin.style.display = on ? 'none' : 'inline-block';
+    btnLogout.style.display = on ? 'inline-block' : 'none';
+    authState.textContent = on ? 'Angemeldet' : 'Abgemeldet';
+  }
+
+  btnLogin.onclick = async () => {
+    authState.textContent = 'Anmeldung läuft…';
+    try{
+      await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+      await auth.signInWithEmailAndPassword(email.value, password.value);
+      setAdminUI(true);
+    }catch(e){
+      authState.textContent = e?.message || 'Login fehlgeschlagen';
+    }
+  };
+  btnLogout.onclick = async () => { await auth.signOut(); };
+  auth.onAuthStateChanged(user => setAdminUI(!!user));
+
+  /* === Formular / UI Refs === */
+  const nameInput = document.getElementById('name');
+  const idInput = document.getElementById('mitgliedId');
+  const proofUrlInput = document.getElementById('proofUrl');
+  const btnSave = document.getElementById('btnSave');
+  const status = document.getElementById('status');
+  const list = document.getElementById('list');
+
+  /* === Eintrag speichern (öffentlich) === */
+  btnSave.onclick = async () => {
+    status.textContent = "Speichere…";
+    try {
+      const name = (nameInput.value||"").trim();
+      const id   = (idInput.value||"").trim();
+      const proofUrl = (proofUrlInput.value||"").trim();
+
+      if(!name || !id){
+        status.textContent = "Bitte Name und ID ausfüllen.";
+        return;
+      }
+
+      const payload = {
+        name, id, proofUrl,
+        ts: new Date().toISOString(),
+        serverTs: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await db.collection('plantageLogs').add(payload);
+
+      nameInput.value=""; idInput.value=""; proofUrlInput.value="";
+      status.textContent="Gespeichert.";
+      setTimeout(()=>status.textContent="",1500);
+    } catch(e){
+      console.error(e);
+      status.textContent = "Fehler: " + (e.message || e);
+    }
+  };
+
+  /* === Logs live anzeigen === */
+  db.collection('plantageLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
+    list.innerHTML = "";
+    snap.forEach(doc=>{
+      const d = doc.data();
+      list.appendChild(renderItem(doc.id, d));
+    });
+  });
+
+  function renderItem(id, d){
+    const el = document.createElement('div');
+    el.className = 'item';
+
+    const header = document.createElement('div');
+    header.className = 'logHeader';
+    header.textContent = formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts);
+
+    const body = document.createElement('div');
+    body.className = 'logBody';
+    body.innerHTML = `
+      <b>${escapeHTML(d.name||"")}</b> (${escapeHTML(d.id||"")})<br>
+      ${d.proofUrl ? `<a href="${escapeAttr(d.proofUrl)}" target="_blank" rel="noopener">Proof ansehen</a>` : `<i>Kein Proof</i>`}
+    `;
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'delbtn admin-only';
+    delBtn.title = 'Log löschen';
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', async () => {
+      if(!isAdmin){ alert('Nicht angemeldet.'); return; }
+      if(confirm('Diesen Plantage-Log wirklich löschen?')){
+        try{ await db.collection('plantageLogs').doc(id).delete(); }
+        catch(e){ alert('Löschen fehlgeschlagen: ' + (e?.message || e)); }
+      }
+    });
+
+    el.appendChild(header);
+    el.appendChild(body);
+    el.appendChild(delBtn);
+    return el;
+  }
+
+  /* === Helpers === */
+  function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
+  function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
+  function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
+</script>
+
 
   <script>
     /* Partikel-Netz (Canvas) – fix hell */
