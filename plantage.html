@@ -34,7 +34,6 @@
       padding:24px 16px 40px;
     }
 
-    /* Hintergrund-Effekte */
     .net-bg{position:fixed; inset:0; pointer-events:none; z-index:0}
     .net-bg canvas{width:100%; height:100%; display:block}
     .grid-bg{position:fixed; inset:0; pointer-events:none; opacity:.35; mix-blend-mode:screen;
@@ -50,14 +49,11 @@
     @keyframes floatGrid { 0% { background-position:0 0, 0 0 } 100% { background-position:0 40px, 40px 0 } }
 
     .wrap{max-width:1100px;margin:0 auto;position:relative;z-index:1}
-
-    /* Topbar */
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
     h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800;font-family: Orbitron, Inter}
 
-    /* Buttons */
     a.btn, button.btn{
-      display:inline-flex; align-items:center; justify-content:center;
+      display:inline-block;
       padding:10px 14px;
       border-radius:12px;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -72,7 +68,6 @@
     .btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 14px 36px rgba(124,58,237,.30)}
     .btnrow{display:flex;gap:8px;flex-wrap:wrap}
 
-    /* Cards */
     .card{
       position:relative; border-radius:var(--radius); padding:20px;
       background:
@@ -84,8 +79,6 @@
       margin-bottom:18px;
     }
     h2{margin:0 0 12px;font-size:18px}
-
-    /* Inputs */
     label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
     input{
       width:100%;padding:12px 14px;border-radius:12px;
@@ -95,36 +88,22 @@
     input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(124,58,237,.2)}
 
     .plantage-img{width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin-bottom:8px}
-
-    /* Grid Layout */
     .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
     @media (max-width:980px){.grid{grid-template-columns:1fr}}
 
-    /* Liste */
     .list{display:grid;grid-template-columns:1fr;gap:12px}
-    .item{
-      position:relative;border:1px solid var(--stroke);border-radius:14px;
-      padding:14px;background:rgba(255,255,255,.03)
-    }
+    .item{position:relative;border:1px solid var(--stroke);border-radius:14px;padding:14px;background:rgba(255,255,255,.03)}
     .logHeader{font-size:15px;font-weight:800;margin:0 0 6px;color:#e5e7eb}
     .logBody{font-size:14px}
     .meta{color:var(--muted);font-size:12px;margin-top:6px}
 
-    /* Admin sichtbar */
-    .admin-only{display:none}
-    body.admin .admin-only{display:block}
-    .delbtn{
-      position:absolute;top:8px;right:8px;background:#0b1020;border:1px solid var(--stroke);
-      color:#fca5a5;width:32px;height:32px;border-radius:999px;cursor:pointer
-    }
-    .delbtn:hover{background:#1f2937;color:#fff}
-
+    .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    @media (max-width:640px){.authrow{grid-template-columns:1fr}}
     .linkbtn{display:inline-block;margin-top:6px;border:1px solid var(--stroke);border-radius:10px;
       padding:6px 10px;text-decoration:none;color:#e5e7eb}
     .linkbtn:hover{background:#111827}
     .public-note{color:var(--muted);font-size:12px;margin-top:6px}
 
-    /* Footer */
     footer{margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
       background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
       -webkit-background-clip: text;
@@ -139,36 +118,9 @@
       50%  { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-
-    /* ===== Modal (Admin Login) ===== */
-    .modal{
-      position:fixed; inset:0; display:none; place-items:center;
-      background:rgba(0,0,0,.5); z-index:50; padding:16px;
-    }
-    .modal.open{ display:grid; }
-    .modal-card{
-      width:min(480px, 100%); border-radius:20px; padding:20px;
-      background:
-        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.08), rgba(255,255,255,.04)),
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--stroke);
-      box-shadow:0 24px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05);
-      backdrop-filter: blur(10px) saturate(1.2);
-      position:relative;
-    }
-    .modal h3{margin:0 0 10px; font-size:20px}
-    .modal .close{
-      position:absolute; top:10px; right:10px; width:36px; height:36px;
-      border-radius:12px; border:1px solid var(--stroke);
-      background:rgba(255,255,255,.06); color:var(--text); cursor:pointer;
-    }
-    .modal .row{display:grid; gap:12px; grid-template-columns:1fr}
-    .modal .actions{display:flex; gap:8px; margin-top:12px; align-items:center; flex-wrap:wrap}
-    .small{font-size:12px; color:var(--muted)}
   </style>
 </head>
 <body>
-  <!-- Hintergrund -->
   <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
   <div class="grid-bg" aria-hidden="true"></div>
 
@@ -177,18 +129,16 @@
       <h1>Plantage-Log</h1>
       <div class="btnrow">
         <a class="btn" href="index.html">Zur Übersicht</a>
-        <button class="btn" id="openAdminLogin">Admin-Login</button>
+        <a class="btn" id="btnAdminLogin" href="admin_sync.html">Admin-Login</a>
       </div>
     </div>
 
-    <!-- Übersicht -->
     <div class="card">
       <h2>Übersicht</h2>
       <img src="https://i.imgur.com/4x2R4SP.png" alt="Plantage" class="plantage-img">
       <p><b>Plantage Nr.:</b> <span id="plantageNummer">62</span></p>
     </div>
 
-    <!-- Eingabe -->
     <div class="card">
       <h2>Neuen Eintrag hinzufügen</h2>
       <div class="grid" style="margin-bottom:12px">
@@ -208,51 +158,23 @@
       </div>
       <div style="margin-top:12px">
         <button class="btn" id="btnSave">Eintragen</button>
-        <p class="public-note">Öffentlich: Jeder kann hier eintragen. (Admin-Login nur zum Löschen nötig.)</p>
+        <p class="public-note">Öffentlich: Jeder kann hier eintragen. (Löschen nur durch Admin möglich.)</p>
         <p class="meta" id="status"></p>
       </div>
     </div>
 
-    <!-- Logs -->
     <div class="card">
       <h2>Logs</h2>
       <div id="list" class="list"></div>
     </div>
 
-    <!-- Footer -->
     <footer>Made by Alvaro SolanoHebel | 20367</footer>
-  </div>
-
-  <!-- Admin-Login Modal -->
-  <div class="modal" id="adminModal" aria-hidden="true" role="dialog" aria-labelledby="adminModalTitle">
-    <div class="modal-card">
-      <button class="close" id="closeAdminModal" aria-label="Schließen">✕</button>
-      <h3 id="adminModalTitle">Admin-Login</h3>
-      <div class="row">
-        <div>
-          <label>E-Mail</label>
-          <input type="email" id="modalEmail" placeholder="admin@beispiel.de" />
-        </div>
-        <div>
-          <label>Passwort</label>
-          <input type="password" id="modalPassword" placeholder="********" />
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn" id="modalBtnLogin">Anmelden</button>
-        <button class="btn" id="modalBtnLogout" style="display:none">Abmelden</button>
-        <span class="small" id="modalAuthState"></span>
-      </div>
-      <p class="small" style="margin-top:6px">Einmal angemeldet → auf allen Seiten als Admin erkannt (bis Abmeldung).</p>
-    </div>
   </div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-    /* === Firebase === */
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -262,62 +184,19 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
-    try { firebase.initializeApp(firebaseConfig); } catch (e) { if (!/already exists/i.test(String(e))) throw e; }
-    const auth = firebase.auth();
-    const db   = firebase.firestore();
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+    try { firebase.initializeApp(firebaseConfig); } 
+    catch(e){ if(!/already exists/i.test(String(e))) throw e; }
+    const db = firebase.firestore();
 
-    /* === Admin-Modal === */
-    const modal = document.getElementById('adminModal');
-    const openBtn = document.getElementById('openAdminLogin');
-    const closeBtn = document.getElementById('closeAdminModal');
-    const emailEl = document.getElementById('modalEmail');
-    const passEl  = document.getElementById('modalPassword');
-    const btnIn   = document.getElementById('modalBtnLogin');
-    const btnOut  = document.getElementById('modalBtnLogout');
-    const stateEl = document.getElementById('modalAuthState');
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412053136692220054/fCZClu9u7auz5jDvb9qvReSv44lrZO__8KWw0ZHwKZs0L83smUdJdgVmNIwIew2I2pwE"; // 👈 ersetzen
 
-    function openModal(){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); setTimeout(()=>emailEl?.focus(),50); }
-    function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
-    openBtn?.addEventListener('click', openModal);
-    closeBtn?.addEventListener('click', closeModal);
-    modal?.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
-    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
-
-    function setAdminUI(on, user){
-      document.body.classList.toggle('admin', !!on);
-      btnIn.style.display  = on ? 'none' : 'inline-flex';
-      btnOut.style.display = on ? 'inline-flex' : 'none';
-      stateEl.textContent  = on ? `Angemeldet${user?.email?`: ${user.email}`:''}` : 'Abgemeldet';
-    }
-    btnIn.addEventListener('click', async ()=>{
-      stateEl.textContent = 'Anmeldung läuft…';
-      try{
-        await auth.signInWithEmailAndPassword(emailEl.value, passEl.value);
-        stateEl.textContent = 'Erfolgreich angemeldet.';
-        setTimeout(closeModal, 400);
-      }catch(e){
-        stateEl.textContent = e?.message || 'Login fehlgeschlagen';
-      }
-    });
-    btnOut.addEventListener('click', async ()=>{
-      try{ await auth.signOut(); stateEl.textContent = 'Abgemeldet.'; }
-      catch(e){ stateEl.textContent = e?.message || 'Fehler beim Abmelden'; }
-    });
-    auth.onAuthStateChanged(user => setAdminUI(!!user, user));
-
-    /* === Formular / UI Refs === */
     const nameInput = document.getElementById('name');
-    const idInput   = document.getElementById('mitgliedId');
+    const idInput = document.getElementById('mitgliedId');
     const proofUrlInput = document.getElementById('proofUrl');
     const btnSave = document.getElementById('btnSave');
-    const status  = document.getElementById('status');
-    const list    = document.getElementById('list');
+    const status = document.getElementById('status');
+    const list = document.getElementById('list');
 
-    /* === Discord Webhook === */
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1412053136692220054/fCZClu9u7auz5Jdvb9qvReSv44lrZO__8KWw0ZHwKZs0L83smUdJdgVmNIwIew2I2pwE";
-
-    /* === Eintrag speichern (öffentlich) + Discord senden === */
     btnSave.onclick = async () => {
       status.textContent = "Speichere…";
       try {
@@ -329,25 +208,12 @@
           status.textContent = "Bitte Name und ID ausfüllen.";
           return;
         }
-        if (proofUrl && !(proofUrl.startsWith("http://") || proofUrl.startsWith("https://"))) {
-          status.textContent = "Bitte gültige URL (http/https).";
-          return;
-        }
 
-        const payload = {
-          name, id, proofUrl,
-          ts: new Date().toISOString(),
-          serverTs: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        // 1) Firestore
+        const payload = { name, id, proofUrl, ts: new Date().toISOString(), serverTs: firebase.firestore.FieldValue.serverTimestamp() };
         await db.collection('plantageLogs').add(payload);
 
-        // 2) Discord senden (ohne Speichervorgang zu blockieren)
-        try { await sendDiscordPlantage(payload); }
-        catch(e){ console.warn("Discord Webhook Fehler:", e); }
+        try { await sendDiscordPlantage(payload); } catch(e){ console.warn("Discord Fehler:", e); }
 
-        // UI reset
         nameInput.value=""; idInput.value=""; proofUrlInput.value="";
         status.textContent="Gespeichert & an Discord gesendet.";
         setTimeout(()=>status.textContent="",2000);
@@ -358,93 +224,23 @@
       }
     };
 
-    /* === Logs live anzeigen === */
-    db.collection('plantageLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
-      list.innerHTML = "";
-      snap.forEach(doc=>{
-        const d = doc.data();
-        list.appendChild(renderItem(doc.id, d));
-      });
-    });
-
-    function renderItem(id, d){
-      const el = document.createElement('div');
-      el.className = 'item';
-
-      const header = document.createElement('div');
-      header.className = 'logHeader';
-      header.textContent = formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts);
-
-      const body = document.createElement('div');
-      body.className = 'logBody';
-      body.innerHTML = `
-        <b>${escapeHTML(d.name||"")}</b> (${escapeHTML(d.id||"")})<br>
-        ${d.proofUrl ? `<a href="${escapeAttr(d.proofUrl)}" target="_blank" rel="noopener">Proof ansehen</a>` : `<i>Kein Proof</i>`}
-      `;
-
-      // Admin-Löschbutton (sichtbar, wenn eingeloggt)
-      const delBtn = document.createElement('button');
-      delBtn.className = 'delbtn admin-only';
-      delBtn.title = 'Log löschen';
-      delBtn.textContent = '✕';
-      delBtn.addEventListener('click', async () => {
-        if(!auth.currentUser){ alert('Nicht angemeldet.'); return; }
-        const ok = confirm('Diesen Plantage-Log wirklich löschen?');
-        if(!ok) return;
-        try{
-          await db.collection('plantageLogs').doc(id).delete();
-        }catch(e){
-          alert('Löschen fehlgeschlagen: ' + (e?.message || e));
-        }
-      });
-
-      el.appendChild(header);
-      el.appendChild(body);
-      el.appendChild(delBtn);
-      return el;
-    }
-
-    /* === Discord Embed Sender === */
+    /* === Discord: Plantage-Embed === */
     async function sendDiscordPlantage({name, id, proofUrl, ts}){
       const isImg = isImageUrl(proofUrl||"");
-      const nowIso = new Date(ts || Date.now()).toISOString();
-
-      // Schöner Titel & Beschreibung
-      const title = "🌱 Neuer Plantage-Eintrag";
-      const description =
-        `**Name:** ${escapeMd(name||"—")}\n`+
-        `**ID:** \`${escapeMd(id||"—")}\`\n`+
-        (proofUrl ? `**Proof:** ${proofUrl}` : "*Kein Proof angegeben*");
-
       const embed = {
-        title,
-        description,
-        color: 0x06b6d4,                // Türkis
-        timestamp: nowIso,
-        author: {
-          name: "MS-13 · Plantage System",
-          icon_url: "https://i.imgur.com/N7W2wfd.png"
-        },
-        thumbnail: isImg ? { url: proofUrl } : undefined,
-        image: (isImg ? { url: proofUrl } : undefined),
-        footer: {
-          text: "Automatische Benachrichtigung • MS Auszahlungen",
-          icon_url: "https://i.imgur.com/N7W2wfd.png"
-        },
+        title: "🌱 Neuer Plantage-Log",
+        color: 0x06b6d4,
+        timestamp: new Date(ts || Date.now()).toISOString(),
         fields: [
-          { name: "Status", value: "Erfolgreich gespeichert ✅", inline: true },
-          { name: "Zeit",   value: new Date().toLocaleString('de-DE'), inline: true }
-        ]
+          { name: "Name", value: name || "—", inline: true },
+          { name: "ID",   value: id   || "—", inline: true },
+          ...(proofUrl ? [{ name: "Proof", value: proofUrl, inline: false }] : [])
+        ],
+        thumbnail: isImg ? { url: proofUrl } : undefined,
+        footer: { text: "MS Auszahlungen · Plantage-Log" }
       };
+      const body = { username: "MS-Plantage System", embeds: [embed] };
 
-      const body = {
-        username: "MS-Plantage System",
-        avatar_url: "https://i.imgur.com/N7W2wfd.png",
-        allowed_mentions: { parse: [] }, // niemanden auto-mentionen
-        embeds: [embed]
-      };
-
-      // 1) normaler POST
       let ok = false;
       try{
         const r = await fetch(DISCORD_WEBHOOK, {
@@ -453,11 +249,8 @@
           body: JSON.stringify(body)
         });
         ok = r.ok || r.status === 204;
-      }catch(e){
-        console.warn("Webhook POST error:", e);
-      }
+      }catch{}
 
-      // 2) Fallback (no-cors) – „fire and forget“
       if(!ok){
         try{
           await fetch(DISCORD_WEBHOOK, {
@@ -466,98 +259,31 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
           });
-        }catch(e){
-          console.warn("Webhook no-cors fallback error:", e);
-        }
+        }catch{}
       }
     }
 
-    /* === Helpers === */
+    function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif)$/i.test(new URL(u).pathname); }catch{return false;} }
+
+    db.collection('plantageLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
+      list.innerHTML = "";
+      snap.forEach(doc=>{
+        const d = doc.data();
+        const el = document.createElement('div');
+        el.className = 'item';
+        el.innerHTML = `
+          <div class="logHeader">${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</div>
+          <div class="logBody">
+            <b>${escapeHTML(d.name||"")}</b> (${escapeHTML(d.id||"")})<br>
+            ${d.proofUrl ? `<a href="${escapeAttr(d.proofUrl)}" target="_blank">Proof ansehen</a>` : `<i>Kein Proof</i>`}
+          </div>`;
+        list.appendChild(el);
+      });
+    });
+
+    function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
     function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
     function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
-    function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
-    function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname); }catch{ return false; } }
-
-    // Discord-Markdown Escaping für Felder
-    function escapeMd(s){
-      return String(s).replace(/([*_`~>|\\])/g, "\\$1");
-    }
-  </script>
-
-  <script>
-    /* Partikel-Netz (Canvas) – fix hell */
-    (function(){
-      const canvas = document.getElementById('netCanvas');
-      const ctx = canvas.getContext('2d');
-      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      let particles = [];
-      let w = 0, h = 0;
-
-      function resize(){
-        w = canvas.clientWidth;
-        h = canvas.clientHeight;
-        canvas.width = Math.floor(w * DPR);
-        canvas.height = Math.floor(h * DPR);
-        ctx.setTransform(DPR,0,0,DPR,0,0);
-
-        const targetCount = Math.round((w*h)/9000);
-        const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
-        const min = 50;
-        const count = Math.max(min, Math.min(max, targetCount));
-
-        if (particles.length > count) particles.length = count;
-        while (particles.length < count){ particles.push(makeParticle()); }
-      }
-
-      function makeParticle(){
-        return {
-          x: Math.random()*w,
-          y: Math.random()*h,
-          vx: (Math.random()*2-1)*0.25,
-          vy: (Math.random()*2-1)*0.25,
-          r: Math.random()*1.2 + 0.6
-        };
-      }
-
-      let MAX_D = 160;  let DOT_A = 0.85;  let LINK_A = 0.22;
-
-      function step(){
-        ctx.clearRect(0,0,w,h);
-
-        ctx.beginPath();
-        particles.forEach(p=>{
-          p.x += p.vx; p.y += p.vy;
-          if (p.x < -20 || p.x > w+20) p.vx *= -1;
-          if (p.y < -20 || p.y > h+20) p.vy *= -1;
-          ctx.moveTo(p.x + p.r, p.y);
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        });
-        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
-        ctx.fill();
-
-        for (let i=0;i<particles.length;i++){
-          for (let j=i+1;j<particles.length;j++){
-            const a = particles[i], b = particles[j];
-            const dx = a.x-b.x, dy = a.y-b.y;
-            const d2 = dx*dx + dy*dy;
-            if (d2 < MAX_D*MAX_D){
-              const alpha = 1 - Math.sqrt(d2)/MAX_D;
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-          }
-        }
-        requestAnimationFrame(step);
-      }
-
-      window.addEventListener('resize', resize, {passive:true});
-      resize();
-      requestAnimationFrame(step);
-    })();
   </script>
 </body>
 </html>
