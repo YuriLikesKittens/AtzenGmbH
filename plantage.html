@@ -57,7 +57,7 @@
 
     /* Buttons */
     a.btn, button.btn{
-      display:inline-block;
+      display:inline-flex; align-items:center; justify-content:center;
       padding:10px 14px;
       border-radius:12px;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -142,6 +142,34 @@
       50%  { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
+
+    /* ===== Modal (Admin Login) ===== */
+    .modal{
+      position:fixed; inset:0; display:none; place-items:center;
+      background:rgba(0,0,0,.5); z-index:50; padding:16px;
+    }
+    .modal.open{ display:grid; }
+    .modal-card{
+      width:min(480px, 100%); border-radius:20px; padding:20px;
+      background:
+        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.08), rgba(255,255,255,.04)),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--stroke);
+      box-shadow:0 24px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05);
+      backdrop-filter: blur(10px) saturate(1.2);
+      position:relative;
+    }
+    .modal h3{margin:0 0 10px; font-size:20px}
+    .modal .close{
+      position:absolute; top:10px; right:10px; width:36px; height:36px;
+      border-radius:12px; border:1px solid var(--stroke);
+      background:rgba(255,255,255,.06); color:var(--text); cursor:pointer;
+    }
+    .modal .row{display:grid; gap:12px; grid-template-columns:1fr}
+    .modal .actions{display:flex; gap:8px; margin-top:12px; align-items:center; flex-wrap:wrap}
+    .small{font-size:12px; color:var(--muted)}
+    /* Alte Login-Karte ausblenden, da Modal genutzt wird */
+    #authCard{ display:none; }
   </style>
 </head>
 <body>
@@ -154,29 +182,8 @@
       <h1>Plantage-Log</h1>
       <div class="btnrow">
         <a class="btn" href="index.html">Zur Übersicht</a>
-        <!-- Event-Log Button entfernt -->
+        <button class="btn" id="openAdminLogin">Admin-Login</button>
       </div>
-    </div>
-
-    <!-- Admin Login -->
-    <div class="card" id="authCard">
-      <h2>Admin Login (nur zum Löschen)</h2>
-      <div class="authrow">
-        <div>
-          <label>E-Mail</label>
-          <input type="email" id="email" placeholder="admin@beispiel.de" />
-        </div>
-        <div>
-          <label>Passwort</label>
-          <input type="password" id="password" placeholder="********" />
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-        <button class="btn" id="btnLogin">Anmelden</button>
-        <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
-        <span class="meta" id="authState"></span>
-      </div>
-      <p class="meta" style="margin-top:6px">Hinweis: Login wird nicht gespeichert – nach Reload wieder abgemeldet.</p>
     </div>
 
     <!-- Übersicht -->
@@ -218,22 +225,34 @@
     </div>
 
     <!-- Footer -->
-    <footer style="
-      margin-top:24px;
-      text-align:center;
-      font-size:13px;
-      padding:10px;
-      font-weight:600;
-      background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      color: transparent;
-      animation: rgbMove 6s linear infinite;
-      background-size: 300% 100%;
-    ">
+    <footer>
       Made by Alvaro SolanoHebel | 20367
     </footer>
+  </div>
+
+  <!-- Admin-Login Modal -->
+  <div class="modal" id="adminModal" aria-hidden="true" role="dialog" aria-labelledby="adminModalTitle">
+    <div class="modal-card">
+      <button class="close" id="closeAdminModal" aria-label="Schließen">✕</button>
+      <h3 id="adminModalTitle">Admin-Login</h3>
+      <div class="row">
+        <div>
+          <label>E-Mail</label>
+          <input type="email" id="modalEmail" placeholder="admin@beispiel.de" />
+        </div>
+        <div>
+          <label>Passwort</label>
+          <input type="password" id="modalPassword" placeholder="********" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="modalBtnLogin">Anmelden</button>
+        <button class="btn" id="modalBtnLogout" style="display:none">Abmelden</button>
+        <span class="small" id="modalAuthState"></span>
+      </div>
+      <p class="small" style="margin-top:6px">Einmal angemeldet → auf allen Seiten als Admin erkannt (bis Abmeldung).</p>
+    </div>
+  </div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -250,6 +269,148 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
+    // sichere Init
+    try { firebase.initializeApp(firebaseConfig); } catch (e) { if (!/already exists/i.test(String(e))) throw e; }
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    /* === Admin Session global (LOCAL) === */
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+
+    /* === Modal Steuerung === */
+    const modal = document.getElementById('adminModal');
+    const openBtn = document.getElementById('openAdminLogin');
+    const closeBtn = document.getElementById('closeAdminModal');
+    const emailEl = document.getElementById('modalEmail');
+    const passEl  = document.getElementById('modalPassword');
+    const btnIn   = document.getElementById('modalBtnLogin');
+    const btnOut  = document.getElementById('modalBtnLogout');
+    const stateEl = document.getElementById('modalAuthState');
+
+    function openModal(){
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+      setTimeout(()=>emailEl?.focus(), 50);
+    }
+    function closeModal(){
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+    }
+    openBtn?.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+
+    function setAdminUI(on, user){
+      document.body.classList.toggle('admin', !!on);
+      btnIn.style.display  = on ? 'none' : 'inline-flex';
+      btnOut.style.display = on ? 'inline-flex' : 'none';
+      stateEl.textContent  = on ? `Angemeldet${user?.email?`: ${user.email}`:''}` : 'Abgemeldet';
+    }
+
+    btnIn.addEventListener('click', async ()=>{
+      stateEl.textContent = 'Anmeldung läuft…';
+      try{
+        await auth.signInWithEmailAndPassword(emailEl.value, passEl.value);
+        stateEl.textContent = 'Erfolgreich angemeldet.';
+        setTimeout(closeModal, 400);
+      }catch(e){
+        stateEl.textContent = e?.message || 'Login fehlgeschlagen';
+      }
+    });
+    btnOut.addEventListener('click', async ()=>{
+      try{ await auth.signOut(); stateEl.textContent = 'Abgemeldet.'; }
+      catch(e){ stateEl.textContent = e?.message || 'Fehler beim Abmelden'; }
+    });
+
+    auth.onAuthStateChanged(user => setAdminUI(!!user, user));
+
+    /* === Formular / UI Refs === */
+    const nameInput = document.getElementById('name');
+    const idInput   = document.getElementById('mitgliedId');
+    const proofUrlInput = document.getElementById('proofUrl');
+    const btnSave = document.getElementById('btnSave');
+    const status  = document.getElementById('status');
+    const list    = document.getElementById('list');
+
+    /* === Eintrag speichern (öffentlich) === */
+    btnSave.onclick = async () => {
+      status.textContent = "Speichere…";
+      try {
+        const name = (nameInput.value||"").trim();
+        const id   = (idInput.value||"").trim();
+        const proofUrl = (proofUrlInput.value||"").trim();
+
+        if(!name || !id){
+          status.textContent = "Bitte Name und ID ausfüllen.";
+          return;
+        }
+        const payload = {
+          name, id, proofUrl,
+          ts: new Date().toISOString(),
+          serverTs: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await db.collection('plantageLogs').add(payload);
+
+        nameInput.value=""; idInput.value=""; proofUrlInput.value="";
+        status.textContent="Gespeichert.";
+        setTimeout(()=>status.textContent="",1500);
+      } catch(e){
+        console.error(e);
+        status.textContent = "Fehler: " + (e.message || e);
+      }
+    };
+
+    /* === Logs live anzeigen === */
+    db.collection('plantageLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
+      list.innerHTML = "";
+      snap.forEach(doc=>{
+        const d = doc.data();
+        list.appendChild(renderItem(doc.id, d));
+      });
+    });
+
+    function renderItem(id, d){
+      const el = document.createElement('div');
+      el.className = 'item';
+
+      const header = document.createElement('div');
+      header.className = 'logHeader';
+      header.textContent = formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts);
+
+      const body = document.createElement('div');
+      body.className = 'logBody';
+      body.innerHTML = `
+        <b>${escapeHTML(d.name||"")}</b> (${escapeHTML(d.id||"")})<br>
+        ${d.proofUrl ? `<a href="${escapeAttr(d.proofUrl)}" target="_blank" rel="noopener">Proof ansehen</a>` : `<i>Kein Proof</i>`}
+      `;
+
+      // Admin-Löschbutton (sichtbar, wenn eingeloggt)
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delbtn admin-only';
+      delBtn.title = 'Log löschen';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', async () => {
+        if(!auth.currentUser){ alert('Nicht angemeldet.'); return; }
+        const ok = confirm('Diesen Plantage-Log wirklich löschen?');
+        if(!ok) return;
+        try{
+          await db.collection('plantageLogs').doc(id).delete();
+        }catch(e){
+          alert('Löschen fehlgeschlagen: ' + (e?.message || e));
+        }
+      });
+
+      el.appendChild(header);
+      el.appendChild(body);
+      el.appendChild(delBtn);
+      return el;
+    }
+
+    /* === Helpers === */
+    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
+    function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
+    function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
   </script>
 
   <script>
@@ -278,47 +439,21 @@
       }
 
       function makeParticle(){
-        return {
-          x: Math.random()*w,
-          y: Math.random()*h,
-          vx: (Math.random()*2-1)*0.25,
-          vy: (Math.random()*2-1)*0.25,
-          r: Math.random()*1.2 + 0.6
-        };
+        return { x: Math.random()*w, y: Math.random()*h, vx: (Math.random()*2-1)*0.25, vy:(Math.random()*2-1)*0.25, r: Math.random()*1.2 + 0.6 };
       }
-
-      let MAX_D = 160;  let DOT_A = 0.85;  let LINK_A = 0.22;
 
       function step(){
         ctx.clearRect(0,0,w,h);
-
         ctx.beginPath();
-        particles.forEach(p=>{
+        for(const p of particles){
           p.x += p.vx; p.y += p.vy;
           if (p.x < -20 || p.x > w+20) p.vx *= -1;
           if (p.y < -20 || p.y > h+20) p.vy *= -1;
           ctx.moveTo(p.x + p.r, p.y);
           ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        });
-        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
-        ctx.fill();
-
-        for (let i=0;i<particles.length;i++){
-          for (let j=i+1;j<particles.length;j++){
-            const a = particles[i], b = particles[j];
-            const dx = a.x-b.x, dy = a.y-b.y;
-            const d2 = dx*dx + dy*dy;
-            if (d2 < MAX_D*MAX_D){
-              const alpha = 1 - Math.sqrt(d2)/MAX_D;
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-          }
         }
+        ctx.fillStyle = `rgba(255,255,255,.85)`;
+        ctx.fill();
         requestAnimationFrame(step);
       }
 
