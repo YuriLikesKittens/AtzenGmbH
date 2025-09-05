@@ -18,9 +18,10 @@
     .wrap{max-width:1100px;margin:0 auto}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
     h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800}
-    a.btn{display:inline-block;padding:10px 14px;border-radius:12px;
+    a.btn,button.btn{display:inline-block;padding:10px 14px;border-radius:12px;
           background:linear-gradient(135deg,var(--accent),var(--accent2));
-          color:#fff;text-decoration:none;font-weight:700;border:0}
+          color:#fff;text-decoration:none;font-weight:700;border:0;cursor:pointer}
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
     .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
     @media (max-width:980px){.grid{grid-template-columns:1fr}}
     .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
@@ -32,9 +33,9 @@
                         border:1px solid var(--border);background:#0b1020;
                         color:#e5e7eb;outline:none;transition:.2s}
     input:focus,select:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.2)}
-    .btn{cursor:pointer;font-weight:700;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
+    .btn.primary{cursor:pointer;font-weight:700;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
          border:none;margin-top:8px;box-shadow:0 6px 16px rgba(6,182,212,.35)}
-    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+
     .muted{color:var(--muted);font-size:12px}
 
     /* Liste */
@@ -48,9 +49,9 @@
     .thumb img{width:100%;height:100%;object-fit:cover;display:block}
     .content{min-width:0}
     .title{margin:0 0 6px}
-    .evName{font-weight:800;color:var(--green)}  /* Event grün */
+    .evName{font-weight:800;color:var(--green)}
     .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
-    .count{color:var(--red);font-weight:700}     /* Mitglieder rot */
+    .count{color:var(--red);font-weight:700}
     .hint{font-size:12px;color:#9ca3af;margin-top:6px}
     .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;
           padding:4px 8px;font-size:12px;color:#9ca3af;margin-top:6px}
@@ -61,41 +62,63 @@
             color:#fca5a5;width:32px;height:32px;border-radius:999px;cursor:pointer}
     .delbtn:hover{background:#1f2937;color:#fff}
 
-    /* Login Card */
+    /* Popup Login */
+    #adminPopup{
+      display:none; position:fixed; inset:0; z-index:999;
+      background:rgba(0,0,0,.6); backdrop-filter:blur(4px);
+      align-items:center; justify-content:center;
+    }
+    .adminPopup-card{
+      width:90%; max-width:420px; border-radius:16px;
+      background:#111827; border:1px solid var(--border);
+      box-shadow:0 18px 42px rgba(0,0,0,.5);
+      padding:22px;
+    }
     .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
     @media (max-width:640px){.authrow{grid-template-columns:1fr}}
-    /* Link-Button unter dem Proof-Feld */
     .linkbtn{display:inline-block;margin-top:6px;border:1px solid var(--border);border-radius:10px;
              padding:6px 10px;text-decoration:none;color:#e5e7eb}
     .linkbtn:hover{background:#111827}
+
+    /* Footer RGB */
+    footer{margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
+      background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
+      -webkit-background-clip: text;-webkit-text-fill-color: transparent;background-clip: text;color: transparent;
+      animation: rgbMove 6s linear infinite;background-size: 300% 100%;}
+    @keyframes rgbMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
       <h1>Event-Log · Einträge & Proof-Links</h1>
-      <a class="btn" href="https://yurilikeskittens.github.io/MS13Auszahlung/">Zur Übersicht</a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn" href="index.html">Zur Übersicht</a>
+        <button class="btn" id="btnAdminLogin">Admin-Login</button>
+      </div>
     </div>
 
-    <!-- Admin Login nur fürs Löschen -->
-    <div class="card" id="authCard">
-      <h2>Admin Login (nur zum Löschen)</h2>
-      <div class="authrow">
-        <div>
-          <label>E-Mail</label>
-          <input type="email" id="email" placeholder="admin@beispiel.de" />
+    <!-- Popup-Login -->
+    <div id="adminPopup">
+      <div class="adminPopup-card">
+        <h2 style="margin:0 0 14px;font-size:18px">Admin Login</h2>
+        <div class="authrow" style="margin-bottom:12px">
+          <div>
+            <label>E-Mail</label>
+            <input type="email" id="email" placeholder="admin@beispiel.de" />
+          </div>
+          <div>
+            <label>Passwort</label>
+            <input type="password" id="password" placeholder="********" />
+          </div>
         </div>
-        <div>
-          <label>Passwort</label>
-          <input type="password" id="password" placeholder="********" />
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="btnLogin">Anmelden</button>
+          <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
+          <button class="btn" id="btnClosePopup" style="background:#6b7280">Schließen</button>
         </div>
+        <p class="muted" id="authState" style="margin-top:8px"></p>
       </div>
-      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-        <button class="btn" id="btnLogin">Anmelden</button>
-        <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
-        <span class="muted" id="authState"></span>
-      </div>
-      <p class="muted" style="margin-top:6px">Hinweis: Login wird nicht gespeichert – nach Reload wieder abgemeldet.</p>
     </div>
 
     <div class="grid">
@@ -115,16 +138,15 @@
           <div>
             <label>Proof-URL (optional)</label>
             <input type="url" id="proofUrl" placeholder="Hier Imgur Link einfügen" />
-            <!-- NEU: schneller Link zu Imgur Upload -->
             <a class="linkbtn" href="https://imgur.com/upload" target="_blank" rel="noopener">Bild bei Imgur hochladen ↗</a>
-            <div class="hint">Lade das Bild bei Imgur hoch und füge den Link hier ein.</div>
+            <div class="muted">Lade das Bild bei Imgur hoch und füge den Link hier ein.</div>
           </div>
           <div>
             <label>Bemerkung (optional)</label>
             <input type="text" id="note" placeholder="Anmerkungen" />
           </div>
         </div>
-        <button class="btn" id="btnSubmit">Eintragen</button>
+        <button class="btn primary" id="btnSubmit">Eintragen</button>
         <p class="muted" id="status"></p>
       </div>
 
@@ -134,6 +156,8 @@
       </div>
     </div>
   </div>
+
+  <footer>Made by Alvaro SolanoHebel | 20367</footer>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -149,50 +173,42 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
-    firebase.initializeApp(firebaseConfig);
+    try{ firebase.initializeApp(firebaseConfig); }catch(e){ if(!/already exists/i.test(String(e))) throw e; }
     const auth = firebase.auth();
-    const db = firebase.firestore();
+    const db   = firebase.firestore();
 
-    /* Nur diese 10 Events auswählbar */
-const eventOptions = [
-  "40er",
-  "50er",
-  "Bank",
-  "Bizwar",
-  "Cayo",
-  "EKZ/Mall",
-  "Gießerei",
-  "Hafen Drop",
-  "RP Fabrik",
-  "Waffenfabrik",
-  "Drogenlabor Angriff",
-  "Flugzeugträger",
-  "Raid / Angriff",
-  "Raid / Verteidigung",
-  "Famwar"
-];
-
+    /* Nur diese Events auswählbar */
+    const eventOptions = [
+      "40er","50er","Bank","Bizwar","Cayo","EKZ/Mall","Gießerei","Hafen Drop",
+      "RP Fabrik","Waffenfabrik","Drogenlabor Angriff","Flugzeugträger",
+      "Raid / Angriff","Raid / Verteidigung","Famwar"
+    ];
 
     /* Discord Webhook */
     const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1411850377560592527/2V4Xmj0iJeLIsDUVkz9ow9KEFdvhU9cffPcQqZtJUfOmkFoBzj5kBAaYSn9zXhO17ocJ";
 
-    // --- Admin Login nur fürs Löschen ---
-    const email = document.getElementById('email');
-    const password = document.getElementById('password');
-    const btnLogin = document.getElementById('btnLogin');
-    const btnLogout = document.getElementById('btnLogout');
-    const authState = document.getElementById('authState');
+    /* Popup Login UI */
+    const btnAdminLogin = document.getElementById('btnAdminLogin');
+    const adminPopup    = document.getElementById('adminPopup');
+    const btnClosePopup = document.getElementById('btnClosePopup');
+    const email         = document.getElementById('email');
+    const password      = document.getElementById('password');
+    const btnLogin      = document.getElementById('btnLogin');
+    const btnLogout     = document.getElementById('btnLogout');
+    const authState     = document.getElementById('authState');
 
-    let isAdmin = false;
+    btnAdminLogin.addEventListener('click', ()=>{ adminPopup.style.display = 'flex'; });
+    btnClosePopup.addEventListener('click', ()=>{ adminPopup.style.display = 'none'; });
+    adminPopup.addEventListener('click', (e)=>{ if(e.target === adminPopup) adminPopup.style.display='none'; });
+
     function setAdminUI(on){
-      isAdmin = !!on;
       document.body.classList.toggle('admin', !!on);
-      btnLogin.style.display = on ? 'none' : 'inline-block';
+      btnLogin.style.display  = on ? 'none' : 'inline-block';
       btnLogout.style.display = on ? 'inline-block' : 'none';
-      authState.textContent = on ? 'Angemeldet' : 'Abgemeldet';
+      authState.textContent   = on ? 'Angemeldet' : 'Abgemeldet';
     }
 
-    btnLogin.onclick = async () => {
+    btnLogin.addEventListener('click', async () => {
       authState.textContent = 'Anmeldung läuft…';
       try{
         await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
@@ -201,59 +217,48 @@ const eventOptions = [
       }catch(e){
         authState.textContent = e?.message || 'Login fehlgeschlagen';
       }
-    };
-    btnLogout.onclick = async () => { await auth.signOut(); };
+    });
+    btnLogout.addEventListener('click', async () => { await auth.signOut(); });
     auth.onAuthStateChanged(user => setAdminUI(!!user));
-    // ------------------------------------
 
     // UI Refs
-    const eventType = document.getElementById('eventType');
-    const memberCount = document.getElementById('memberCount');
+    const eventType     = document.getElementById('eventType');
+    const memberCount   = document.getElementById('memberCount');
     const proofUrlInput = document.getElementById('proofUrl');
-    const note = document.getElementById('note');
-    const btnSubmit = document.getElementById('btnSubmit');
-    const status = document.getElementById('status');
-    const list = document.getElementById('list');
+    const note          = document.getElementById('note');
+    const btnSubmit     = document.getElementById('btnSubmit');
+    const statusEl      = document.getElementById('status');
+    const list          = document.getElementById('list');
 
-    // Dropdown auf die 10 Events setzen
-    function populateEventSelect() {
-      while (eventType.firstChild) eventType.removeChild(eventType.firstChild);
-      const ph = document.createElement('option');
-      ph.value = ""; ph.textContent = "— Bitte wählen —";
-      eventType.appendChild(ph);
-      for (const label of eventOptions) {
-        const opt = document.createElement('option');
-        opt.value = label; opt.textContent = label;
+    // Dropdown befüllen
+    function populateEventSelect(){
+      eventType.innerHTML = '<option value="">— Bitte wählen —</option>';
+      for(const label of eventOptions){
+        const opt=document.createElement('option'); opt.value=label; opt.textContent=label;
         eventType.appendChild(opt);
       }
     }
     document.addEventListener('DOMContentLoaded', populateEventSelect);
 
-    btnSubmit.onclick=async()=>{
+    btnSubmit.onclick = async () => {
       setStatus("Speichere…");
       try{
-        const type=eventType.value.trim();
-        const cnt=parseInt(memberCount.value||"0",10);
-        if(!type){return setStatus("Bitte eine Event-Art wählen.");}
-        if(!eventOptions.includes(type)){return setStatus("Ungültiges Event.");}
-        if(isNaN(cnt)||cnt<0){return setStatus("Mitgliederzahl ungültig.");}
+        const type = (eventType.value||"").trim();
+        const cnt  = parseInt(memberCount.value||"0",10);
+        if(!type)                 return setStatus("Bitte eine Event-Art wählen.");
+        if(!eventOptions.includes(type)) return setStatus("Ungültiges Event.");
+        if(isNaN(cnt)||cnt<0)     return setStatus("Mitgliederzahl ungültig.");
         let proofUrl=(proofUrlInput.value||"").trim();
-        if(proofUrl && !(proofUrl.startsWith("http://")||proofUrl.startsWith("https://"))){
-          return setStatus("Bitte gültige URL (http/https).");
-        }
+        if(proofUrl && !(/^https?:\/\//i.test(proofUrl))) return setStatus("Bitte gültige URL (http/https).");
 
-        const payload={ts:new Date().toISOString(),serverTs:firebase.firestore.FieldValue.serverTimestamp(),
-          type,memberCount:cnt,note:note.value||"",proofUrl};
+        const payload={
+          ts:new Date().toISOString(),
+          serverTs:firebase.firestore.FieldValue.serverTimestamp(),
+          type,memberCount:cnt,note:(note.value||"").trim(),proofUrl
+        };
 
-        // 1) Firestore speichern
         await db.collection('eventLogs').add(payload);
-
-        // 2) Discord Webhook (Embed)
-        try{
-          await sendDiscordLog(payload);
-        }catch(e){
-          console.warn("Discord-Webhook Fehler:", e);
-        }
+        try{ await sendDiscordLog(payload); }catch(e){ console.warn("Discord-Webhook Fehler:", e); }
 
         populateEventSelect(); memberCount.value=""; proofUrlInput.value=""; note.value="";
         setStatus("Gespeichert & an Discord gesendet.");
@@ -261,12 +266,10 @@ const eventOptions = [
       }catch(e){ setStatus("Fehler: "+(e.message||e)); }
     };
 
-    // Live-Liste inkl. (admin-only) Löschen
+    // Live-Liste inkl. Admin-Löschen
     db.collection('eventLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
       const frag=document.createDocumentFragment();
-      snap.forEach(doc=>{
-        frag.appendChild(renderItem(doc.id, doc.data()));
-      });
+      snap.forEach(doc=>{ frag.appendChild(renderItem(doc.id, doc.data())); });
       list.innerHTML=""; list.appendChild(frag);
     });
 
@@ -275,30 +278,25 @@ const eventOptions = [
       const el=document.createElement('div');
       el.className='item';
 
-      // Admin X Button
+      // Admin X
       const delBtn=document.createElement('button');
       delBtn.className='delbtn admin-only';
       delBtn.title='Event-Log löschen';
       delBtn.textContent='✕';
       delBtn.onclick=async()=>{
-        if(!isAdmin){ alert('Nicht angemeldet.'); return; }
+        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
         const ok=confirm('Diesen Event-Log wirklich löschen?');
         if(!ok) return;
-        try{
-          await db.collection('eventLogs').doc(id).delete();
-        }catch(e){
-          alert('Löschen fehlgeschlagen: ' + (e?.message||e));
-        }
+        try{ await db.collection('eventLogs').doc(id).delete(); }
+        catch(e){ alert('Löschen fehlgeschlagen: ' + (e?.message||e)); }
       };
       el.appendChild(delBtn);
 
       // Thumbnail/Link
-      const thumb=document.createElement('div');
-      thumb.className='thumb';
+      const thumb=document.createElement('div'); thumb.className='thumb';
       const isImg = isImageUrl(proof);
       if(proof && isImg){
-        const img=document.createElement('img');
-        img.src=proof; img.alt='Proof';
+        const img=document.createElement('img'); img.src=proof; img.alt='Proof';
         img.onerror=()=>{ thumb.innerHTML=`<a class="pill" href="${escapeAttr(proof)}" target="_blank" rel="noopener">Proof öffnen</a>`; };
         thumb.appendChild(img);
       }else{
@@ -307,8 +305,7 @@ const eventOptions = [
           : `<span class="pill" style="opacity:.8">Kein Proof</span>`;
       }
 
-      const content=document.createElement('div');
-      content.className='content';
+      const content=document.createElement('div'); content.className='content';
       content.innerHTML=`
         <p class="title"><span class="evName">${escapeHTML(d.type||'')}</span></p>
         <div class="meta">
@@ -317,19 +314,17 @@ const eventOptions = [
         </div>
         ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
       `;
-
-      el.appendChild(thumb);
-      el.appendChild(content);
+      el.appendChild(thumb); el.appendChild(content);
       return el;
     }
 
-    /* ===== Discord Webhook Sender ===== */
+    /* Discord: hübsches Embed */
     async function sendDiscordLog({type, memberCount, note, proofUrl, ts}){
       const isImg = isImageUrl(proofUrl||"");
       const embed = {
         title: `Neues Event: ${type}`,
         description: (note || "").trim() || undefined,
-        color: 0x22c55e, // grün
+        color: 0x22c55e,
         timestamp: new Date(ts || Date.now()).toISOString(),
         fields: [
           { name: "Event", value: type, inline: true },
@@ -339,38 +334,29 @@ const eventOptions = [
         thumbnail: isImg ? { url: proofUrl } : undefined,
         footer: { text: "MS Auszahlungen · Event-Log" }
       };
-
-      const body = {
-        username: "MS-Eventlog System",
-        avatar_url: "https://imgur.com/wuvue8S",
-        embeds: [embed]
-      };
+      const body = { username: "MS-Eventlog System", embeds: [embed] };
 
       try{
         const r = await fetch(DISCORD_WEBHOOK, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
         });
         if (!r.ok && r.status !== 204) throw new Error(`HTTP ${r.status}`);
-      }catch(err){
+      }catch{
         try{
           await fetch(DISCORD_WEBHOOK, {
-            method: "POST",
-            mode: "no-cors",
+            method: "POST", mode: "no-cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
           });
-        }catch(e2){
-          console.warn("Webhook no-cors Fallback fehlgeschlagen:", e2);
-        }
+        }catch{}
       }
     }
 
     /* Helpers */
-    function setStatus(msg){ status.textContent = msg; }
+    function setStatus(msg){ statusEl.textContent = msg; }
     function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
-    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])); }
+    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
     function escapeAttr(str){ return String(str).replace(/["'\\`]/g,"_"); }
     function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname); }catch{ return false; } }
   </script>
