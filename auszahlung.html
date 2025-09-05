@@ -4,38 +4,168 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Übersicht, Transaktionen & Auszahlungstabelle (Read-Only)</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
   <style>
     :root{
-      --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
-      --accent:#7c3aed; --accent2:#06b6d4;
+      --bg:#0b0f1a;
+      --bg2:#111828;
+      --text:#f3f4f6;
+      --muted:#cbd5e1;
+      --accent:#7c3aed;
+      --accent2:#06b6d4;
+      --radius:20px;
+      --stroke: rgba(255,255,255,.16);
+      --panel: rgba(255,255,255,.08);
+      --shadow: 0 18px 42px rgba(124,58,237,.22), inset 0 0 0 1px var(--stroke);
     }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);color:var(--text);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;padding:24px 16px 40px;}
-    .wrap{max-width:1200px;margin:0 auto}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
-    h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800}
-    a.btn{display:inline-block;padding:10px 14px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;text-decoration:none;font-weight:700;border:0}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px;backdrop-filter:blur(6px)}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      margin:0;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% 10%, rgba(124,58,237,.16), transparent 40%),
+        radial-gradient(800px 600px at 90% 20%, rgba(6,182,212,.15), transparent 45%),
+        radial-gradient(1000px 700px at 80% 90%, rgba(34,197,94,.12), transparent 45%),
+        linear-gradient(160deg,var(--bg) 0%, var(--bg2) 100%);
+      overflow-x:hidden;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      padding:24px 16px 40px;
+    }
+
+    /* Hintergrundeffekte */
+    .net-bg{position:fixed; inset:0; pointer-events:none; z-index:0}
+    .net-bg canvas{width:100%; height:100%; display:block}
+    .grid-bg{position:fixed; inset:0; pointer-events:none; opacity:.35; mix-blend-mode:screen;
+      background:
+        linear-gradient(transparent 0 49%, rgba(255,255,255,.10) 49% 51%, transparent 51% 100%),
+        linear-gradient(90deg, transparent 0 49%, rgba(255,255,255,.10) 49% 51%, transparent 51% 100%);
+      background-size: 40px 40px, 40px 40px;
+      transform: perspective(800px) rotateX(55deg) scale(1.2);
+      transform-origin: top center;
+      animation: floatGrid 18s linear infinite;
+      z-index:0;
+    }
+    @keyframes floatGrid { 0% { background-position:0 0, 0 0 } 100% { background-position:0 40px, 40px 0 } }
+
+    .wrap{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+
+    /* Topbar */
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+    h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800;font-family: Orbitron, Inter}
+
+    /* Buttons */
+    a.btn, button.btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 14px;
+      border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff;
+      text-decoration:none;
+      font-weight:700;
+      border:0;
+      cursor:pointer;
+      box-shadow:0 10px 26px rgba(6,182,212,.34), inset 0 0 0 1px rgba(255,255,255,.05);
+      transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+    }
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 14px 36px rgba(124,58,237,.30)}
+    .btnrow{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* Cards */
+    .card{
+      position:relative; border-radius:var(--radius); padding:20px;
+      background:
+        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.07), rgba(255,255,255,.03)),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--stroke);
+      backdrop-filter: blur(8px) saturate(1.2);
+      box-shadow:0 14px 36px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.04);
+      margin-bottom:18px;
+    }
+
+    /* Chips */
     .chips{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
-    .chip{background:#0b1020;border:1px solid var(--border);border-radius:999px;padding:8px 12px;color:#9ca3af;font-size:13px}
+    .chip{background:#0b1020;border:1px solid var(--stroke);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:13px}
+
+    /* Tabellen */
     table{width:100%;border-collapse:collapse}
-    thead th{position:sticky;top:0;background:#0a0f1f;border-bottom:1px solid var(--border);text-transform:uppercase;font-size:12px;color:#9ca3af;padding:10px;text-align:left}
+    thead th{
+      position:sticky;top:0; z-index:1;
+      background:rgba(10,15,31,.7);
+      backdrop-filter: blur(6px);
+      border-bottom:1px solid var(--stroke);
+      text-transform:uppercase;font-size:12px;color:var(--muted);
+      padding:10px;text-align:left
+    }
     td{padding:10px;border-bottom:1px dashed #1f2a44}
     .right{text-align:right}
     .id{color:#a5b4fc;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
     .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
     @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+
     .warn{color:#fca5a5;font-size:12px;margin-top:6px}
+
+    /* Footer (RGB) */
+    footer{margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
+      background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+      animation: rgbMove 6s linear infinite;
+      background-size: 300% 100%;
+    }
+    @keyframes rgbMove {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ===== Modal (Admin Login) ===== */
+    .modal{
+      position:fixed; inset:0; display:none; place-items:center;
+      background:rgba(0,0,0,.5); z-index:50; padding:16px;
+    }
+    .modal.open{ display:grid; }
+    .modal-card{
+      width:min(480px, 100%); border-radius:20px; padding:20px;
+      background:
+        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.08), rgba(255,255,255,.04)),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--stroke);
+      box-shadow:0 24px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05);
+      backdrop-filter: blur(10px) saturate(1.2);
+      position:relative;
+    }
+    .modal h3{margin:0 0 10px; font-size:20px}
+    .modal .close{
+      position:absolute; top:10px; right:10px; width:36px; height:36px;
+      border-radius:12px; border:1px solid var(--stroke);
+      background:rgba(255,255,255,.06); color:var(--text); cursor:pointer;
+    }
+    .modal .row{display:grid; gap:12px; grid-template-columns:1fr}
+    .modal .actions{display:flex; gap:8px; margin-top:12px; align-items:center; flex-wrap:wrap}
+    .small{font-size:12px; color:var(--muted)}
   </style>
 </head>
 <body>
+  <!-- Hintergrund -->
+  <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
+  <div class="grid-bg" aria-hidden="true"></div>
+
   <div class="wrap">
     <div class="topbar">
       <h1>Übersicht & Transaktionen</h1>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div class="btnrow">
         <a class="btn" href="event_log.html">Event-Log</a>
         <a class="btn" href="plantage.html">Plantage-Log</a>
         <a class="btn" id="btnBackAdmin" href="admin_sync.html">Zur Admin-Seite</a>
+        <button class="btn" id="openAdminLogin">Admin-Login</button>
       </div>
     </div>
 
@@ -45,7 +175,7 @@
         <span class="chip">Mitglieder: <b id="statMitglieder">0</b></span>
         <span class="chip">Gesamtsaldo: <b id="statSaldo">0</b> €</span>
       </div>
-      <div style="overflow:auto;max-height:38vh;border:1px solid var(--border);border-radius:12px">
+      <div style="overflow:auto;max-height:38vh;border:1px solid var(--stroke);border-radius:12px">
         <table>
           <thead>
             <tr><th>Mitglied</th><th>ID</th><th class="right">Kontostand (€)</th></tr>
@@ -60,7 +190,7 @@
       <!-- Letzte Auszahlungen -->
       <div class="card">
         <h3 style="margin:0 0 8px">Letzte Auszahlungen</h3>
-        <div style="overflow:auto;max-height:45vh;border:1px solid var(--border);border-radius:12px">
+        <div style="overflow:auto;max-height:45vh;border:1px solid var(--stroke);border-radius:12px">
           <table>
             <thead>
               <tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Saldo danach</th></tr>
@@ -74,7 +204,7 @@
       <!-- Letzte Einzahlungen -->
       <div class="card">
         <h3 style="margin:0 0 8px">Letzte Einzahlungen</h3>
-        <div style="overflow:auto;max-height:45vh;border:1px solid var(--border);border-radius:12px">
+        <div style="overflow:auto;max-height:45vh;border:1px solid var(--stroke);border-radius:12px">
           <table>
             <thead>
               <tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Saldo danach</th></tr>
@@ -89,7 +219,7 @@
     <!-- Auszahlungstabelle (Raten) -->
     <div class="card">
       <h3 style="margin:0 0 8px">Auszahlungstabelle (was wird gezahlt?)</h3>
-      <div style="overflow:auto;max-height:50vh;border:1px solid var(--border);border-radius:12px">
+      <div style="overflow:auto;max-height:50vh;border:1px solid var(--stroke);border-radius:12px">
         <table>
           <thead><tr><th>Event</th><th class="right">Betrag (€)</th></tr></thead>
           <tbody id="tbodyRates"></tbody>
@@ -97,20 +227,60 @@
       </div>
       <p class="chip" style="margin-top:8px">Hinweis: <b>Komplett Auszahlung</b> = gesamter Kontostand. <b>Sanktion</b> = Betrag wird individuell festgelegt.</p>
     </div>
+
+    <!-- Footer -->
+<footer style="
+  margin-top:24px;
+  text-align:center;
+  font-size:13px;
+  padding:10px;
+  font-weight:600;
+  background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  animation: rgbMove 6s linear infinite;
+  background-size: 300% 100%;
+">
+  Made by Alvaro SolanoHebel | 20367
+</footer>
+
+  <!-- Admin-Login Modal -->
+  <div class="modal" id="adminModal" aria-hidden="true" role="dialog" aria-labelledby="adminModalTitle">
+    <div class="modal-card">
+      <button class="close" id="closeAdminModal" aria-label="Schließen">✕</button>
+      <h3 id="adminModalTitle">Admin-Login</h3>
+      <div class="row">
+        <div>
+          <label>E-Mail</label>
+          <input type="email" id="modalEmail" placeholder="admin@beispiel.de" />
+        </div>
+        <div>
+          <label>Passwort</label>
+          <input type="password" id="modalPassword" placeholder="********" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="modalBtnLogin">Anmelden</button>
+        <button class="btn" id="modalBtnLogout" style="display:none">Abmelden</button>
+        <span class="small" id="modalAuthState"></span>
+      </div>
+      <p class="small" style="margin-top:6px">Einmal angemeldet → auf allen Seiten als Admin erkannt (bis Abmeldung).</p>
+    </div>
   </div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" defer></script>
 
   <script>
   // Warten bis Scripts geladen sind
   window.addEventListener('load', () => {
-    if (!window.firebase) {
-      console.error('Firebase nicht geladen.');
-      return;
-    }
+    if (!window.firebase) { console.error('Firebase nicht geladen.'); return; }
 
+    /* === Firebase Init === */
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -120,15 +290,53 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
-    try {
-      firebase.initializeApp(firebaseConfig);
-    } catch (e) {
-      // Doppelte Initialisierung ignorieren
-      if (!/already exists/i.test(String(e))) throw e;
-    }
-    const db = firebase.firestore();
+    try { firebase.initializeApp(firebaseConfig); } catch (e) { if(!/already exists/i.test(String(e))) throw e; }
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
 
-    // ⚙️ Vorlagen (wie Admin-Seite)
+    /* === Admin-Modal === */
+    const modal = document.getElementById('adminModal');
+    const openBtn = document.getElementById('openAdminLogin');
+    const closeBtn = document.getElementById('closeAdminModal');
+    const emailEl = document.getElementById('modalEmail');
+    const passEl  = document.getElementById('modalPassword');
+    const btnIn   = document.getElementById('modalBtnLogin');
+    const btnOut  = document.getElementById('modalBtnLogout');
+    const stateEl = document.getElementById('modalAuthState');
+
+    function openModal(){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); setTimeout(()=>emailEl?.focus(),50); }
+    function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+    openBtn?.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+
+    function setAdminUI(on, user){
+      document.body.classList.toggle('admin', !!on);
+      btnIn.style.display  = on ? 'none'      : 'inline-flex';
+      btnOut.style.display = on ? 'inline-flex': 'none';
+      stateEl.textContent  = on ? `Angemeldet${user?.email?`: ${user.email}`:''}` : 'Abgemeldet';
+    }
+    btnIn.addEventListener('click', async ()=>{
+      stateEl.textContent = 'Anmeldung läuft…';
+      try{
+        await auth.signInWithEmailAndPassword(emailEl.value, passEl.value);
+        stateEl.textContent = 'Erfolgreich angemeldet.';
+        setTimeout(closeModal, 400);
+      }catch(e){
+        stateEl.textContent = e?.message || 'Login fehlgeschlagen';
+      }
+    });
+    btnOut.addEventListener('click', async ()=>{
+      try{ await auth.signOut(); stateEl.textContent = 'Abgemeldet.'; }
+      catch(e){ stateEl.textContent = e?.message || 'Fehler beim Abmelden'; }
+    });
+    auth.onAuthStateChanged(user => setAdminUI(!!user, user));
+
+    /* === Daten laden (Read-Only) === */
+
+    // Vorlagen (wie Admin-Seite)
     const eventTemplates = {
       "40er Kill / Win": 30000,
       "40er Kill / Loose": 15000,
@@ -166,7 +374,6 @@
     try {
       db.collection('members').orderBy('name')
         .onSnapshot(snap => {
-          // clear
           tbodyMembers.innerHTML = '';
           let total = 0, count = 0;
           snap.forEach(doc => {
@@ -191,7 +398,7 @@
       errMembers.style.display = '';
     }
 
-    // Transaktionen live (letzte 100), getrennt in Auszahlung/Einzahlung
+    // Transaktionen live (letzte 100)
     try {
       db.collection('transactions').orderBy('ts','desc').limit(100)
         .onSnapshot(snap => {
@@ -224,7 +431,7 @@
       errPayouts.style.display = '';
     }
 
-    // Auszahlungstabelle rendern
+    // Auszahlungstabelle
     (function renderRates(){
       const html = Object.entries(eventTemplates)
         .sort((a,b)=> a[0].localeCompare(b[0],'de'))
@@ -242,8 +449,57 @@
     function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
     function toLocale(n){ return (n||0).toLocaleString('de-DE'); }
     function formatDate(ts){ try{return new Date(ts).toLocaleString('de-DE')}catch(e){return String(ts)} }
-    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','\"':'&quot;'}[s])) }
+    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])) }
   });
+  </script>
+
+  <script>
+    /* Partikel-Netz (Canvas) */
+    (function(){
+      const canvas = document.getElementById('netCanvas');
+      const ctx = canvas.getContext('2d');
+      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      let particles = [];
+      let w = 0, h = 0;
+
+      function resize(){
+        w = canvas.clientWidth;
+        h = canvas.clientHeight;
+        canvas.width = Math.floor(w * DPR);
+        canvas.height = Math.floor(h * DPR);
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+
+        const targetCount = Math.round((w*h)/9000);
+        const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
+        const min = 50;
+        const count = Math.max(min, Math.min(max, targetCount));
+
+        particles = Array.from({length:count}, ()=>({
+          x: Math.random()*w, y: Math.random()*h,
+          vx: (Math.random()*2-1)*0.25, vy: (Math.random()*2-1)*0.25,
+          r: Math.random()*1.2 + 0.6
+        }));
+      }
+
+      function step(){
+        ctx.clearRect(0,0,w,h);
+        ctx.beginPath();
+        for(const p of particles){
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < -20 || p.x > w+20) p.vx *= -1;
+          if (p.y < -20 || p.y > h+20) p.vy *= -1;
+          ctx.moveTo(p.x + p.r, p.y);
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        }
+        ctx.fillStyle = `rgba(255,255,255,.85)`;
+        ctx.fill();
+        requestAnimationFrame(step);
+      }
+
+      window.addEventListener('resize', resize, {passive:true});
+      resize();
+      requestAnimationFrame(step);
+    })();
   </script>
 </body>
 </html>
