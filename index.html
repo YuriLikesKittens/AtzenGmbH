@@ -78,19 +78,36 @@
     .btn:hover{ transform: translateY(-1px); filter:brightness(1.05); box-shadow:0 14px 36px rgba(124,58,237,.30) }
     .btn.ghost{ background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); color:var(--text); }
 
-    /* Hero */
+    /* Hero – Bild ohne Beschnitt in fixem Frame */
     .hero{
-      position:relative; border-radius:24px; overflow:hidden;
-      box-shadow: var(--shadow); border:1px solid var(--stroke);
+      position:relative;
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      border:1px solid var(--stroke);
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       margin-bottom:20px;
+
+      /* Neu: fixe Rahmenhöhe + Centering */
+      height:360px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background-color: #0c1220; /* falls seitliche Balken entstehen */
     }
     .hero img{
-      width:100%; height:360px; object-fit:cover; display:block;
+      /* Neu: passt das komplette Bild in den Frame, kein Beschnitt */
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
       filter:saturate(1.05) contrast(1.05) brightness(1.02);
     }
-    @media (max-width:720px){ .hero img{height:240px} }
-    /* HELLERES Overlay */
+    @media (max-width:720px){
+      .hero{height:240px;}     /* Frame wird kleiner */
+      .hero img{height:100%;}
+    }
+    /* Overlay bleibt, aber ist dezent */
     .hero::after{
       content:""; position:absolute; inset:0;
       background:
