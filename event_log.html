@@ -4,95 +4,153 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Event-Log · Einträge & Proof-Links</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
   <style>
     :root{
-      --bg:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
-      --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
+      --bg:#0b1020; --bg2:#0f172a;
+      --text:#e5e7eb; --muted:#9aa4b2;
+      --border:rgba(255,255,255,.14);
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(255,255,255,.04);
+      --radius:18px; --radius-sm:12px;
+      --shadow:0 18px 42px rgba(0,0,0,.45);
       --accent:#7c3aed; --accent2:#06b6d4; --green:#22c55e; --red:#ef4444;
     }
+
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
-      background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);
       color:var(--text);
-      font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;
-      padding:24px 16px 40px;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:
+        radial-gradient(1200px 800px at 8% 10%, rgba(124,58,237,.12), transparent 40%),
+        radial-gradient(1000px 700px at 85% 15%, rgba(6,182,212,.12), transparent 45%),
+        linear-gradient(160deg,var(--bg) 0%, var(--bg2) 100%);
+      padding:28px 16px 40px;
     }
-    .wrap{max-width:1100px;margin:0 auto}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
-    h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800}
-    a.btn,button.btn{
-      display:inline-block;padding:10px 14px;border-radius:12px;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      color:#fff;text-decoration:none;font-weight:700;border:0;cursor:pointer
-    }
-    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
-    .grid{
-      display:grid;gap:16px;grid-template-columns:360px 1fr;
-      align-items:start;               /* ⟵ verhindert gleiches Hochziehen */
-    }
-    @media (max-width:980px){.grid{grid-template-columns:1fr}}
 
+    /* Wrapper */
+    .wrap{max-width:1150px;margin:0 auto}
+
+    /* Topbar */
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    h1{margin:0;font-family:Orbitron, Inter;font-size:clamp(22px,4vw,34px);letter-spacing:.02em}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    a.btn, button.btn{
+      appearance:none;border:0;cursor:pointer;
+      padding:10px 14px;border-radius:12px;font-weight:800;
+      color:#fff;text-decoration:none;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      box-shadow:0 10px 26px rgba(6,182,212,.34), inset 0 0 0 1px rgba(255,255,255,.06);
+      transition:.2s transform, .2s filter, .2s box-shadow;
+    }
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 14px 34px rgba(124,58,237,.30)}
+
+    /* Grid */
+    .grid{
+      display:grid;gap:18px;
+      grid-template-columns:360px 1fr;
+      align-items:start;
+    }
+    @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+
+    /* Card base (glassy) */
     .card{
-      background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
-      border:1px solid var(--border);border-radius:var(--radius);
-      box-shadow:var(--shadow);padding:18px;backdrop-filter:blur(6px)
+      border-radius:var(--radius);
+      background:
+        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.07), rgba(255,255,255,.03)),
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      backdrop-filter:saturate(1.2) blur(8px);
+      padding:18px;
     }
     .card h2{margin:0 0 12px;font-size:18px}
 
+    /* Inputs */
     label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-    input,select,button{
-      width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);
-      background:#0b1020;color:#e5e7eb;outline:none;transition:.2s
+    input,select{
+      width:100%;padding:12px 14px;border-radius:12px;
+      border:1px solid var(--border);background:#0b1020;color:var(--text);
+      outline:none;transition:border-color .2s, box-shadow .2s, transform .1s;
     }
-    input:focus,select:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.2)}
-    .btn.primary{
-      background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
-      border:none;margin-top:8px;box-shadow:0 6px 16px rgba(6,182,212,.35)
-    }
+    input:focus,select:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.22)}
+    .btn.primary{width:100%;margin-top:10px}
+
     .muted{color:var(--muted);font-size:12px}
 
-    /* Chips unter der Überschrift */
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 0}
-    .chip{background:#0b1020;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:#9ca3af}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+    .chip{background:#0b1020;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:#a5b4fc}
 
-    /* Liste rechts – scollbares Panel */
+    .linkbtn{display:inline-block;margin-top:6px;border:1px solid var(--border);border-radius:10px;
+      padding:6px 10px;text-decoration:none;color:#e5e7eb}
+    .linkbtn:hover{background:#111827}
+
+    /* Sticky linke Karte */
+    .sticky{position:sticky;top:12px}
+
+    /* Rechte Liste */
     .listwrap{
-      border:1px solid var(--border);border-radius:12px;overflow:auto;max-height:65vh;
-      background:rgba(0,0,0,.12)
+      border:1px solid var(--border);border-radius:12px;overflow:auto;max-height:68vh;
+      background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.02));
     }
     .listhead{
       position:sticky;top:0;z-index:1;
       display:flex;justify-content:space-between;align-items:center;
-      padding:10px 12px;border-bottom:1px solid var(--border);
+      padding:12px;border-bottom:1px solid var(--border);
       background:#0a0f1f;
+      border-top-left-radius:12px;border-top-right-radius:12px;
     }
-    .list{display:grid;grid-template-columns:1fr;gap:10px;padding:12px}
+    .badge{padding:6px 10px;border-radius:999px;border:1px solid var(--border);color:#cbd5e1;font-size:12px}
+
+    .list{display:grid;gap:12px;padding:12px}
+
     .item{
       position:relative;display:grid;grid-template-columns:160px 1fr;gap:14px;
       border:1px solid var(--border);border-radius:14px;padding:12px;
-      background:rgba(255,255,255,.03)
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
+      transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
     }
+    .item:hover{transform:translateY(-1px);border-color:rgba(124,58,237,.35);box-shadow:0 8px 18px rgba(0,0,0,.35)}
     @media (max-width:640px){.item{grid-template-columns:1fr}}
-    .thumb{width:100%;height:120px;max-width:160px;background:#0a0f1f;border:1px solid var(--border);
-           border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
-    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .content{min-width:0}
-    .title{margin:0 0 6px}
-    .evName{font-weight:800;color:var(--green)}
-    .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
-    .count{color:var(--red);font-weight:700}
-    .hint{font-size:12px;color:#9ca3af;margin-top:6px}
-    .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:12px;color:#9ca3af;margin-top:6px}
 
-    /* Admin-Steuerung */
+    .thumb{width:100%;height:120px;max-width:160px;background:#0a0f1f;border:1px solid var(--border);
+           border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:contrast(1.05)}
+    .content{min-width:0}
+    .title{margin:0 0 6px;font-weight:800}
+    .evName{font-weight:800;color:var(--green)}
+    .meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    .count{color:var(--red);font-weight:800}
+    .hint{font-size:12px;color:#a7b0bf;margin-top:6px}
+    .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:#cbd5e1;margin-top:6px; text-decoration:none}
+    .pill:hover{background:#111827}
+
+    /* Admin delete */
     .admin-only{display:none}
     body.admin .admin-only{display:block}
     .delbtn{
-      position:absolute;top:8px;right:8px;background:#0b1020;border:1px solid var(--border);
-      color:#fca5a5;width:32px;height:32px;border-radius:999px;cursor:pointer
+      position:absolute;top:10px;right:10px;background:#0b1020;border:1px solid var(--border);
+      color:#fca5a5;width:34px;height:34px;border-radius:999px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800
     }
     .delbtn:hover{background:#1f2937;color:#fff}
+
+    /* Pretty scrollbar */
+    .listwrap::-webkit-scrollbar{width:10px}
+    .listwrap::-webkit-scrollbar-track{background:transparent}
+    .listwrap::-webkit-scrollbar-thumb{
+      background:linear-gradient(180deg, var(--accent), var(--accent2));
+      border-radius:999px;border:2px solid rgba(0,0,0,.2)
+    }
+    .listwrap{scrollbar-color:#7c3aed transparent;scrollbar-width:thin}
 
     /* Popup Login */
     #adminPopup{
@@ -107,8 +165,6 @@
     }
     .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
     @media (max-width:640px){.authrow{grid-template-columns:1fr}}
-    .linkbtn{display:inline-block;margin-top:6px;border:1px solid var(--border);border-radius:10px;padding:6px 10px;text-decoration:none;color:#e5e7eb}
-    .linkbtn:hover{background:#111827}
 
     /* Footer RGB */
     footer{margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
@@ -122,7 +178,7 @@
   <div class="wrap">
     <div class="topbar">
       <h1>Event-Log · Einträge & Proof-Links</h1>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div class="actions">
         <a class="btn" href="index.html">Zur Übersicht</a>
         <button class="btn" id="btnAdminLogin">Admin-Login</button>
       </div>
@@ -152,14 +208,15 @@
     </div>
 
     <div class="grid">
-      <!-- Linke Spalte: kompakte Eingabe (wächst NICHT mit) -->
-      <div class="card" style="position:sticky;top:12px">
+      <!-- Linke Spalte -->
+      <div class="card sticky">
         <h2>Neues Event eintragen</h2>
         <div class="chips">
           <span class="chip">Letzte Auswahl bleibt leer</span>
           <span class="chip">Proof optional</span>
         </div>
-        <div class="row" style="display:grid;gap:12px;grid-template-columns:1fr 1fr;margin-top:10px">
+
+        <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr;margin-top:8px">
           <div>
             <label>Art des Events</label>
             <select id="eventType"><option value="">— Bitte wählen —</option></select>
@@ -169,7 +226,8 @@
             <input type="number" id="memberCount" min="0" step="1" placeholder="z. B. 12" />
           </div>
         </div>
-        <div class="row" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+
+        <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
           <div>
             <label>Proof-URL (optional)</label>
             <input type="url" id="proofUrl" placeholder="Hier Imgur Link einfügen" />
@@ -181,17 +239,18 @@
             <input type="text" id="note" placeholder="Anmerkungen" />
           </div>
         </div>
+
         <button class="btn primary" id="btnSubmit">Eintragen</button>
         <p class="muted" id="status"></p>
       </div>
 
-      <!-- Rechte Spalte: scrollbare Liste -->
+      <!-- Rechte Spalte -->
       <div class="card">
-        <h2 style="margin-bottom:8px">Letzte Events</h2>
+        <h2 style="margin-bottom:10px">Letzte Events</h2>
         <div class="listwrap">
           <div class="listhead">
-            <div class="muted">Neueste zuerst</div>
-            <div class="muted" id="counter">0 Einträge</div>
+            <span class="muted">Neueste zuerst</span>
+            <span class="badge" id="counter">0 Einträge</span>
           </div>
           <div id="list" class="list"></div>
         </div>
@@ -201,11 +260,12 @@
 
   <footer>Made by Alvaro SolanoHebel | 20367</footer>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
+    /* Firebase */
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -219,15 +279,17 @@
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
+    /* Events-Auswahl */
     const eventOptions = [
       "40er","50er","Bank","Bizwar","Cayo","EKZ/Mall","Gießerei","Hafen Drop",
       "RP Fabrik","Waffenfabrik","Drogenlabor Angriff","Flugzeugträger",
       "Raid / Angriff","Raid / Verteidigung","Famwar"
     ];
 
+    /* Webhook */
     const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1411850377560592527/2V4Xmj0iJeLIsDUVkz9ow9KEFdvhU9cffPcQqZtJUfOmkFoBzj5kBAaYSn9zXhO17ocJ";
 
-    // Popup Login
+    /* Popup Login */
     const btnAdminLogin = document.getElementById('btnAdminLogin');
     const adminPopup    = document.getElementById('adminPopup');
     const btnClosePopup = document.getElementById('btnClosePopup');
@@ -258,7 +320,7 @@
     btnLogout.addEventListener('click', async () => { await auth.signOut(); });
     auth.onAuthStateChanged(user => setAdminUI(!!user));
 
-    // UI Refs
+    /* UI Refs */
     const eventType     = document.getElementById('eventType');
     const memberCount   = document.getElementById('memberCount');
     const proofUrlInput = document.getElementById('proofUrl');
@@ -390,80 +452,6 @@
     function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
     function escapeAttr(str){ return String(str).replace(/["'\\`]/g,"_"); }
     function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname); }catch{ return false; } }
-
-    /* Partikel-Netz (Canvas) – fix hell */
-    (function(){
-      const canvas = document.getElementById('netCanvas');
-      const ctx = canvas.getContext('2d');
-      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      let particles = [];
-      let w = 0, h = 0;
-
-      function resize(){
-        w = canvas.clientWidth;
-        h = canvas.clientHeight;
-        canvas.width = Math.floor(w * DPR);
-        canvas.height = Math.floor(h * DPR);
-        ctx.setTransform(DPR,0,0,DPR,0,0);
-
-        const targetCount = Math.round((w*h)/9000);
-        const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
-        const min = 50;
-        const count = Math.max(min, Math.min(max, targetCount));
-
-        if (particles.length > count) particles.length = count;
-        while (particles.length < count){ particles.push(makeParticle()); }
-      }
-
-      function makeParticle(){
-        return {
-          x: Math.random()*w,
-          y: Math.random()*h,
-          vx: (Math.random()*2-1)*0.25,
-          vy: (Math.random()*2-1)*0.25,
-          r: Math.random()*1.2 + 0.6
-        };
-      }
-
-      let MAX_D = 160;  let DOT_A = 0.85;  let LINK_A = 0.22;
-
-      function step(){
-        ctx.clearRect(0,0,w,h);
-
-        ctx.beginPath();
-        particles.forEach(p=>{
-          p.x += p.vx; p.y += p.vy;
-          if (p.x < -20 || p.x > w+20) p.vx *= -1;
-          if (p.y < -20 || p.y > h+20) p.vy *= -1;
-          ctx.moveTo(p.x + p.r, p.y);
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        });
-        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
-        ctx.fill();
-
-        for (let i=0;i<particles.length;i++){
-          for (let j=i+1;j<particles.length;j++){
-            const a = particles[i], b = particles[j];
-            const dx = a.x-b.x, dy = a.y-b.y;
-            const d2 = dx*dx + dy*dy;
-            if (d2 < MAX_D*MAX_D){
-              const alpha = 1 - Math.sqrt(d2)/MAX_D;
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-          }
-        }
-        requestAnimationFrame(step);
-      }
-
-      window.addEventListener('resize', resize, {passive:true});
-      resize();
-      requestAnimationFrame(step);
-    })();
   </script>
 </body>
 </html>
