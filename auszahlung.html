@@ -373,8 +373,8 @@
 
     // Mitglieder live
     try {
-      db.collection('members').orderBy('name')
-        .onSnapshot(snap => {
+   db.collection('members').orderBy('balance', 'desc')
+  .onSnapshot(snap => {
           tbodyMembers.innerHTML = '';
           let total = 0, count = 0;
           snap.forEach(doc => {
