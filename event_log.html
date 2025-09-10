@@ -120,8 +120,26 @@
 
     .admin-only{display:none}
     body.admin .admin-only{display:block}
-    .delbtn{position:absolute;top:10px;right:10px;background:#0b1020;border:1px solid var(--border);color:#fca5a5;width:34px;height:34px;border-radius:999px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800}
+
+    .delbtn, .donebtn{
+      position:absolute; top:10px; width:34px; height:34px; border-radius:999px;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      font-size:16px; font-weight:800; border:1px solid var(--border);
+      background:#0b1020;
+    }
+    .delbtn{ right:10px; color:#fca5a5; }
     .delbtn:hover{background:#1f2937;color:#fff}
+
+    .donebtn{ right:52px; color:#bbf7d0; }
+    .donebtn:hover{ background:#10251a; color:#22c55e; border-color:#14532d; }
+
+    /* Badge für „Von Leadership bearbeitet“ */
+    .review-badge{
+      display:inline-flex; align-items:center; gap:6px;
+      margin-top:8px; padding:6px 10px; border-radius:999px;
+      background:rgba(34,197,94,.12); color:#86efac; font-weight:800;
+      border:1px solid rgba(34,197,94,.35);
+    }
 
     .listwrap::-webkit-scrollbar{width:10px}
     .listwrap::-webkit-scrollbar-track{background:transparent}
@@ -392,7 +410,6 @@
     function parseParticipant(input){
       if(!input) return null;
       const raw = String(input).trim().replace(/\s+/g,' ');
-      // erlaubte Trenner: # oder Leerzeichen + # (z.B. "Max #4711")
       const m = raw.match(/^(.+?)\s*#\s*([A-Za-z0-9_-]{1,32})$/);
       if(!m) return null;
       const name = m[1].trim();
@@ -406,13 +423,11 @@
     function addParticipantFromText(){
       const p = parseParticipant(participantText.value);
       if(!p){
-        // Mini-Feedback
         participantText.style.transform='scale(0.99)';
         participantText.style.boxShadow='0 0 0 4px rgba(239,68,68,.22)';
         setTimeout(()=>{ participantText.style.transform=''; participantText.style.boxShadow=''; },160);
         return;
       }
-      // Duplikate verhindern
       if (participantsArr.some(x => participantKey(x) === participantKey(p))) {
         participantText.value = '';
         return;
@@ -428,7 +443,6 @@
     }
 
     function renderParticipantsChips(){
-      // entferne alle Chips außer das Input
       Array.from(participantsInput.querySelectorAll('.chip')).forEach(n=>n.remove());
       for(const p of participantsArr){
         const chip = document.createElement('span');
@@ -443,19 +457,16 @@
     }
 
     participantText.addEventListener('keydown', (e)=>{
-      // Enter, Tab, Komma, Semikolon lösen Hinzufügen aus
       if(['Enter','Tab'].includes(e.key) || e.key === ',' || e.key === ';'){
         e.preventDefault();
         addParticipantFromText();
       }else if(e.key === 'Backspace' && participantText.value === '' && participantsArr.length){
-        // Backspace bei leerem Feld: letzten Chip entfernen
         const last = participantsArr[participantsArr.length-1];
         removeParticipantByKey(participantKey(last));
       }
     });
 
     participantText.addEventListener('blur', ()=>{
-      // beim Verlassen evtl. restlichen Text übernehmen
       if(participantText.value.trim()) addParticipantFromText();
     });
 
@@ -477,13 +488,15 @@
           memberCount:cnt,
           participants: participantsArr.slice(), // Array von {name,id}
           note:(note.value||"").trim(),
-          proofUrl
+          proofUrl,
+          reviewed:false,           // neu: Standard = nicht geprüft
+          reviewedBy:null,
+          reviewedTs:null
         };
 
         await db.collection('eventLogs').add(payload);
         try{ await sendDiscordLog(payload); }catch(e){ console.warn("Discord-Webhook Fehler:", e); }
 
-        // Felder leeren
         populateEventSelect(); 
         memberCount.value=""; 
         proofUrlInput.value=""; 
@@ -496,6 +509,7 @@
       }catch(e){ setStatus("Fehler: "+(e.message||e)); }
     };
 
+    // Realtime Liste
     db.collection('eventLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
       const frag=document.createDocumentFragment();
       let count=0;
@@ -508,6 +522,26 @@
       const proof=d.proofUrl||"";
       const el=document.createElement('div'); el.className='item';
 
+      // ✅ Toggle-Button (nur Admin)
+      const doneBtn=document.createElement('button');
+      doneBtn.className='donebtn admin-only';
+      doneBtn.title = d.reviewed ? 'Als nicht bearbeitet markieren' : 'Als bearbeitet markieren';
+      doneBtn.textContent = d.reviewed ? '✅' : '☑️';
+      doneBtn.onclick = async ()=>{
+        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
+        try{
+          const now = new Date();
+          const patch = d.reviewed
+            ? { reviewed:false, reviewedBy:null, reviewedTs:null }
+            : { reviewed:true,  reviewedBy:auth.currentUser.email||auth.currentUser.uid, reviewedTs:now.toISOString() };
+          await db.collection('eventLogs').doc(id).update(patch);
+        }catch(e){
+          alert('Konnte Status nicht ändern: ' + (e?.message||e));
+        }
+      };
+      el.appendChild(doneBtn);
+
+      // ❌ Lösch-Button (nur Admin)
       const delBtn=document.createElement('button');
       delBtn.className='delbtn admin-only'; delBtn.title='Event-Log löschen'; delBtn.textContent='✕';
       delBtn.onclick=async()=>{
@@ -519,6 +553,7 @@
       };
       el.appendChild(delBtn);
 
+      // Thumbnail / Proof
       const thumb=document.createElement('div'); thumb.className='thumb';
       const isImg = isImageUrl(proof);
       if(proof && isImg){
@@ -533,7 +568,7 @@
 
       const content=document.createElement('div'); content.className='content';
 
-      // Teilnehmerliste aufbereiten (sowohl neues Arrayformat als auch alter String werden unterstützt)
+      // Teilnehmerliste aufbereiten
       const plist = Array.isArray(d.participants)
         ? d.participants.filter(p=>p && (p.name||p.id)).map(p=>({name:String(p.name||'').trim(), id:String(p.id||'').trim()}))
         : (d.participants ? String(d.participants).split(',').map(s=>{
@@ -550,6 +585,7 @@
           <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
         </div>
         ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
+        ${d.reviewed ? `<div class="review-badge">✅ Von Leadership bearbeitet</div>` : ``}
         ${pCount ? `
           <details class="participants">
             <summary>Teilnehmer anzeigen (${pCount})</summary>
