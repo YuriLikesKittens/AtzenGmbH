@@ -24,57 +24,38 @@
 
     *{box-sizing:border-box}
     html,body{height:100%}
+    html{ overflow-y:auto; scrollbar-gutter: stable; }
     body{
-      margin:0;color:var(--text);
+      min-height:100svh; margin:0;color:var(--text);
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       background:
         radial-gradient(1200px 800px at 8% 10%, rgba(124,58,237,.12), transparent 40%),
         radial-gradient(1000px 700px at 85% 15%, rgba(6,182,212,.12), transparent 45%),
         linear-gradient(160deg,var(--bg) 0%, var(--bg2) 100%);
-      padding:28px 16px 40px;
-      overflow-x:hidden;
+      padding:28px 16px 40px; overflow-x:hidden;
     }
 
-    /* Hintergrund-Layer */
     .net-bg{position:fixed; inset:0; pointer-events:none; z-index:0}
     .net-bg canvas{width:100%; height:100%; display:block}
 
-    /* Wrapper */
     .wrap{max-width:1150px;margin:0 auto;position:relative;z-index:1}
 
-    /* Topbar */
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
     h1{margin:0;font-family:Orbitron, Inter;font-size:clamp(22px,4vw,34px);letter-spacing:.02em}
     .actions{display:flex;gap:10px;flex-wrap:wrap}
     a.btn, button.btn{
       appearance:none;border:0;cursor:pointer;
-      padding:10px 14px;border-radius:12px;font-weight:800;
-      color:#fff;text-decoration:none;
+      padding:10px 14px;border-radius:12px;font-weight:800;color:#fff;text-decoration:none;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
       box-shadow:0 10px 26px rgba(6,182,212,.34), inset 0 0 0 1px rgba(255,255,255,.06);
       transition:.2s transform, .2s filter, .2s box-shadow;
     }
     .btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 14px 34px rgba(124,58,237,.30)}
 
-    /* Grid (linke Spalte etwas breiter) */
-    .grid{
-      display:grid;gap:10px;
-      grid-template-columns:420px 1fr;
-      align-items:start;
-      grid-auto-rows: min-content;
-    }
-    /* Explizite Platzierung: rechte Liste über zwei Zeilen, Hinweise unter links */
-    .left-card{ grid-column:1; grid-row:1; }
-    .right-card{ grid-column:2; grid-row:1 / span 3; }
-    .hints-card{ grid-column:1; grid-row:2; }
-    @media (max-width:980px){
-      .grid{ grid-template-columns:1fr; }
-      .left-card{ grid-column:auto; grid-row:auto; }
-      .right-card{ grid-column:auto; grid-row:auto; }
-      .hints-card{ grid-column:auto; grid-row:auto; }
-    }
+    .row-hero{ display:grid; gap:10px; grid-template-columns: 520px 1fr; align-items:start; margin-bottom:10px; }
+    @media (max-width:980px){ .row-hero{ grid-template-columns:1fr; } }
+    .row-list{ display:block; }
 
-    /* Card base (glassy) */
     .card{
       border-radius:var(--radius);
       background:
@@ -87,7 +68,6 @@
     }
     .card h2{margin:0 0 12px;font-size:18px}
 
-    /* Inputs */
     label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
     input,select{
       width:100%;padding:12px 14px;border-radius:12px;
@@ -103,13 +83,12 @@
     .linkbtn{display:inline-block;margin-top:6px;border:1px solid var(--border);border-radius:10px;padding:6px 10px;text-decoration:none;color:#e5e7eb}
     .linkbtn:hover{background:#111827}
 
-    /* Linke Karte fixieren */
-    .sticky{position:sticky;top:12px}
+    .sticky{position:sticky; top:12px}
 
-    /* Rechte Liste */
     .listwrap{
       border:1px solid var(--border);border-radius:12px;overflow:auto;max-height:68vh;
       background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.02));
+      scrollbar-gutter: stable;
     }
     .listhead{
       position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;
@@ -124,6 +103,7 @@
       background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
       box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
       transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+      will-change: transform;
     }
     .item:hover{transform:translateY(-1px);border-color:rgba(124,58,237,.35);box-shadow:0 8px 18px rgba(0,0,0,.35)}
     @media (max-width:640px){.item{grid-template-columns:1fr}}
@@ -138,13 +118,11 @@
     .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:#cbd5e1;margin-top:6px; text-decoration:none}
     .pill:hover{background:#111827}
 
-    /* Admin delete */
     .admin-only{display:none}
     body.admin .admin-only{display:block}
     .delbtn{position:absolute;top:10px;right:10px;background:#0b1020;border:1px solid var(--border);color:#fca5a5;width:34px;height:34px;border-radius:999px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800}
     .delbtn:hover{background:#1f2937;color:#fff}
 
-    /* Pretty scrollbar */
     .listwrap::-webkit-scrollbar{width:10px}
     .listwrap::-webkit-scrollbar-track{background:transparent}
     .listwrap::-webkit-scrollbar-thumb{
@@ -153,7 +131,7 @@
     }
     .listwrap{scrollbar-color:#7c3aed transparent;scrollbar-width:thin}
 
-    /* Popup Login */
+    /* Popup */
     #adminPopup{display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;}
     .adminPopup-card{width:90%; max-width:420px; border-radius:16px; background:#111827; border:1px solid var(--border); box-shadow:0 18px 42px rgba(0,0,0,.5); padding:22px;}
     .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
@@ -165,6 +143,46 @@
       -webkit-background-clip: text;-webkit-text-fill-color: transparent;background-clip: text;color: transparent;
       animation: rgbMove 6s linear infinite;background-size: 300% 100%;}
     @keyframes rgbMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+    /* ========= Teilnehmer Chip-Input ========= */
+    .chip-input{
+      display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+      padding:8px; border:1px solid var(--border); border-radius:12px; background:#0b1020;
+      min-height:46px;
+    }
+    .chip-input:focus-within{ border-color:#4c1d95; box-shadow:0 0 0 4px rgba(124,58,237,.22); }
+    .chip-input .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px; border:1px solid rgba(124,58,237,.5);
+      background:linear-gradient(135deg, rgba(124,58,237,.18), rgba(6,182,212,.16));
+      color:#e9e7ff; font-weight:700; letter-spacing:.01em;
+    }
+    .chip-input .chip .chipx{
+      appearance:none; border:0; background:#0b1020; color:#fff; opacity:.8;
+      width:20px; height:20px; border-radius:999px; cursor:pointer; line-height:20px; text-align:center;
+      font-weight:900; padding:0;
+    }
+    .chip-input .chip .chipx:hover{ opacity:1; background:#1f2937; }
+    .chip-input input{
+      flex:1 0 180px; min-width:160px; border:0; outline:0; background:transparent; color:var(--text); padding:8px 6px;
+    }
+    .helper{ margin-top:6px; color:#9aa4b2; font-size:12px; }
+    .helper .kbd{
+      display:inline-block; padding:2px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    /* Collapsible Teilnehmerliste */
+    details.participants{ margin-top:8px; border:1px solid var(--border); border-radius:10px; }
+    details.participants summary{
+      cursor:pointer; padding:8px 10px; user-select:none;
+      background:rgba(255,255,255,.03); border-radius:10px;
+      font-weight:700; color:#c7d2fe; outline:none;
+    }
+    details.participants[open] summary{ border-bottom:1px solid var(--border); border-bottom-left-radius:0;border-bottom-right-radius:0; }
+    .plist{ padding:10px; display:grid; gap:6px; font-size:13px; }
+    .plist .pitem{ display:flex; justify-content:space-between; gap:10px; border:1px solid var(--border); border-radius:10px; padding:6px 10px; background:#0b1020; }
+    .plist .pname{ font-weight:700; color:#e5e7eb; }
+    .plist .pid{ color:#93c5fd; font-family:ui-monospace, monospace; }
   </style>
 </head>
 <body>
@@ -203,9 +221,10 @@
       </div>
     </div>
 
-    <div class="grid">
-      <!-- Linke Spalte -->
-      <div class="card sticky left-card">
+    <!-- OBERER BEREICH: 2 Spalten -->
+    <div class="row-hero">
+      <!-- Linke Spalte (sticky) -->
+      <div class="card sticky">
         <h2>Neues Event eintragen</h2>
         <div class="chips">
           <span class="chip">Letzte Auswahl bleibt leer</span>
@@ -223,37 +242,41 @@
           </div>
         </div>
 
+        <!-- Teilnehmer (Chip-Input) + Proof nebeneinander -->
         <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+          <div>
+            <label>Teilnehmer</label>
+            <div id="participantsInput" class="chip-input" role="group" aria-label="Teilnehmer">
+              <!-- Chips kommen hier dynamisch rein -->
+              <input id="participantText" type="text" placeholder="Name#ID eingeben und Enter" />
+            </div>
+            <div class="helper">
+              Format: <b>Name#ID</b>, dann <span class="kbd">Enter</span> / <span class="kbd">,</span> / <span class="kbd">;</span> / <span class="kbd">Tab</span>. &nbsp;Beispiel: <i>Max#4711</i>
+            </div>
+          </div>
+
           <div>
             <label>Proof-URL (optional)</label>
             <input type="url" id="proofUrl" placeholder="Hier Imgur Link einfügen" />
             <a class="linkbtn" href="https://imgur.com/upload" target="_blank" rel="noopener">Bild bei Imgur hochladen ↗</a>
             <div class="muted">Lade das Bild bei Imgur hoch und füge den Link hier ein.</div>
           </div>
+        </div>
+
+        <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
           <div>
             <label>Bemerkung (optional)</label>
             <input type="text" id="note" placeholder="Anmerkungen" />
           </div>
+          <div></div>
         </div>
 
         <button class="btn primary" id="btnSubmit">Eintragen</button>
         <p class="muted" id="status"></p>
       </div>
 
-      <!-- Rechte Spalte -->
-      <div class="card right-card">
-        <h2 style="margin-bottom:10px">Letzte Events</h2>
-        <div class="listwrap">
-          <div class="listhead">
-            <span class="muted">Neueste zuerst</span>
-            <span class="badge" id="counter">0 Einträge</span>
-          </div>
-          <div id="list" class="list"></div>
-        </div>
-      </div>
-
-      <!-- Hinweise-Box: sitzt unter der linken Card -->
-      <div class="card hints-card">
+      <!-- Rechte Spalte (Hinweise) -->
+      <div class="card">
         <h2 style="color:red">Hinweise</h2>
         <p class="muted" style="margin:0 0 10px">
           Hier findest du Hinweise zum Hochladen von Events. SCHAUT EUCH DAS BEISPIEL AN!
@@ -268,6 +291,20 @@
         </ul>
       </div>
     </div>
+
+    <!-- UNTERER BEREICH: volle Breite, eigene Section -->
+    <div class="row-list">
+      <div class="card">
+        <h2 style="margin-bottom:10px">Letzte Events</h2>
+        <div class="listwrap">
+          <div class="listhead">
+            <span class="muted">Neueste zuerst</span>
+            <span class="badge" id="counter">0 Einträge</span>
+          </div>
+          <div id="list" class="list"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <footer>Made by Alvaro SolanoHebel | 20367</footer>
@@ -277,7 +314,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-    /* Firebase */
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -291,17 +327,14 @@
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
-    /* Events-Auswahl */
     const eventOptions = [
       "40er","50er","Bank","Bizwar","Cayo","EKZ/Mall","Gießerei","Hafen Drop",
       "RP Fabrik","Waffenfabrik","Drogenlabor Angriff","Flugzeugträger",
       "Raid / Angriff","Raid / Verteidigung","Famwar"
     ];
 
-    /* Webhook */
     const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1411850377560592527/2V4Xmj0iJeLIsDUVkz9ow9KEFdvhU9cffPcQqZtJUfOmkFoBzj5kBAaYSn9zXhO17ocJ";
 
-    /* Popup Login */
     const btnAdminLogin = document.getElementById('btnAdminLogin');
     const adminPopup    = document.getElementById('adminPopup');
     const btnClosePopup = document.getElementById('btnClosePopup');
@@ -332,7 +365,6 @@
     btnLogout.addEventListener('click', async () => { await auth.signOut(); });
     auth.onAuthStateChanged(user => setAdminUI(!!user));
 
-    /* UI Refs */
     const eventType     = document.getElementById('eventType');
     const memberCount   = document.getElementById('memberCount');
     const proofUrlInput = document.getElementById('proofUrl');
@@ -342,6 +374,11 @@
     const listEl        = document.getElementById('list');
     const counterEl     = document.getElementById('counter');
 
+    // === Teilnehmer Chip-Input ===
+    const participantsInput = document.getElementById('participantsInput');
+    const participantText   = document.getElementById('participantText');
+    let participantsArr     = []; // [{name, id}]
+
     function populateEventSelect(){
       eventType.innerHTML = '<option value="">— Bitte wählen —</option>';
       for(const label of eventOptions){
@@ -350,6 +387,77 @@
       }
     }
     document.addEventListener('DOMContentLoaded', populateEventSelect);
+
+    // Parse "Name#ID" -> {name,id}
+    function parseParticipant(input){
+      if(!input) return null;
+      const raw = String(input).trim().replace(/\s+/g,' ');
+      // erlaubte Trenner: # oder Leerzeichen + # (z.B. "Max #4711")
+      const m = raw.match(/^(.+?)\s*#\s*([A-Za-z0-9_-]{1,32})$/);
+      if(!m) return null;
+      const name = m[1].trim();
+      const id   = m[2].trim();
+      if(!name || !id) return null;
+      return {name, id};
+    }
+
+    function participantKey(p){ return (p.name + '|' + p.id).toLowerCase(); }
+
+    function addParticipantFromText(){
+      const p = parseParticipant(participantText.value);
+      if(!p){
+        // Mini-Feedback
+        participantText.style.transform='scale(0.99)';
+        participantText.style.boxShadow='0 0 0 4px rgba(239,68,68,.22)';
+        setTimeout(()=>{ participantText.style.transform=''; participantText.style.boxShadow=''; },160);
+        return;
+      }
+      // Duplikate verhindern
+      if (participantsArr.some(x => participantKey(x) === participantKey(p))) {
+        participantText.value = '';
+        return;
+      }
+      participantsArr.push(p);
+      participantText.value = '';
+      renderParticipantsChips();
+    }
+
+    function removeParticipantByKey(key){
+      participantsArr = participantsArr.filter(p => participantKey(p) !== key);
+      renderParticipantsChips();
+    }
+
+    function renderParticipantsChips(){
+      // entferne alle Chips außer das Input
+      Array.from(participantsInput.querySelectorAll('.chip')).forEach(n=>n.remove());
+      for(const p of participantsArr){
+        const chip = document.createElement('span');
+        chip.className='chip';
+        chip.innerHTML = `<span>${escapeHTML(p.name)}<span style="opacity:.7">#${escapeHTML(p.id)}</span></span>`;
+        const x = document.createElement('button');
+        x.className='chipx'; x.type='button'; x.ariaLabel='Entfernen'; x.textContent='×';
+        x.addEventListener('click', () => removeParticipantByKey(participantKey(p)));
+        chip.appendChild(x);
+        participantsInput.insertBefore(chip, participantText);
+      }
+    }
+
+    participantText.addEventListener('keydown', (e)=>{
+      // Enter, Tab, Komma, Semikolon lösen Hinzufügen aus
+      if(['Enter','Tab'].includes(e.key) || e.key === ',' || e.key === ';'){
+        e.preventDefault();
+        addParticipantFromText();
+      }else if(e.key === 'Backspace' && participantText.value === '' && participantsArr.length){
+        // Backspace bei leerem Feld: letzten Chip entfernen
+        const last = participantsArr[participantsArr.length-1];
+        removeParticipantByKey(participantKey(last));
+      }
+    });
+
+    participantText.addEventListener('blur', ()=>{
+      // beim Verlassen evtl. restlichen Text übernehmen
+      if(participantText.value.trim()) addParticipantFromText();
+    });
 
     btnSubmit.onclick = async () => {
       setStatus("Speichere…");
@@ -365,13 +473,24 @@
         const payload={
           ts:new Date().toISOString(),
           serverTs:firebase.firestore.FieldValue.serverTimestamp(),
-          type,memberCount:cnt,note:(note.value||"").trim(),proofUrl
+          type,
+          memberCount:cnt,
+          participants: participantsArr.slice(), // Array von {name,id}
+          note:(note.value||"").trim(),
+          proofUrl
         };
 
         await db.collection('eventLogs').add(payload);
         try{ await sendDiscordLog(payload); }catch(e){ console.warn("Discord-Webhook Fehler:", e); }
 
-        populateEventSelect(); memberCount.value=""; proofUrlInput.value=""; note.value="";
+        // Felder leeren
+        populateEventSelect(); 
+        memberCount.value=""; 
+        proofUrlInput.value=""; 
+        note.value="";
+        participantsArr = [];
+        renderParticipantsChips();
+
         setStatus("Gespeichert & an Discord gesendet.");
         setTimeout(()=>setStatus(""),2000);
       }catch(e){ setStatus("Fehler: "+(e.message||e)); }
@@ -413,6 +532,17 @@
       }
 
       const content=document.createElement('div'); content.className='content';
+
+      // Teilnehmerliste aufbereiten (sowohl neues Arrayformat als auch alter String werden unterstützt)
+      const plist = Array.isArray(d.participants)
+        ? d.participants.filter(p=>p && (p.name||p.id)).map(p=>({name:String(p.name||'').trim(), id:String(p.id||'').trim()}))
+        : (d.participants ? String(d.participants).split(',').map(s=>{
+            const m = s.trim().match(/^(.+?)\s*\((.+?)\)$/);
+            return m ? {name:m[1], id:m[2]} : {name:s.trim(), id:''};
+          }) : []);
+
+      const pCount = plist.length;
+
       content.innerHTML=`
         <p class="title"><span class="evName">${escapeHTML(d.type||'')}</span></p>
         <div class="meta">
@@ -420,13 +550,30 @@
           <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
         </div>
         ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
+        ${pCount ? `
+          <details class="participants">
+            <summary>Teilnehmer anzeigen (${pCount})</summary>
+            <div class="plist">
+              ${plist.map(p=>`
+                <div class="pitem">
+                  <span class="pname">${escapeHTML(p.name||'')}</span>
+                  <span class="pid">${p.id?`ID: ${escapeHTML(p.id)}`:''}</span>
+                </div>
+              `).join('')}
+            </div>
+          </details>
+        ` : ``}
       `;
       el.appendChild(thumb); el.appendChild(content);
       return el;
     }
 
-    async function sendDiscordLog({type, memberCount, note, proofUrl, ts}){
+    async function sendDiscordLog({type, memberCount, note, proofUrl, ts, participants}){
       const isImg = isImageUrl(proofUrl||"");
+      const participantsText = Array.isArray(participants) && participants.length
+        ? participants.map(p=>`${p.name} (${p.id})`).join(', ')
+        : undefined;
+
       const embed = {
         title: `Neues Event: ${type}`,
         description: (note || "").trim() || undefined,
@@ -435,6 +582,7 @@
         fields: [
           { name: "Event", value: type, inline: true },
           { name: "Mitglieder", value: String(memberCount||0), inline: true },
+          ...(participantsText ? [{ name: "Teilnehmer", value: participantsText, inline: false }] : []),
           ...(proofUrl ? [{ name: "Proof", value: proofUrl, inline: false }] : [])
         ],
         thumbnail: isImg ? { url: proofUrl } : undefined,
@@ -466,7 +614,7 @@
     function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname); }catch{ return false; } }
   </script>
 
-  <!-- Partikel-Netz (Canvas) – fix hell) -->
+  <!-- Partikel-Netz (Canvas) -->
   <script>
     (function(){
       const canvas = document.getElementById('netCanvas');
@@ -485,10 +633,10 @@
         const targetCount = Math.round((w*h)/9000);
         const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
         const min = 50;
-        const count = Math.max(min, Math.min(max, targetCount));
+        const theCount = Math.max(min, Math.min(max, targetCount));
 
-        if (particles.length > count) particles.length = count;
-        while (particles.length < count){ particles.push(makeParticle()); }
+        if (particles.length > theCount) particles.length = theCount;
+        while (particles.length < theCount){ particles.push(makeParticle()); }
       }
 
       function makeParticle(){
