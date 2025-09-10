@@ -585,7 +585,7 @@
           <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
         </div>
         ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
-        ${d.reviewed ? `<div class="review-badge">✅ Von Leadership bearbeitet</div>` : ``}
+        ${d.reviewed ? `<div class="review-badge">✅ Von Leaderschaft bearbeitet</div>` : ``}
         ${pCount ? `
           <details class="participants">
             <summary>Teilnehmer anzeigen (${pCount})</summary>
