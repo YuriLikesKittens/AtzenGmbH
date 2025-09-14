@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Event-Log · MS-13 DE01</title>
+  <title>Event-Log · Einträge & Proof-Links</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -257,7 +257,7 @@
             <select id="eventType"><option value="">— Bitte wählen —</option></select>
           </div>
           <div>
-            <label>Mitglieder [Müssen nicht mehr Eingtragen werden]</label>
+            <label>Mitglieder</label>
             <input type="number" id="memberCount" min="0" step="1" placeholder="0" readonly />
           </div>
         </div>
@@ -268,7 +268,7 @@
             <label>Teilnehmer</label>
             <div id="participantsInput" class="chip-input" role="group" aria-label="Teilnehmer">
               <!-- Chips kommen hier dynamisch rein -->
-              <input id="participantText" type="text" placeholder="Name#ID eingeben und Enter drücken!" />
+              <input id="participantText" type="text" placeholder="Name#ID eingeben und Enter" />
             </div>
             <div class="helper">
               Format: <b>Name#ID</b>, dann <span class="kbd">Enter</span> / <span class="kbd">,</span> / <span class="kbd">;</span> / <span class="kbd">Tab</span>. &nbsp;Beispiel: <i>Max#4711</i>
@@ -276,10 +276,10 @@
           </div>
 
           <div>
-            <label>Proof-URL Pflicht</label>
-            <input type="url" id="proofUrl" placeholder="Hier fügst du den Imgur Link ein" />
+            <label>Proof-URL (optional)</label>
+            <input type="url" id="proofUrl" placeholder="Hier Imgur Link einfügen" />
             <a class="linkbtn" href="https://imgur.com/upload" target="_blank" rel="noopener">Bild bei Imgur hochladen ↗</a>
-            <div class="muted">Bild hochladen und dann einfügen!.</div>
+            <div class="muted">Lade das Bild bei Imgur hoch und füge den Link hier ein.</div>
           </div>
         </div>
 
@@ -337,7 +337,14 @@
       "Raid / Angriff","Raid / Verteidigung","Famwar", "Shop / Ammu Raub", "Zinken",
     ];
 
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1411850377560592527/2V4Xmj0iJeLIsDUVkz9ow9KEFdvhU9cffPcQqZtJUfOmkFoBzj5kBAaYSn9zXhO17ocJ";
+    /* DEFAULT = Angefahrene Events */
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1416741503253872801/2H75_WDeGl2k8K5zDwHWRLlZX8Il2XXOdI658Slo45OmUNxYX_x551T0fNCEXtVdAFz-";
+
+    /* Spezielle Channels */
+    const WEBHOOKS = {
+      "40er":  "https://discord.com/api/webhooks/1416741181152432148/ElS3YqwlR6HygQGk0zc98L0h6J-2OONZu68_595U9IZeeSdJvyEESG9gGJS2j5ATgsxl",
+      "Bizwar":"https://discord.com/api/webhooks/1416741309917560852/9fYnthXUW0vtBbcrmrhIT6xIhEC_K4TV1h5QEWI4P2GDS5Lx3uLa5r8URnwMatTZn3tf"
+    };
 
     const btnAdminLogin = document.getElementById('btnAdminLogin');
     const adminPopup    = document.getElementById('adminPopup');
@@ -619,15 +626,18 @@
       };
       const body = { username: "MS-Eventlog System", embeds: [embed] };
 
+      // Webhook anhand des Typs wählen; sonst Standard (Angefahrene Events)
+      const webhookUrl = WEBHOOKS[type] || DISCORD_WEBHOOK;
+
       try{
-        const r = await fetch(DISCORD_WEBHOOK, {
+        const r = await fetch(webhookUrl, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
         });
         if (!r.ok && r.status !== 204) throw new Error(`HTTP ${r.status}`);
       }catch{
         try{
-          await fetch(DISCORD_WEBHOOK, {
+          await fetch(webhookUrl, {
             method: "POST", mode: "no-cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
