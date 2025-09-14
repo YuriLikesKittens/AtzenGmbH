@@ -3,12 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin · Guthaben Verwaltung (Sync)</title>
+  <title>Leaderschaftspanel für Auszahlungen</title>
 
   <style>
-    /* ===========================
-       DESIGN-TOKENS (Default)
-       =========================== */
     :root{
       --bg:#0f172a;
       --surface-1:#111827cc;   /* Panels */
@@ -37,7 +34,6 @@
       --space-5:18px; --space-6:20px; --space-7:24px; --space-8:32px;
     }
 
-    /* Optionales Custom Theme */
     [data-theme="custom"]{
       --bg:#0b0f1a;
       --surface-1:rgba(14,18,27,.72);
@@ -54,7 +50,6 @@
       --focus-ring:rgba(139,92,246,.25);
     }
 
-    /* Basis */
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -67,14 +62,10 @@
       overflow-x:hidden;
     }
 
-    /* Vollbild-Hintergrund-Canvas */
-    .net-bg{
-      position:fixed; inset:0; z-index:0; pointer-events:none;
-    }
+    .net-bg{position:fixed; inset:0; z-index:0; pointer-events:none;}
     .net-bg canvas{width:100%;height:100%;display:block}
 
     .container{max-width:1120px;margin:0 auto; position:relative; z-index:1}
-
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-2)}
     h1{
       margin:0;font-size:clamp(22px,4vw,34px);letter-spacing:.2px;font-weight:800;
@@ -83,13 +74,11 @@
     }
     .subtitle{color:var(--text-muted);margin:6px 0 var(--space-6)}
 
-    /* Layout */
     .grid{display:grid;gap:18px;grid-template-columns:1.1fr .9fr}
     @media (max-width:920px){.grid{grid-template-columns:1fr}}
     .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
     @media (max-width:680px){.row{grid-template-columns:1fr}}
 
-    /* Cards */
     .card{
       background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));
       border:1px solid var(--border);
@@ -100,7 +89,6 @@
     }
     h2{margin:0 0 var(--space-3);font-size:18px;font-weight:700}
 
-    /* Form */
     label{
       font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);
       display:block;margin-bottom:6px;
@@ -113,12 +101,10 @@
     input::placeholder{color:color-mix(in srgb, var(--text-muted) 85%, white 15%)}
     input:focus,select:focus{border-color:color-mix(in srgb, var(--accent) 70%, black 30%);box-shadow:0 0 0 4px var(--focus-ring)}
 
-    /* Buttons */
     .btn{
       cursor:pointer;font-weight:700;border:none;margin-top:8px;
       background:linear-gradient(135deg,var(--accent) 0%, var(--accent-2) 100%);
       box-shadow:0 6px 16px color-mix(in srgb, var(--accent-2) 60%, black 40%);
-      will-change:transform,filter;
     }
     .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
     .btn:active{transform:translateY(0)}
@@ -131,7 +117,6 @@
     .muted{color:var(--text-muted);font-size:12px}
     .warn{color:#fca5a5;font-size:12px}
 
-    /* Stats & Tabelle */
     .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
     .chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-pill);padding:8px 12px;font-size:13px;color:var(--text-muted)}
     .chip b{color:#e2e8f0}
@@ -143,15 +128,37 @@
     .right{text-align:right}
     .id{color:#a5b4fc;font-family:var(--font-mono)}
 
-    /* Admin-only Spalte */
     .admin-only{display:none}
     body.admin .admin-only{display:table-cell}
 
     .table-shell{overflow:auto;max-height:55vh;border:1px solid var(--border);border-radius:var(--radius-md)}
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow-elev);
+      animation: fadeIn .2s ease;
+    }
+    .modal h3 { margin: 0 0 12px; }
+    @keyframes fadeIn { from {opacity:0;transform:scale(.96)} to {opacity:1;transform:scale(1)} }
   </style>
 </head>
 <body>
-  <!-- Hintergrund: Partikel-Netz -->
+  <!-- Hintergrund -->
   <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
 
   <div class="container">
@@ -159,9 +166,9 @@
       <h1>Admin · Guthaben Verwaltung (Sync)</h1>
       <a class="btn payoutBtn" id="btnToPayouts" href="#" target="_self">Zur Übersicht</a>
     </div>
-    <p class="subtitle">Sign-In → Mitglieder & Auszahlungen pflegen. Änderungen synchronisieren live zur öffentlichen Seite.</p>
+    <p class="subtitle">Hier kann die Leaderschaft Auszahlung verwalten</p>
 
-    <!-- Login-Panel (wird nach Login automatisch ausgeblendet) -->
+    <!-- Login -->
     <div class="card" id="authCard">
       <h2>Admin Login</h2>
       <div class="row">
@@ -174,13 +181,14 @@
           <input type="password" id="password" placeholder="********" />
         </div>
       </div>
-      <div class="auth" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <button class="btn" id="btnLogin">Anmelden</button>
-        <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
+        <button class="btn btn-danger" id="btnLogout" style="display:none">Abmelden</button>
       </div>
-      <p class="muted">Hinweis: E-Mail/Passwort in Firebase Authentication anlegen. <span class="warn" id="authState"></span></p>
+      <p class="muted">Hinweis: Brauchst nen Login von Alvaro du schlingel. <span class="warn" id="authState"></span></p>
     </div>
 
+    <!-- App -->
     <div class="grid" id="app" style="display:none">
       <div class="card">
         <h2>Buchung / Mitglied</h2>
@@ -252,25 +260,38 @@
     </div>
   </div>
 
-<footer style="
-  margin-top:24px;
-  text-align:center;
-  font-size:13px;
-  padding:10px;
-  font-weight:600;
-  background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-  animation: rgbMove 6s linear infinite;
-  background-size: 300% 100%;
-">
-  Made by Alvaro SolanoHebel | 20367
-</footer>
+  <!-- Modal: Mitglied bearbeiten -->
+  <div id="editModal" class="modal-overlay">
+    <div class="modal">
+      <h3>Mitglied bearbeiten</h3>
+      <div class="row">
+        <div>
+          <label>Neuer Name</label>
+          <input type="text" id="editName" placeholder="Neuer Mitgliedsname" />
+        </div>
+        <div>
+          <label>Neue ID</label>
+          <input type="text" id="editId" placeholder="z. B. M001" />
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn" id="btnEditSave">Speichern</button>
+        <button class="btn btn-danger" id="btnEditCancel">Abbrechen</button>
+        <span class="muted" id="editHint" style="align-self:center;margin-left:8px"></span>
+      </div>
+    </div>
+  </div>
 
-  
-  <!-- Firebase SDKs (CDN) -->
+  <footer style="
+    margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
+    background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; color: transparent; animation: rgbMove 6s linear infinite; background-size: 300% 100%;
+  ">
+    Made by Alvaro SolanoHebel | 20367
+  </footer>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -285,15 +306,14 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
+    const PAYOUTS_URL = "index.html";
 
-    const PAYOUTS_URL = "index.html"; // <- Link zur Übersicht
-
-    // --- Firebase Init ---
+    // Firebase init
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // --- UI Refs ---
+    // --- UI Refs (WICHTIG: alle definieren!) ---
     const authCard = document.getElementById("authCard");
     const appEl = document.getElementById("app");
     const authState = document.getElementById("authState");
@@ -304,54 +324,6 @@
     const btnToPayouts = document.getElementById("btnToPayouts");
     btnToPayouts.href = PAYOUTS_URL;
 
-    // State: ist Admin eingeloggt?
-    let isAdmin = false;
-    function setAdminUI(on){
-      document.body.classList.toggle("admin", !!on);
-    }
-
-    // Login
-    btnLogin.onclick = async () => {
-      authState.textContent = "Anmeldung läuft…";
-      try {
-        await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
-        await auth.signInWithEmailAndPassword(email.value, password.value);
-        authState.textContent = "Angemeldet";
-      } catch (e) {
-        authState.textContent = e && e.message ? e.message : "Login fehlgeschlagen";
-      }
-    };
-    btnLogout.onclick = async () => { await auth.signOut(); };
-
-    // <<< WICHTIG: Login-Panel nach Login ausblenden & App zeigen >>>
-    auth.onAuthStateChanged(user => {
-      isAdmin = !!user;
-      setAdminUI(isAdmin);
-
-      if (user){
-        // Buttons umschalten
-        btnLogin.style.display = "none";
-        btnLogout.style.display = "inline-block";
-        authState.textContent = "Angemeldet";
-
-        // Panel ausblenden, App einblenden
-        authCard.style.display = "none";
-        appEl.style.display = "";
-
-        // optional: nach oben scrollen, falls nötig
-        // window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        btnLogin.style.display = "inline-block";
-        btnLogout.style.display = "none";
-        authState.textContent = "Abgemeldet";
-
-        // Panel wieder anzeigen, App ausblenden
-        authCard.style.display = "";
-        appEl.style.display = "none";
-      }
-    });
-
-    // --- DOM inputs ---
     const mitgliedSel = document.getElementById("mitglied");
     const neuesMitgliedInput = document.getElementById("neuesMitglied");
     const mitgliedIdInput = document.getElementById("mitgliedId");
@@ -361,7 +333,83 @@
     const tbody = document.getElementById("tbody");
     const statMitglieder = document.getElementById("statMitglieder");
     const statSaldo = document.getElementById("statSaldo");
-    document.getElementById("btnSave").onclick = saveEntry;
+    const btnSave = document.getElementById("btnSave");
+
+    // Modal refs
+    const editModal = document.getElementById("editModal");
+    const editNameInput = document.getElementById("editName");
+    const editIdInput = document.getElementById("editId");
+    const btnEditSave = document.getElementById("btnEditSave");
+    const btnEditCancel = document.getElementById("btnEditCancel");
+    const editHint = document.getElementById("editHint");
+
+    // State
+    let isAdmin = false;
+    let unsubMembers = null;
+    let currentMemberName = null;
+
+    function setAdminUI(on){ document.body.classList.toggle("admin", !!on); }
+
+    // Login
+    btnLogin.onclick = async () => {
+      authState.textContent = "Anmeldung läuft…";
+      try {
+        await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+        await auth.signInWithEmailAndPassword(email.value, password.value);
+        authState.textContent = "Angemeldet";
+      } catch (e) {
+        authState.textContent = e?.message || "Login fehlgeschlagen";
+      }
+    };
+    btnLogout.onclick = async () => { await auth.signOut(); };
+
+    // Auth-State (einziger Listener, aufgeräumt)
+    auth.onAuthStateChanged(user => {
+      isAdmin = !!user;
+      setAdminUI(isAdmin);
+
+      // UI toggle
+      authCard.style.display = user ? "none" : "";
+      appEl.style.display = user ? "" : "none";
+      btnLogin.style.display = user ? "none" : "inline-block";
+      btnLogout.style.display = user ? "inline-block" : "none";
+      authState.textContent = user ? "Angemeldet" : "Abgemeldet";
+
+      // Snapshot sauber (neu setzen/abbestellen)
+      if (unsubMembers) { unsubMembers(); unsubMembers = null; }
+      if (user) {
+        unsubMembers = db.collection("members").orderBy("name").onSnapshot(snap => {
+          // Dropdown + Tabelle erneuern
+          while (mitgliedSel.options.length > 1) mitgliedSel.remove(1);
+          tbody.innerHTML = "";
+          let total = 0, count = 0;
+
+          snap.forEach(doc => {
+            const m = doc.data();
+            const opt = document.createElement("option");
+            opt.value = m.name;
+            opt.textContent = m.name;
+            mitgliedSel.appendChild(opt);
+
+            const tr = document.createElement("tr");
+            const actionCell = isAdmin ? `<td class="admin-only right">
+                <button class="xbtn" title="Mitglied bearbeiten" onclick="editMember('${escapeAttr(m.name)}')">✎</button>
+                <button class="xbtn btn-danger" title="Mitglied entfernen" onclick="deleteMember('${escapeAttr(m.name)}')">✕</button>
+              </td>` : `<td class="admin-only right"></td>`;
+
+            tr.innerHTML = `<td>${escapeHTML(m.name)}</td>
+                            <td class="id">${escapeHTML(m.id || "")}</td>
+                            <td class="right">${toLocale(m.balance || 0)}</td>
+                            ${actionCell}`;
+            tbody.appendChild(tr);
+            count++; total += (m.balance || 0);
+          });
+
+          statMitglieder.textContent = String(count);
+          statSaldo.textContent = toLocale(round2(total));
+        });
+      }
+    });
 
     // Events
     const eventTemplates = {
@@ -372,8 +420,6 @@
       "EKZ/Mall Win": 50000, "RP Fabrik Win": 300000, "RP Fabrik Teilnahme": 0, "Cayo": 50000,
       "Sanktion": 0, "Komplett Auszahlung": -1
     };
-
-    // Fill events
     (function initEvents(){
       const entries = Object.entries(eventTemplates).sort((a,b)=> a[0].localeCompare(b[0], "de"));
       for (const [label, value] of entries){
@@ -388,39 +434,8 @@
       });
     })();
 
-    // Live listeners
-    let unsubMembers = null;
-    auth.onAuthStateChanged(user => {
-      if (unsubMembers) unsubMembers();
-      unsubMembers = db.collection("members").orderBy("name").onSnapshot(snap => {
-        // refresh dropdown + table
-        while (mitgliedSel.options.length > 1) mitgliedSel.remove(1);
-        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-        let total = 0, count = 0;
-        snap.forEach(doc => {
-          const m = doc.data();
-          const opt = document.createElement("option");
-          opt.value = m.name;
-          opt.textContent = m.name;
-          mitgliedSel.appendChild(opt);
-
-          const tr = document.createElement("tr");
-          const actionCell = isAdmin ? `<td class="admin-only right">
-              <button class="xbtn btn-danger" title="Mitglied entfernen" onclick="deleteMember('${escapeAttr(m.name)}')">✕</button>
-            </td>` : `<td class="admin-only right"></td>`;
-
-          tr.innerHTML = `<td>${escapeHTML(m.name)}</td>
-                          <td class="id">${escapeHTML(m.id || "")}</td>
-                          <td class="right">${toLocale(m.balance || 0)}</td>
-                          ${actionCell}`;
-          tbody.appendChild(tr);
-          count++; total += (m.balance || 0);
-        });
-        statMitglieder.textContent = count.toString();
-        statSaldo.textContent = toLocale(round2(total));
-      });
-    });
-
+    // Eintrag speichern
+    btnSave.onclick = saveEntry;
     async function ensureMember(name, idMaybe){
       const ref = db.collection("members").doc(name);
       const snap = await ref.get();
@@ -431,7 +446,6 @@
       }
       return ref;
     }
-
     async function saveEntry(){
       let name = mitgliedSel.value;
       const neuerName = (neuesMitgliedInput.value || "").trim();
@@ -441,16 +455,13 @@
 
       const memberRef = await ensureMember(name, id);
 
-      // Betrag
       let amount = betragInput.value === "" ? NaN : parseFloat(betragInput.value);
       if (isNaN(amount)){
         const ev = eventSel.value;
         if (ev && eventTemplates[ev] != null) amount = parseFloat(eventTemplates[ev]);
       }
-
       if (isNaN(amount)){
-        clearInputs();
-        return; // nur Mitglied anlegen
+        clearInputs(); return; // nur Mitglied anlegen/aktualisieren
       }
 
       const type = typSel.value; // einzahlung | auszahlung
@@ -476,16 +487,70 @@
       clearInputs();
     }
 
-    // Mitglied löschen (nur Admin; Transaktionen bleiben erhalten)
+    // Modal öffnen/schließen
+    window.editMember = async function(name){
+      if (!isAdmin){ alert("Nicht angemeldet."); return; }
+      try {
+        const ref = db.collection("members").doc(name);
+        const snap = await ref.get();
+        if (!snap.exists){ alert("Mitglied nicht gefunden."); return; }
+        const data = snap.data();
+        currentMemberName = data.name;
+        editNameInput.value = data.name;
+        editIdInput.value = data.id || "";
+        editHint.textContent = "Hinweis: Eine Namensänderung legt ein neues Dokument an.";
+        editModal.classList.add("active");
+      } catch (e) {
+        alert("Fehler beim Laden: " + (e?.message || e));
+      }
+    };
+    function closeEditModal(){
+      editModal.classList.remove("active");
+      currentMemberName = null;
+      editHint.textContent = "";
+    }
+    btnEditCancel.onclick = closeEditModal;
+    editModal.addEventListener("click", (e)=>{ if(e.target===editModal) closeEditModal(); });
+    window.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeEditModal(); });
+
+    btnEditSave.onclick = async () => {
+      if (!isAdmin || !currentMemberName) return;
+      btnEditSave.disabled = true; btnEditCancel.disabled = true;
+      editHint.textContent = "Speichern…";
+      try{
+        const newName = (editNameInput.value || "").trim();
+        const newId = (editIdInput.value || "").trim();
+        if (!newName){ alert("Name darf nicht leer sein."); return; }
+
+        const oldRef = db.collection("members").doc(currentMemberName);
+        const oldSnap = await oldRef.get();
+        if (!oldSnap.exists){ alert("Altes Mitglied nicht gefunden."); return; }
+        const oldData = oldSnap.data();
+
+        if (newName !== currentMemberName){
+          const newRef = db.collection("members").doc(newName);
+          if ((await newRef.get()).exists){ alert("Ein Mitglied mit diesem neuen Namen existiert bereits."); return; }
+          await newRef.set({ name: newName, id: newId, balance: oldData.balance || 0 });
+          await oldRef.delete();
+        } else {
+          await oldRef.update({ id: newId });
+        }
+        closeEditModal();
+      } catch (e){
+        alert("Bearbeiten fehlgeschlagen: " + (e?.message || e));
+      } finally {
+        btnEditSave.disabled = false; btnEditCancel.disabled = false;
+        editHint.textContent = "";
+      }
+    };
+
+    // Löschen
     window.deleteMember = async function(name){
       if (!isAdmin){ alert("Nicht angemeldet."); return; }
       const ok = confirm(`Mitglied "${name}" wirklich entfernen? Transaktionen bleiben erhalten.`);
       if (!ok) return;
-      try{
-        await db.collection("members").doc(name).delete();
-      }catch(e){
-        alert("Löschen fehlgeschlagen: " + (e && e.message ? e.message : e));
-      }
+      try{ await db.collection("members").doc(name).delete(); }
+      catch(e){ alert("Löschen fehlgeschlagen: " + (e?.message || e)); }
     };
 
     function clearInputs(){
@@ -503,7 +568,7 @@
     function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s => ({ "&":"&amp;","<":"&lt;","&gt;":"&gt;","'":"&#39;","\"":"&quot;" }[s])); }
     function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
 
-    /* Partikel-Netz (Canvas) – dezent & skaliert */
+    /* Partikel-Netz */
     (function(){
       const canvas = document.getElementById('netCanvas');
       if(!canvas) return;
@@ -513,11 +578,9 @@
       let w = 0, h = 0;
 
       function resize(){
-        w = canvas.clientWidth;
-        h = canvas.clientHeight;
+        w = canvas.clientWidth; h = canvas.clientHeight;
         if(!w||!h) return;
-        canvas.width = Math.floor(w * DPR);
-        canvas.height = Math.floor(h * DPR);
+        canvas.width = Math.floor(w * DPR); canvas.height = Math.floor(h * DPR);
         ctx.setTransform(DPR,0,0,DPR,0,0);
 
         const targetCount = Math.round((w*h)/9000);
@@ -526,26 +589,22 @@
         const count = Math.max(min, Math.min(max, targetCount));
 
         if (particles.length > count) particles.length = count;
-        while (particles.length < count){ particles.push(makeParticle()); }
-      }
-      function makeParticle(){
-        return { x: Math.random()*w, y: Math.random()*h, vx:(Math.random()*2-1)*0.25, vy:(Math.random()*2-1)*0.25, r: Math.random()*1.2+0.6 };
+        while (particles.length < count){ particles.push({ x: Math.random()*w, y: Math.random()*h, vx:(Math.random()*2-1)*0.25, vy:(Math.random()*2-1)*0.25, r: Math.random()*1.2+0.6 }); }
       }
 
-      let MAX_D = 160, DOT_A = 0.35, LINK_A = 0.14;
+      const MAX_D = 160, DOT_A = 0.35, LINK_A = 0.14;
 
       function step(){
         ctx.clearRect(0,0,w,h);
         ctx.beginPath();
-        particles.forEach(p=>{
+        for (const p of particles){
           p.x += p.vx; p.y += p.vy;
           if (p.x < -20 || p.x > w+20) p.vx *= -1;
           if (p.y < -20 || p.y > h+20) p.vy *= -1;
           ctx.moveTo(p.x + p.r, p.y);
           ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        });
-        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
-        ctx.fill();
+        }
+        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`; ctx.fill();
 
         for (let i=0;i<particles.length;i++){
           for (let j=i+1;j<particles.length;j++){
@@ -554,12 +613,8 @@
             const d2=dx*dx+dy*dy;
             if(d2<MAX_D*MAX_D){
               const alpha=(1-Math.sqrt(d2)/MAX_D)*LINK_A;
-              ctx.beginPath();
-              ctx.moveTo(a.x,a.y);
-              ctx.lineTo(b.x,b.y);
-              ctx.strokeStyle=`rgba(255,255,255,${alpha})`;
-              ctx.lineWidth=1;
-              ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+              ctx.strokeStyle=`rgba(255,255,255,${alpha})`; ctx.lineWidth=1; ctx.stroke();
             }
           }
         }
@@ -567,8 +622,7 @@
       }
 
       window.addEventListener('resize', resize, {passive:true});
-      resize();
-      requestAnimationFrame(step);
+      resize(); requestAnimationFrame(step);
     })();
   </script>
 </body>
