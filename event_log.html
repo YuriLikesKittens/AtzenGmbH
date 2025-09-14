@@ -52,7 +52,8 @@
     }
     .btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 14px 34px rgba(124,58,237,.30)}
 
-    .row-hero{ display:grid; gap:10px; grid-template-columns: 520px 1fr; align-items:start; margin-bottom:10px; }
+    /* Nur hier angepasst: eine Spalte, da die Hinweise-Box entfernt wurde */
+    .row-hero{ display:grid; gap:10px; grid-template-columns: 1fr; align-items:start; margin-bottom:10px; }
     @media (max-width:980px){ .row-hero{ grid-template-columns:1fr; } }
     .row-list{ display:block; }
 
@@ -239,7 +240,7 @@
       </div>
     </div>
 
-    <!-- OBERER BEREICH: 2 Spalten -->
+    <!-- OBERER BEREICH: EIN SPALTE (Hinweise-Box entfernt) -->
     <div class="row-hero">
       <!-- Linke Spalte (sticky) -->
       <div class="card sticky">
@@ -249,24 +250,25 @@
           <span class="chip">Proof optional</span>
         </div>
 
-        <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr;margin-top:8px">
+        <!-- 1) Eventtyp + Mitglieder (Mitglieder = readonly, auto) -->
+        <div style="display:grid;gap:12px;grid-template-columns:1fr;margin-top:8px">
           <div>
             <label>Art des Events</label>
             <select id="eventType"><option value="">— Bitte wählen —</option></select>
           </div>
           <div>
-            <label>Mitglieder</label>
-            <input type="number" id="memberCount" min="0" step="1" placeholder="z. B. 12" />
+            <label>Mitglieder [Müssen nicht mehr Eingtragen werden]</label>
+            <input type="number" id="memberCount" min="0" step="1" placeholder="0" readonly />
           </div>
         </div>
 
-        <!-- Teilnehmer (Chip-Input) + Proof nebeneinander -->
-        <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <!-- 2) Teilnehmer und 3) Proof jeweils untereinander -->
+        <div style="display:grid;gap:12px;grid-template-columns:1fr">
           <div>
             <label>Teilnehmer</label>
             <div id="participantsInput" class="chip-input" role="group" aria-label="Teilnehmer">
               <!-- Chips kommen hier dynamisch rein -->
-              <input id="participantText" type="text" placeholder="Name#ID eingeben und Enter" />
+              <input id="participantText" type="text" placeholder="Name#ID eingeben und Enter drücken!" />
             </div>
             <div class="helper">
               Format: <b>Name#ID</b>, dann <span class="kbd">Enter</span> / <span class="kbd">,</span> / <span class="kbd">;</span> / <span class="kbd">Tab</span>. &nbsp;Beispiel: <i>Max#4711</i>
@@ -274,39 +276,23 @@
           </div>
 
           <div>
-            <label>Proof-URL (optional)</label>
-            <input type="url" id="proofUrl" placeholder="Hier Imgur Link einfügen" />
+            <label>Proof-URL Pflicht</label>
+            <input type="url" id="proofUrl" placeholder="Hier fügst du den Imgur Link ein" />
             <a class="linkbtn" href="https://imgur.com/upload" target="_blank" rel="noopener">Bild bei Imgur hochladen ↗</a>
-            <div class="muted">Lade das Bild bei Imgur hoch und füge den Link hier ein.</div>
+            <div class="muted">Bild hochladen und dann einfügen!.</div>
           </div>
         </div>
 
-        <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <!-- 4) Bemerkung -->
+        <div style="display:grid;gap:12px;grid-template-columns:1fr">
           <div>
             <label>Bemerkung (optional)</label>
             <input type="text" id="note" placeholder="Anmerkungen" />
           </div>
-          <div></div>
         </div>
 
         <button class="btn primary" id="btnSubmit">Eintragen</button>
         <p class="muted" id="status"></p>
-      </div>
-
-      <!-- Rechte Spalte (Hinweise) -->
-      <div class="card">
-        <h2 style="color:red">Hinweise</h2>
-        <p class="muted" style="margin:0 0 10px">
-          Hier findest du Hinweise zum Hochladen von Events. SCHAUT EUCH DAS BEISPIEL AN!
-        </p>
-        <a class="linkbtn" href="#" role="button">Beispiel</a>
-        <ul style="margin:10px 0 0; padding-left:18px; color:#c7d2fe; font-size:13px">
-          <li>BITTE LADET GEWINNER SCREEN UND IN-ZONE SCREEN IN EINEN IMGUR Link HOCH!</li>
-          <li>Die Proof wird ausschließlich über IMGUR hochgeladen, alles andere wird gelöscht.</li>
-          <li>Proof ist Pflicht. Kein Proof = Keine Auszahlung</li>
-          <li>Das Datum wird automatisch gesetzt.</li>
-          <li>Bemerkung bitte kurz halten.</li>
-        </ul>
       </div>
     </div>
 
@@ -404,7 +390,10 @@
         eventType.appendChild(opt);
       }
     }
-    document.addEventListener('DOMContentLoaded', populateEventSelect);
+    document.addEventListener('DOMContentLoaded', () => {
+      populateEventSelect();
+      updateMemberCountInput(); // initial anzeigen (0)
+    });
 
     // Parse "Name#ID" -> {name,id}
     function parseParticipant(input){
@@ -442,6 +431,10 @@
       renderParticipantsChips();
     }
 
+    function updateMemberCountInput(){
+      if(memberCount) memberCount.value = String(participantsArr.length);
+    }
+
     function renderParticipantsChips(){
       Array.from(participantsInput.querySelectorAll('.chip')).forEach(n=>n.remove());
       for(const p of participantsArr){
@@ -454,6 +447,7 @@
         chip.appendChild(x);
         participantsInput.insertBefore(chip, participantText);
       }
+      updateMemberCountInput(); // 👈 live aktualisieren
     }
 
     participantText.addEventListener('keydown', (e)=>{
@@ -474,10 +468,10 @@
       setStatus("Speichere…");
       try{
         const type = (eventType.value||"").trim();
-        const cnt  = parseInt(memberCount.value||"0",10);
+        const cnt  = participantsArr.length; // 👈 automatisch berechnet
         if(!type) return setStatus("Bitte eine Event-Art wählen.");
         if(!eventOptions.includes(type)) return setStatus("Ungültiges Event.");
-        if(isNaN(cnt)||cnt<0) return setStatus("Mitgliederzahl ungültig.");
+
         let proofUrl=(proofUrlInput.value||"").trim();
         if(proofUrl && !(/^https?:\/\//i.test(proofUrl))) return setStatus("Bitte gültige URL (http/https).");
 
@@ -489,7 +483,7 @@
           participants: participantsArr.slice(), // Array von {name,id}
           note:(note.value||"").trim(),
           proofUrl,
-          reviewed:false,           // neu: Standard = nicht geprüft
+          reviewed:false,
           reviewedBy:null,
           reviewedTs:null
         };
@@ -498,11 +492,10 @@
         try{ await sendDiscordLog(payload); }catch(e){ console.warn("Discord-Webhook Fehler:", e); }
 
         populateEventSelect(); 
-        memberCount.value=""; 
         proofUrlInput.value=""; 
         note.value="";
         participantsArr = [];
-        renderParticipantsChips();
+        renderParticipantsChips(); // setzt auch memberCount -> 0
 
         setStatus("Gespeichert & an Discord gesendet.");
         setTimeout(()=>setStatus(""),2000);
