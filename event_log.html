@@ -122,7 +122,8 @@
     .admin-only{display:none}
     body.admin .admin-only{display:block}
 
-    .delbtn, .donebtn{
+    /* === Admin Aktions-Buttons === */
+    .delbtn, .donebtn, .rejectbtn, .nobankbtn, .noproofbtn{
       position:absolute; top:10px; width:34px; height:34px; border-radius:999px;
       cursor:pointer; display:flex; align-items:center; justify-content:center;
       font-size:16px; font-weight:800; border:1px solid var(--border);
@@ -134,13 +135,33 @@
     .donebtn{ right:52px; color:#bbf7d0; }
     .donebtn:hover{ background:#10251a; color:#22c55e; border-color:#14532d; }
 
-    /* Badge für „Von Leadership bearbeitet“ */
+    .rejectbtn{ right:94px; color:#f87171; }
+    .rejectbtn:hover{ background:#2b1111; color:#fca5a5; border-color:#7f1d1d; }
+
+    .nobankbtn{ right:136px; color:#60a5fa; }
+    .nobankbtn:hover{ background:#10223a; color:#3b82f6; border-color:#1e40af; }
+
+    .noproofbtn{ right:178px; color:#fcd34d; }
+    .noproofbtn:hover{ background:#2a2310; color:#fbbf24; border-color:#92400e; }
+
+    /* Badge für „Von Leadership bearbeitet“ (bestehend) */
     .review-badge{
       display:inline-flex; align-items:center; gap:6px;
       margin-top:8px; padding:6px 10px; border-radius:999px;
       background:rgba(34,197,94,.12); color:#86efac; font-weight:800;
       border:1px solid rgba(34,197,94,.35);
     }
+
+    /* Neue Status-Badges */
+    .status-badge{
+      display:inline-flex; align-items:center; gap:6px;
+      margin-top:8px; padding:6px 10px; border-radius:999px;
+      font-weight:800; border:1px solid;
+    }
+    .badge-reviewed{ background:rgba(34,197,94,.12); color:#86efac; border-color:rgba(34,197,94,.35); }
+    .badge-rejected{ background:rgba(239,68,68,.12); color:#fca5a5; border-color:rgba(239,68,68,.35); }
+    .badge-nobank{ background:rgba(59,130,246,.12); color:#93c5fd; border-color:rgba(59,130,246,.35); }
+    .badge-noproof{ background:rgba(251,191,36,.12); color:#fde68a; border-color:rgba(251,191,36,.35); }
 
     .listwrap::-webkit-scrollbar{width:10px}
     .listwrap::-webkit-scrollbar-track{background:transparent}
@@ -202,6 +223,13 @@
     .plist .pitem{ display:flex; justify-content:space-between; gap:10px; border:1px solid var(--border); border-radius:10px; padding:6px 10px; background:#0b1020; }
     .plist .pname{ font-weight:700; color:#e5e7eb; }
     .plist .pid{ color:#93c5fd; font-family:ui-monospace, monospace; }
+
+    /* Proofgrid (für mehrere Proofs im Content, ab Proof #2) */
+    .proofgrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:8px; margin-top:8px; }
+    .proofcell{ border:1px solid var(--border); border-radius:10px; overflow:hidden; background:#0b1020; }
+    .proofcell img{ width:100%; height:90px; object-fit:cover; display:block; }
+    .proofcell a{ display:block; padding:6px 8px; font-size:12px; color:#e5e7eb; text-decoration:none; text-align:center; }
+    .prooflabel{ font-size:12px; color:#9aa4b2; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -247,7 +275,7 @@
         <h2>Neues Event eintragen</h2>
         <div class="chips">
           <span class="chip">Letzte Auswahl bleibt leer</span>
-          <span class="chip">Proof optional</span>
+          <span class="chip">Proofs optional / mehrere möglich</span>
         </div>
 
         <!-- 1) Eventtyp + Mitglieder (Mitglieder = readonly, auto) -->
@@ -262,7 +290,7 @@
           </div>
         </div>
 
-        <!-- 2) Teilnehmer und 3) Proof jeweils untereinander -->
+        <!-- 2) Teilnehmer und 3) Proofs jeweils untereinander -->
         <div style="display:grid;gap:12px;grid-template-columns:1fr">
           <div>
             <label>Teilnehmer</label>
@@ -276,10 +304,13 @@
           </div>
 
           <div>
-            <label>Proof-URL (optional)</label>
-            <input type="url" id="proofUrl" placeholder="Hier Imgur Link einfügen" />
+            <label>Proof-URLs (optional, mehrere)</label>
+            <div id="proofsInput" class="chip-input" role="group" aria-label="Proof-Links">
+              <!-- Proof-Chips -->
+              <input id="proofText" type="url" placeholder="Link einfügen und Enter" />
+            </div>
             <a class="linkbtn" href="https://imgur.com/upload" target="_blank" rel="noopener">Bild bei Imgur hochladen ↗</a>
-            <div class="muted">Lade das Bild bei Imgur hoch und füge den Link hier ein.</div>
+            <div class="muted">Füge beliebige http/https Links hinzu. Bilder werden automatisch als Thumbnails angezeigt.</div>
           </div>
         </div>
 
@@ -378,7 +409,6 @@
 
     const eventType     = document.getElementById('eventType');
     const memberCount   = document.getElementById('memberCount');
-    const proofUrlInput = document.getElementById('proofUrl');
     const note          = document.getElementById('note');
     const btnSubmit     = document.getElementById('btnSubmit');
     const statusEl      = document.getElementById('status');
@@ -389,6 +419,11 @@
     const participantsInput = document.getElementById('participantsInput');
     const participantText   = document.getElementById('participantText');
     let participantsArr     = []; // [{name, id}]
+
+    // === Proofs Chip-Input (mehrere) ===
+    const proofsInput = document.getElementById('proofsInput');
+    const proofText   = document.getElementById('proofText');
+    let proofsArr     = []; // [url, url, ...]
 
     function populateEventSelect(){
       eventType.innerHTML = '<option value="">— Bitte wählen —</option>';
@@ -413,15 +448,12 @@
       if(!name || !id) return null;
       return {name, id};
     }
-
     function participantKey(p){ return (p.name + '|' + p.id).toLowerCase(); }
 
     function addParticipantFromText(){
       const p = parseParticipant(participantText.value);
       if(!p){
-        participantText.style.transform='scale(0.99)';
-        participantText.style.boxShadow='0 0 0 4px rgba(239,68,68,.22)';
-        setTimeout(()=>{ participantText.style.transform=''; participantText.style.boxShadow=''; },160);
+        bumpInput(participantText, true);
         return;
       }
       if (participantsArr.some(x => participantKey(x) === participantKey(p))) {
@@ -454,7 +486,7 @@
         chip.appendChild(x);
         participantsInput.insertBefore(chip, participantText);
       }
-      updateMemberCountInput(); // 👈 live aktualisieren
+      updateMemberCountInput(); // live aktualisieren
     }
 
     participantText.addEventListener('keydown', (e)=>{
@@ -466,22 +498,79 @@
         removeParticipantByKey(participantKey(last));
       }
     });
-
     participantText.addEventListener('blur', ()=>{
       if(participantText.value.trim()) addParticipantFromText();
     });
+
+    // === Proofs handling ===
+    function normalizeUrl(u){
+      try{
+        const url = new URL(u.trim());
+        if(!/^https?:$/i.test(url.protocol)) return null;
+        return url.toString();
+      }catch{ return null; }
+    }
+    function proofKey(u){ return String(u).trim().toLowerCase(); }
+    function addProofFromText(){
+      const raw = proofText.value;
+      if(!raw){ bumpInput(proofText, true); return; }
+      const url = normalizeUrl(raw);
+      if(!url){ bumpInput(proofText, true); return; }
+      if(proofsArr.some(x => proofKey(x) === proofKey(url))){
+        proofText.value=''; return;
+      }
+      proofsArr.push(url);
+      proofText.value='';
+      renderProofChips();
+    }
+    function removeProofByKey(key){
+      proofsArr = proofsArr.filter(u => proofKey(u) !== key);
+      renderProofChips();
+    }
+    function renderProofChips(){
+      Array.from(proofsInput.querySelectorAll('.chip')).forEach(n=>n.remove());
+      for(const u of proofsArr){
+        const chip = document.createElement('span');
+        chip.className='chip';
+        const label = isImageUrl(u) ? 'Bild' : 'Link';
+        chip.innerHTML = `<span>${label}</span><a href="${escapeAttr(u)}" target="_blank" rel="noopener" style="color:#c7d2fe;text-decoration:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(u)}</a>`;
+        const x = document.createElement('button');
+        x.className='chipx'; x.type='button'; x.ariaLabel='Entfernen'; x.textContent='×';
+        x.addEventListener('click', () => removeProofByKey(proofKey(u)));
+        chip.appendChild(x);
+        proofsInput.insertBefore(chip, proofText);
+      }
+    }
+    proofText.addEventListener('keydown', (e)=>{
+      if(['Enter','Tab'].includes(e.key) || e.key === ',' || e.key === ';'){
+        e.preventDefault();
+        addProofFromText();
+      }else if(e.key === 'Backspace' && proofText.value === '' && proofsArr.length){
+        proofsArr.pop();
+        renderProofChips();
+      }
+    });
+    proofText.addEventListener('blur', ()=>{
+      if(proofText.value.trim()) addProofFromText();
+    });
+
+    // Kleine Eingabe-Animation bei Fehler
+    function bumpInput(el, danger){
+      el.style.transform='scale(0.99)';
+      el.style.boxShadow = danger ? '0 0 0 4px rgba(239,68,68,.22)' : '0 0 0 4px rgba(124,58,237,.22)';
+      setTimeout(()=>{ el.style.transform=''; el.style.boxShadow=''; },160);
+    }
 
     btnSubmit.onclick = async () => {
       setStatus("Speichere…");
       try{
         const type = (eventType.value||"").trim();
-        const cnt  = participantsArr.length; // 👈 automatisch berechnet
+        const cnt  = participantsArr.length; // automatisch berechnet
         if(!type) return setStatus("Bitte eine Event-Art wählen.");
         if(!eventOptions.includes(type)) return setStatus("Ungültiges Event.");
 
-        let proofUrl=(proofUrlInput.value||"").trim();
-        if(proofUrl && !(/^https?:\/\//i.test(proofUrl))) return setStatus("Bitte gültige URL (http/https).");
-
+        // payload vorbereiten
+        const proofUrls = proofsArr.slice();
         const payload={
           ts:new Date().toISOString(),
           serverTs:firebase.firestore.FieldValue.serverTimestamp(),
@@ -489,21 +578,29 @@
           memberCount:cnt,
           participants: participantsArr.slice(), // Array von {name,id}
           note:(note.value||"").trim(),
-          proofUrl,
+          // Mehrere Proofs:
+          proofUrls,
+          // Rückwärtskompatibilität:
+          proofUrl: proofUrls[0] || "",
+          // Stati (alle optional toggelbar)
           reviewed:false,
           reviewedBy:null,
-          reviewedTs:null
+          reviewedTs:null,
+          rejected:false,
+          noPayout:false,
+          proofRejected:false
         };
 
         await db.collection('eventLogs').add(payload);
         try{ await sendDiscordLog(payload); }catch(e){ console.warn("Discord-Webhook Fehler:", e); }
 
-        populateEventSelect(); 
-        proofUrlInput.value=""; 
+        // Reset
+        populateEventSelect();
         note.value="";
         participantsArr = [];
-        renderParticipantsChips(); // setzt auch memberCount -> 0
-
+        proofsArr = [];
+        renderParticipantsChips();
+        renderProofChips();
         setStatus("Gespeichert & an Discord gesendet.");
         setTimeout(()=>setStatus(""),2000);
       }catch(e){ setStatus("Fehler: "+(e.message||e)); }
@@ -519,10 +616,12 @@
     });
 
     function renderItem(id, d){
-      const proof=d.proofUrl||"";
+      const proofs = Array.isArray(d.proofUrls) && d.proofUrls.length ? d.proofUrls.filter(Boolean)
+                    : (d.proofUrl ? [d.proofUrl] : []);
+      const firstProof = proofs[0] || "";
       const el=document.createElement('div'); el.className='item';
 
-      // ✅ Toggle-Button (nur Admin)
+      // ✅ (grün) Von Leadership bearbeitet (toggle) – speichert reviewedBy/Time
       const doneBtn=document.createElement('button');
       doneBtn.className='donebtn admin-only';
       doneBtn.title = d.reviewed ? 'Als nicht bearbeitet markieren' : 'Als bearbeitet markieren';
@@ -535,11 +634,49 @@
             ? { reviewed:false, reviewedBy:null, reviewedTs:null }
             : { reviewed:true,  reviewedBy:auth.currentUser.email||auth.currentUser.uid, reviewedTs:now.toISOString() };
           await db.collection('eventLogs').doc(id).update(patch);
-        }catch(e){
-          alert('Konnte Status nicht ändern: ' + (e?.message||e));
-        }
+        }catch(e){ alert('Konnte Status nicht ändern: ' + (e?.message||e)); }
       };
       el.appendChild(doneBtn);
+
+      // ❓ Von Leaderschaft abgelehnt (toggle)
+      const rejectBtn=document.createElement('button');
+      rejectBtn.className='rejectbtn admin-only';
+      rejectBtn.title = d.rejected ? 'Ablehnung entfernen' : 'Von Leaderschaft abgelehnt';
+      rejectBtn.textContent = '❓';
+      rejectBtn.onclick = async ()=>{
+        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
+        try{
+          await db.collection('eventLogs').doc(id).update({ rejected: !d.rejected });
+        }catch(e){ alert('Konnte Status nicht ändern: ' + (e?.message||e)); }
+      };
+      el.appendChild(rejectBtn);
+
+      // 🟦✔️ Von Leaderschaft bearbeitet / Keine Auszahlung (toggle)
+      const nobankBtn=document.createElement('button');
+      nobankBtn.className='nobankbtn admin-only';
+      nobankBtn.title = d.noPayout ? 'Keine Auszahlung entfernen' : 'Von Leaderschaft bearbeitet / Keine Auszahlung';
+      nobankBtn.textContent='✔️';
+      nobankBtn.style.filter = 'hue-rotate(200deg)'; /* visueller blauer Touch */
+      nobankBtn.onclick = async ()=>{
+        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
+        try{
+          await db.collection('eventLogs').doc(id).update({ noPayout: !d.noPayout });
+        }catch(e){ alert('Konnte Status nicht ändern: ' + (e?.message||e)); }
+      };
+      el.appendChild(nobankBtn);
+
+      // 🛡️ Proof wird nicht akzeptiert (toggle)
+      const noproofBtn=document.createElement('button');
+      noproofBtn.className='noproofbtn admin-only';
+      noproofBtn.title = d.proofRejected ? 'Flag entfernen' : 'Proof wird nicht akzeptiert';
+      noproofBtn.textContent='🛡️';
+      noproofBtn.onclick = async ()=>{
+        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
+        try{
+          await db.collection('eventLogs').doc(id).update({ proofRejected: !d.proofRejected });
+        }catch(e){ alert('Konnte Status nicht ändern: ' + (e?.message||e)); }
+      };
+      el.appendChild(noproofBtn);
 
       // ❌ Lösch-Button (nur Admin)
       const delBtn=document.createElement('button');
@@ -553,16 +690,15 @@
       };
       el.appendChild(delBtn);
 
-      // Thumbnail / Proof
+      // Thumbnail / Proof #1 links
       const thumb=document.createElement('div'); thumb.className='thumb';
-      const isImg = isImageUrl(proof);
-      if(proof && isImg){
-        const img=document.createElement('img'); img.src=proof; img.alt='Proof';
-        img.onerror=()=>{ thumb.innerHTML=`<a class="pill" href="${escapeAttr(proof)}" target="_blank" rel="noopener">Proof öffnen</a>`; };
+      if(firstProof && isImageUrl(firstProof)){
+        const img=document.createElement('img'); img.src=firstProof; img.alt='Proof';
+        img.onerror=()=>{ thumb.innerHTML=`<a class="pill" href="${escapeAttr(firstProof)}" target="_blank" rel="noopener">Proof öffnen</a>`; };
         thumb.appendChild(img);
       }else{
-        thumb.innerHTML = proof
-          ? `<a class="pill" href="${escapeAttr(proof)}" target="_blank" rel="noopener">Proof öffnen</a>`
+        thumb.innerHTML = firstProof
+          ? `<a class="pill" href="${escapeAttr(firstProof)}" target="_blank" rel="noopener">Proof öffnen</a>`
           : `<span class="pill" style="opacity:.8">Kein Proof</span>`;
       }
 
@@ -578,6 +714,29 @@
 
       const pCount = plist.length;
 
+      // Status-Badges (können mehrere sein)
+      const badges = [
+        d.reviewed ? `<div class="status-badge badge-reviewed">✅ Von Leaderschaft bearbeitet</div>` : ``,
+        d.rejected ? `<div class="status-badge badge-rejected">❓ Von Leaderschaft abgelehnt</div>` : ``,
+        d.noPayout ? `<div class="status-badge badge-nobank">✔️ Von Leaderschaft bearbeitet / Keine Auszahlung</div>` : ``,
+        d.proofRejected ? `<div class="status-badge badge-noproof">🛡️ Proof wird nicht akzeptiert</div>` : ``,
+      ].join('');
+
+      // Weitere Proofs ab #2 als Grid
+      const moreProofs = proofs.slice(1);
+      const proofGridHTML = moreProofs.length ? `
+        <div class="prooflabel">Weitere Proofs (${moreProofs.length}):</div>
+        <div class="proofgrid">
+          ${moreProofs.map((u,i)=>{
+            if(isImageUrl(u)){
+              return `<div class="proofcell"><a href="${escapeAttr(u)}" target="_blank" rel="noopener"><img src="${escapeAttr(u)}" alt="Proof ${i+2}"></a></div>`;
+            }else{
+              return `<div class="proofcell"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">Proof ${i+2} öffnen</a></div>`;
+            }
+          }).join('')}
+        </div>
+      ` : ``;
+
       content.innerHTML=`
         <p class="title"><span class="evName">${escapeHTML(d.type||'')}</span></p>
         <div class="meta">
@@ -585,7 +744,7 @@
           <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
         </div>
         ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
-        ${d.reviewed ? `<div class="review-badge">✅ Von Leaderschaft bearbeitet</div>` : ``}
+        ${badges}
         ${pCount ? `
           <details class="participants">
             <summary>Teilnehmer anzeigen (${pCount})</summary>
@@ -599,29 +758,34 @@
             </div>
           </details>
         ` : ``}
+        ${proofGridHTML}
       `;
       el.appendChild(thumb); el.appendChild(content);
       return el;
     }
 
-    async function sendDiscordLog({type, memberCount, note, proofUrl, ts, participants}){
-      const isImg = isImageUrl(proofUrl||"");
+    async function sendDiscordLog({type, memberCount, note, proofUrls, proofUrl, ts, participants}){
+      const proofs = Array.isArray(proofUrls) && proofUrls.length ? proofUrls : (proofUrl ? [proofUrl] : []);
+      const first = proofs[0];
+      const firstIsImg = isImageUrl(first||"");
       const participantsText = Array.isArray(participants) && participants.length
         ? participants.map(p=>`${p.name} (${p.id})`).join(', ')
         : undefined;
+
+      const fields = [
+        { name: "Event", value: type, inline: true },
+        { name: "Mitglieder", value: String(memberCount||0), inline: true },
+        ...(participantsText ? [{ name: "Teilnehmer", value: participantsText, inline: false }] : []),
+        ...(proofs.length ? proofs.map((u,idx)=>({ name: `Proof ${idx+1}`, value: u, inline: false })) : [])
+      ];
 
       const embed = {
         title: `Neues Event: ${type}`,
         description: (note || "").trim() || undefined,
         color: 0x22c55e,
         timestamp: new Date(ts || Date.now()).toISOString(),
-        fields: [
-          { name: "Event", value: type, inline: true },
-          { name: "Mitglieder", value: String(memberCount||0), inline: true },
-          ...(participantsText ? [{ name: "Teilnehmer", value: participantsText, inline: false }] : []),
-          ...(proofUrl ? [{ name: "Proof", value: proofUrl, inline: false }] : [])
-        ],
-        thumbnail: isImg ? { url: proofUrl } : undefined,
+        fields,
+        thumbnail: firstIsImg ? { url: first } : undefined,
         footer: { text: "MS Auszahlungen · Event-Log" }
       };
       const body = { username: "MS-Eventlog System", embeds: [embed] };
