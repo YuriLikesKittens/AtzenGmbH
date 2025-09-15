@@ -4,90 +4,50 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Leaderschaftspanel für Auszahlungen</title>
-
   <style>
     :root{
-      --bg:#0f172a;
-      --surface-1:#111827cc;   /* Panels */
-      --surface-2:#0b1220cc;   /* Cards / Inputs */
-      --border:#1f2937;
-      --shadow-elev:0 10px 30px rgba(0,0,0,.35);
-      --radius-lg:16px;
-      --radius-md:12px;
-      --radius-pill:999px;
-
-      --text:#e5e7eb;
-      --text-muted:#9ca3af;
-      --success:#22c55e;
-      --warning:#f59e0b;
-      --danger:#ef4444;
-
-      --accent:#7c3aed;
-      --accent-2:#06b6d4;
-
-      --focus-ring:rgba(124,58,237,.22);
-
-      --font-ui: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-
-      --space-1:6px; --space-2:8px; --space-3:12px; --space-4:16px;
-      --space-5:18px; --space-6:20px; --space-7:24px; --space-8:32px;
-    }
-
-    [data-theme="custom"]{
       --bg:#0b0f1a;
       --surface-1:rgba(14,18,27,.72);
       --surface-2:rgba(9,13,22,.78);
       --border:#1a2333;
-      --accent:#8b5cf6;
-      --accent-2:#22d3ee;
+      --shadow-elev:0 12px 40px rgba(0,0,0,.42);
+      --radius-lg:18px;
+      --radius-md:12px;
+      --radius-pill:999px;
       --text:#eef2ff;
       --text-muted:#9aa3b2;
       --danger:#ef4444;
-      --radius-lg:18px;
-      --radius-md:12px;
-      --shadow-elev:0 12px 40px rgba(0,0,0,.42);
-      --focus-ring:rgba(139,92,246,.25);
+      --font-ui: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
-
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; color:var(--text); font-family:var(--font-ui);
-      padding:var(--space-7) var(--space-4) 40px;
+      margin:0;color:var(--text);font-family:var(--font-ui);
+      padding:28px 16px 48px;
       background:
         radial-gradient(1200px 1200px at 10% -20%, #1e293b 0%, transparent 60%),
-        radial-gradient(1000px 800px  at 120% 10%,  #0ea5e9 0%, transparent 45%),
+        radial-gradient(1000px 800px at 120% 10%, #0ea5e9 0%, transparent 45%),
         linear-gradient(160deg, #0b1020 0%, var(--bg) 100%);
       overflow-x:hidden;
     }
-
-    .net-bg{position:fixed; inset:0; z-index:0; pointer-events:none;}
+    .net-bg{position:fixed;inset:0;z-index:0;pointer-events:none}
     .net-bg canvas{width:100%;height:100%;display:block}
 
-    .container{max-width:1120px;margin:0 auto; position:relative; z-index:1}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-2)}
+    .container{max-width:1120px;margin:0 auto;position:relative;z-index:1}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
     h1{
       margin:0;font-size:clamp(22px,4vw,34px);letter-spacing:.2px;font-weight:800;
       background:linear-gradient(120deg,#fff,#a5b4fc 40%,#67e8f9 80%);
       -webkit-background-clip:text;background-clip:text;color:transparent;
     }
-    .subtitle{color:var(--text-muted);margin:6px 0 var(--space-6)}
-
-    .grid{display:grid;gap:18px;grid-template-columns:1.1fr .9fr}
-    @media (max-width:920px){.grid{grid-template-columns:1fr}}
-    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-    @media (max-width:680px){.row{grid-template-columns:1fr}}
+    .subtitle{color:var(--text-muted);margin:6px 0 18px}
 
     .card{
       background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      border-radius:var(--radius-lg);
-      box-shadow:var(--shadow-elev);
-      padding:var(--space-5);
-      backdrop-filter:blur(6px);
+      border:1px solid var(--border);border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-elev);padding:20px;backdrop-filter:blur(6px);margin-bottom:18px;
     }
-    h2{margin:0 0 var(--space-3);font-size:18px;font-weight:700}
+    h2{margin:0 0 12px;font-size:18px}
 
     label{
       font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);
@@ -99,62 +59,58 @@
       outline:none;transition:.18s ease;display:inline-block;text-align:center;text-decoration:none;
     }
     input::placeholder{color:color-mix(in srgb, var(--text-muted) 85%, white 15%)}
-    input:focus,select:focus{border-color:color-mix(in srgb, var(--accent) 70%, black 30%);box-shadow:0 0 0 4px var(--focus-ring)}
+    input:focus,select:focus{border-color:color-mix(in srgb, #8b5cf6 70%, black 30%);box-shadow:0 0 0 4px rgba(139,92,246,.25)}
 
+    /* Schöne Buttons mit animierten Farbverläufen */
     .btn{
-      cursor:pointer;font-weight:700;border:none;margin-top:8px;
-      background:linear-gradient(135deg,var(--accent) 0%, var(--accent-2) 100%);
-      box-shadow:0 6px 16px color-mix(in srgb, var(--accent-2) 60%, black 40%);
+      cursor:pointer;font-weight:700;border:none;border-radius:var(--radius-pill);
+      padding:12px 18px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      transition:all 0.3s ease;box-shadow:0 3px 8px rgba(0,0,0,0.25);
+      background-size:200% 200%;
     }
-    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
-    .btn:active{transform:translateY(0)}
-    .btn[disabled]{opacity:.5;cursor:not-allowed;filter:none;transform:none}
-    .btn-danger{background:linear-gradient(135deg,var(--danger) 0%, #f97316 100%);box-shadow:0 6px 16px color-mix(in srgb, var(--danger) 55%, black 45%)}
-    .payoutBtn{max-width:220px}
+    .btn span.emoji{font-size:18px}
+    .btn-blue{background:linear-gradient(270deg,#3b82f6,#2563eb,#3b82f6);color:#fff}
+    .btn-green{background:linear-gradient(270deg,#22c55e,#15803d,#22c55e);color:#fff}
+    .btn-yellow{background:linear-gradient(270deg,#facc15,#eab308,#facc15);color:#111}
+    .btn-danger{background:linear-gradient(270deg,#ef4444,#b91c1c,#ef4444);color:#fff}
+    .btn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 6px 16px rgba(0,0,0,0.35);animation:gradientMove 3s linear infinite}
+    .btn:active{transform:translateY(0) scale(0.97)}
+    @keyframes gradientMove{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+
+    .actions{display:flex;gap:12px;flex-wrap:wrap}
+
+    .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    .chip{display:inline-flex;gap:8px;align-items:center;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--text-muted)}
+    .chip b{color:#e2e8f0}
+
+    .table-shell{overflow:auto;max-height:56vh;border:1px solid var(--border);border-radius:12px}
+    table{width:100%;border-collapse:collapse}
+    thead th{position:sticky;top:0;background:var(--surface-2);border-bottom:1px solid var(--border);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);padding:12px 10px;text-align:left}
+    tbody td{padding:12px 10px;border-bottom:1px dashed #1f2a44;vertical-align:middle}
+    tbody tr:hover{background:color-mix(in srgb, #8b5cf6 12%, transparent)}
+    .right{text-align:right}
+
     .xbtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--surface-2);cursor:pointer;transition:.18s}
     .xbtn:hover{background:#1f2937}
 
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:2000}
+    .modal-overlay.active{display:flex}
+    .modal{background:var(--surface-1);border:1px solid var(--border);border-radius:18px;padding:20px;width:100%;max-width:520px;box-shadow:var(--shadow-elev);animation:fadeIn .2s ease}
+    .row{display:grid;gap:12px}
+    .row-2{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    @media (max-width:680px){.row-2{grid-template-columns:1fr}}
     .muted{color:var(--text-muted);font-size:12px}
     .warn{color:#fca5a5;font-size:12px}
+    @keyframes fadeIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 
-    .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-    .chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-pill);padding:8px 12px;font-size:13px;color:var(--text-muted)}
-    .chip b{color:#e2e8f0}
-
-    table{width:100%;border-collapse:collapse}
-    thead th{position:sticky;top:0;z-index:1;background:var(--surface-2);border-bottom:1px solid var(--border);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);padding:12px 10px;text-align:left}
-    tbody td{padding:12px 10px;border-bottom:1px dashed #1f2a44;vertical-align:middle}
-    tbody tr:hover{background:color-mix(in srgb, var(--accent) 12%, transparent)}
-    .right{text-align:right}
-    .id{color:#a5b4fc;font-family:var(--font-mono)}
-
-    .admin-only{display:none}
-    body.admin .admin-only{display:table-cell}
-
-    .table-shell{overflow:auto;max-height:55vh;border:1px solid var(--border);border-radius:var(--radius-md)}
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.6);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
+    footer{
+      margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
+      background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; color: transparent; animation: rgbMove 6s linear infinite; background-size: 300% 100%;
     }
-    .modal-overlay.active { display: flex; }
-    .modal {
-      background: var(--surface-1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: var(--shadow-elev);
-      animation: fadeIn .2s ease;
-    }
-    .modal h3 { margin: 0 0 12px; }
-    @keyframes fadeIn { from {opacity:0;transform:scale(.96)} to {opacity:1;transform:scale(1)} }
+    @keyframes rgbMove{0%{background-position:0 0}100%{background-position:100% 0}}
   </style>
 </head>
 <body>
@@ -164,14 +120,13 @@
   <div class="container">
     <div class="topbar">
       <h1>Admin · Guthaben Verwaltung (Sync)</h1>
-      <a class="btn payoutBtn" id="btnToPayouts" href="#" target="_self">Zur Übersicht</a>
     </div>
-    <p class="subtitle">Hier kann die Leaderschaft Auszahlung verwalten</p>
+    <p class="subtitle">Verwalte Mitglieder und Auszahlungen – mit geführten Workflows.</p>
 
     <!-- Login -->
     <div class="card" id="authCard">
       <h2>Admin Login</h2>
-      <div class="row">
+      <div class="row-2">
         <div>
           <label>E-Mail</label>
           <input type="email" id="email" placeholder="admin@beispiel.de" />
@@ -181,81 +136,134 @@
           <input type="password" id="password" placeholder="********" />
         </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <button class="btn" id="btnLogin">Anmelden</button>
-        <button class="btn btn-danger" id="btnLogout" style="display:none">Abmelden</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-blue" id="btnLogin"><span class="emoji">🔑</span> Anmelden</button>
+        <button class="btn btn-danger" id="btnLogout" style="display:none"><span class="emoji">🚪</span> Abmelden</button>
       </div>
-      <p class="muted">Hinweis: Brauchst nen Login von Alvaro du schlingel. <span class="warn" id="authState"></span></p>
+      <p class="muted">Status: <span class="warn" id="authState">Abgemeldet</span></p>
     </div>
 
-    <!-- App -->
-    <div class="grid" id="app" style="display:none">
-      <div class="card">
-        <h2>Buchung / Mitglied</h2>
-        <div class="row">
-          <div>
-            <label>Mitglied auswählen</label>
-            <select id="mitglied">
-              <option value="">— Neues Mitglied anlegen —</option>
-            </select>
-          </div>
-          <div>
-            <label>Neues Mitglied (optional)</label>
-            <input type="text" id="neuesMitglied" placeholder="Name eingeben" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label>Mitglieds-ID (optional)</label>
-            <input type="text" id="mitgliedId" placeholder="z. B. M001" />
-          </div>
-          <div>
-            <label>Event-Vorlage (optional)</label>
-            <select id="eventVorlage">
-              <option value="">— Kein Event —</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label>Betrag (€) <span class="muted">(optional – wird durch Event gesetzt)</span></label>
-            <input type="number" id="betrag" step="0.01" placeholder="z. B. 20000" />
-          </div>
-          <div>
-            <label>Typ</label>
-            <select id="typ">
-              <option value="einzahlung">Einzahlung</option>
-              <option value="auszahlung">Auszahlung</option>
-            </select>
-          </div>
-        </div>
-
-        <button class="btn" id="btnSave">Abschicken</button>
-        <p class="muted">Ohne Betrag wird nur das Mitglied angelegt/aktualisiert.</p>
+    <!-- Aktionen -->
+    <div class="card" id="app" style="display:none">
+      <h2>Aktionen</h2>
+      <div class="actions">
+        <button class="btn btn-blue" id="btnAddMember"><span class="emoji">✍️</span> Neues Mitglied hinzufügen</button>
+        <button class="btn btn-green" id="btnPayout"><span class="emoji">💵</span> Ein Mitglied auszahlen</button>
+        <button class="btn btn-yellow" id="btnPending"><span class="emoji">⏳</span> Eine Offene Auszahlung hinzufügen</button>
       </div>
+    </div>
 
-      <div class="card">
-        <h2>Übersicht</h2>
-        <div class="stats">
-          <span class="chip">Mitglieder: <b id="statMitglieder">0</b></span>
-          <span class="chip">Gesamtsaldo: <b id="statSaldo">0</b> €</span>
+    <!-- Übersicht -->
+    <div class="card" id="overview" style="display:none">
+      <h2>Übersicht</h2>
+      <div class="stats">
+        <span class="chip">Mitglieder: <b id="statMitglieder">0</b></span>
+        <span class="chip">Gesamtsaldo: <b id="statSaldo">0</b> €</span>
+      </div>
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>Mitglied</th>
+              <th>ID</th>
+              <th class="right">Kontostand (€)</th>
+              <th class="right">Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="muted" style="margin-top:8px">Hinweis: Entfernen löscht das Mitglied aus der Übersicht. <b>Transaktionen bleiben erhalten</b>.</p>
+    </div>
+  </div>
+  <!-- Modal: Mitglied hinzufügen -->
+  <div id="addMemberModal" class="modal-overlay">
+    <div class="modal">
+      <h3>Mitglied hinzufügen</h3>
+      <div class="row" id="addStep1">
+        <div>
+          <label>Name</label>
+          <input type="text" id="addName" placeholder="z. B. Max Mustermann" />
         </div>
-        <div class="table-shell">
-          <table>
-            <thead>
-              <tr>
-                <th>Mitglied</th>
-                <th>ID</th>
-                <th class="right">Kontostand (€)</th>
-                <th class="admin-only right">Aktion</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
+        <button class="btn btn-blue" id="addToStep2">Weiter</button>
+      </div>
+      <div class="row" id="addStep2" style="display:none">
+        <div>
+          <label>ID</label>
+          <input type="text" id="addId" placeholder="z. B. M001" />
         </div>
-        <p class="muted admin-only" style="margin-top:8px">Hinweis: Entfernen löscht nur das Mitglied aus der Übersicht. <b>Transaktionen bleiben erhalten</b>.</p>
+        <div class="muted" id="addConfirmText">Möchtest du <b id="addCName"></b> mit der ID <b id="addCId"></b> hinzufügen?</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-blue" id="addConfirm">Bestätigen</button>
+          <button class="btn btn-yellow" id="addCancel">Abbrechen</button>
+        </div>
+        <p class="warn" id="addWarn" style="display:none">⚠️ Mitglied existiert bereits!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Auszahlung -->
+  <div id="payoutModal" class="modal-overlay">
+    <div class="modal">
+      <h3>Mitglied auszahlen</h3>
+      <div class="row" id="payoutStep1">
+        <div>
+          <label>Wähle ein Mitglied</label>
+          <select id="payoutMember"></select>
+        </div>
+        <button class="btn btn-green" id="payoutToStep2">Weiter</button>
+      </div>
+      <div class="row" id="payoutStep2" style="display:none">
+        <div>
+          <label>Wähle das Event</label>
+          <select id="payoutEvent"></select>
+        </div>
+        <button class="btn btn-green" id="payoutToStep3">Weiter</button>
+      </div>
+      <div class="row" id="payoutStep3" style="display:none">
+        <div>
+          <label>Betrag (€)</label>
+          <input type="number" id="payoutAmount" step="0.01" />
+          <p class="muted">Betrag wird durch Template gesetzt, kann aber manuell angepasst werden.</p>
+        </div>
+        <div class="muted" id="payoutSummary"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-green" id="payoutConfirm">Bestätigen</button>
+          <button class="btn btn-yellow" id="payoutCancel">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Offene Auszahlung -->
+  <div id="pendingModal" class="modal-overlay">
+    <div class="modal">
+      <h3>Offene Auszahlung</h3>
+      <div class="row" id="pendingStep1">
+        <div>
+          <label>Wähle ein Mitglied</label>
+          <select id="pendingMember"></select>
+        </div>
+        <button class="btn btn-yellow" id="pendingToStep2">Weiter</button>
+      </div>
+      <div class="row" id="pendingStep2" style="display:none">
+        <div>
+          <label>Wähle das Event</label>
+          <select id="pendingEvent"></select>
+        </div>
+        <button class="btn btn-yellow" id="pendingToStep3">Weiter</button>
+      </div>
+      <div class="row" id="pendingStep3" style="display:none">
+        <div>
+          <label>Betrag (€)</label>
+          <input type="number" id="pendingAmount" step="0.01" />
+          <p class="muted">Betrag wird durch Template gesetzt, kann aber manuell angepasst werden.</p>
+        </div>
+        <div class="muted" id="pendingSummary"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-yellow" id="pendingConfirm">Bestätigen</button>
+          <button class="btn btn-blue" id="pendingCancel">Abbrechen</button>
+        </div>
       </div>
     </div>
   </div>
@@ -274,29 +282,22 @@
           <input type="text" id="editId" placeholder="z. B. M001" />
         </div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:14px">
-        <button class="btn" id="btnEditSave">Speichern</button>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-blue" id="btnEditSave">Speichern</button>
         <button class="btn btn-danger" id="btnEditCancel">Abbrechen</button>
-        <span class="muted" id="editHint" style="align-self:center;margin-left:8px"></span>
       </div>
+      <p class="muted" id="editHint"></p>
     </div>
   </div>
 
-  <footer style="
-    margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
-    background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text; color: transparent; animation: rgbMove 6s linear infinite; background-size: 300% 100%;
-  ">
-    Made by Alvaro SolanoHebel | 20367
-  </footer>
+  <footer>Made by Alvaro SolanoHebel | 20367</footer>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
   <script>
+    /* -------------------- Firebase Setup -------------------- */
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -306,36 +307,44 @@
       appId: "1:1033439801595:web:4251badc1447ed8079805e",
       measurementId: "G-FWXF3GM505"
     };
-    const PAYOUTS_URL = "index.html";
-
-    // Firebase init
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // --- UI Refs (WICHTIG: alle definieren!) ---
+    /* -------------------- UI Refs -------------------- */
     const authCard = document.getElementById("authCard");
     const appEl = document.getElementById("app");
+    const overviewEl = document.getElementById("overview");
     const authState = document.getElementById("authState");
     const email = document.getElementById("email");
     const password = document.getElementById("password");
     const btnLogin = document.getElementById("btnLogin");
     const btnLogout = document.getElementById("btnLogout");
-    const btnToPayouts = document.getElementById("btnToPayouts");
-    btnToPayouts.href = PAYOUTS_URL;
 
-    const mitgliedSel = document.getElementById("mitglied");
-    const neuesMitgliedInput = document.getElementById("neuesMitglied");
-    const mitgliedIdInput = document.getElementById("mitgliedId");
-    const eventSel = document.getElementById("eventVorlage");
-    const betragInput = document.getElementById("betrag");
-    const typSel = document.getElementById("typ");
     const tbody = document.getElementById("tbody");
     const statMitglieder = document.getElementById("statMitglieder");
     const statSaldo = document.getElementById("statSaldo");
-    const btnSave = document.getElementById("btnSave");
 
-    // Modal refs
+    // Add Member Refs
+    const addName = document.getElementById("addName");
+    const addId = document.getElementById("addId");
+    const addWarn = document.getElementById("addWarn");
+    const addCName = document.getElementById("addCName");
+    const addCId = document.getElementById("addCId");
+
+    // Payout Refs
+    const payoutMember = document.getElementById("payoutMember");
+    const payoutEvent = document.getElementById("payoutEvent");
+    const payoutAmount = document.getElementById("payoutAmount");
+    const payoutSummary = document.getElementById("payoutSummary");
+
+    // Pending Refs
+    const pendingMember = document.getElementById("pendingMember");
+    const pendingEvent = document.getElementById("pendingEvent");
+    const pendingAmount = document.getElementById("pendingAmount");
+    const pendingSummary = document.getElementById("pendingSummary");
+
+    // Edit Refs
     const editModal = document.getElementById("editModal");
     const editNameInput = document.getElementById("editName");
     const editIdInput = document.getElementById("editId");
@@ -343,99 +352,111 @@
     const btnEditCancel = document.getElementById("btnEditCancel");
     const editHint = document.getElementById("editHint");
 
-    // State
-    let isAdmin = false;
     let unsubMembers = null;
     let currentMemberName = null;
 
-    function setAdminUI(on){ document.body.classList.toggle("admin", !!on); }
+    function setLoggedUI(on){
+      authCard.style.display = on ? "none" : "";
+      appEl.style.display = on ? "" : "none";
+      overviewEl.style.display = on ? "" : "none";
+      btnLogin.style.display = on ? "none" : "inline-block";
+      btnLogout.style.display = on ? "inline-block" : "none";
+      authState.textContent = on ? "Angemeldet" : "Abgemeldet";
+    }
 
-    // Login
+    /* -------------------- Auth -------------------- */
     btnLogin.onclick = async () => {
       authState.textContent = "Anmeldung läuft…";
-      try {
+      try{
         await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
         await auth.signInWithEmailAndPassword(email.value, password.value);
         authState.textContent = "Angemeldet";
-      } catch (e) {
-        authState.textContent = e?.message || "Login fehlgeschlagen";
-      }
+      }catch(e){ authState.textContent = e?.message || "Login fehlgeschlagen"; }
     };
     btnLogout.onclick = async () => { await auth.signOut(); };
 
-    // Auth-State (einziger Listener, aufgeräumt)
     auth.onAuthStateChanged(user => {
-      isAdmin = !!user;
-      setAdminUI(isAdmin);
-
-      // UI toggle
-      authCard.style.display = user ? "none" : "";
-      appEl.style.display = user ? "" : "none";
-      btnLogin.style.display = user ? "none" : "inline-block";
-      btnLogout.style.display = user ? "inline-block" : "none";
-      authState.textContent = user ? "Angemeldet" : "Abgemeldet";
-
-      // Snapshot sauber (neu setzen/abbestellen)
-      if (unsubMembers) { unsubMembers(); unsubMembers = null; }
-      if (user) {
-        unsubMembers = db.collection("members").orderBy("name").onSnapshot(snap => {
-          // Dropdown + Tabelle erneuern
-          while (mitgliedSel.options.length > 1) mitgliedSel.remove(1);
-          tbody.innerHTML = "";
-          let total = 0, count = 0;
-
-          snap.forEach(doc => {
+      const loggedIn = !!user;
+      setLoggedUI(loggedIn);
+      if (unsubMembers){ unsubMembers(); unsubMembers = null; }
+      if (loggedIn){
+        unsubMembers = db.collection("members").orderBy("name").onSnapshot(snap=>{
+          tbody.innerHTML = ""; let total=0, count=0;
+          snap.forEach(doc=>{
             const m = doc.data();
-            const opt = document.createElement("option");
-            opt.value = m.name;
-            opt.textContent = m.name;
-            mitgliedSel.appendChild(opt);
-
             const tr = document.createElement("tr");
-            const actionCell = isAdmin ? `<td class="admin-only right">
-                <button class="xbtn" title="Mitglied bearbeiten" onclick="editMember('${escapeAttr(m.name)}')">✎</button>
-                <button class="xbtn btn-danger" title="Mitglied entfernen" onclick="deleteMember('${escapeAttr(m.name)}')">✕</button>
-              </td>` : `<td class="admin-only right"></td>`;
-
-            tr.innerHTML = `<td>${escapeHTML(m.name)}</td>
-                            <td class="id">${escapeHTML(m.id || "")}</td>
-                            <td class="right">${toLocale(m.balance || 0)}</td>
-                            ${actionCell}`;
+            tr.innerHTML = `
+              <td>${escapeHTML(m.name)}</td>
+              <td>${escapeHTML(m.id || "")}</td>
+              <td class="right">${toLocale(m.balance || 0)}</td>
+              <td class="right">
+                <button class="xbtn" title="Bearbeiten" onclick="editMember('${escapeAttr(m.name)}')">✎</button>
+                <button class="xbtn" title="Löschen" onclick="deleteMember('${escapeAttr(m.name)}')">✕</button>
+              </td>`;
             tbody.appendChild(tr);
-            count++; total += (m.balance || 0);
+            total += (m.balance || 0); count++;
           });
-
           statMitglieder.textContent = String(count);
           statSaldo.textContent = toLocale(round2(total));
         });
       }
     });
 
-    // Events
+    /* -------------------- Event-Templates -------------------- */
     const eventTemplates = {
       "40er Kill / Win": 30000, "40er Kill / Lose": 15000, "50er Win": 35000,
       "Bizwar Kill Win": 20000, "Bizwar Kill Lose": 10000, "Bizwar Teilnahme": 10000,
       "Waffenfab. Kill Win": 20000, "Waffenfab. Kills Lose": 10000, "Waffenfab. Win": 20000,
-      "Gießerei Kills Win": 20000, "Gießerei Kills Lose": 10000, "Bank (Gewinn abhängig)": 20000, "Hafen Drop": 25000,
-      "EKZ/Mall Win": 50000, "RP Fabrik Win": 300000, "RP Fabrik Teilnahme": 0, "Cayo": 50000,
+      "Gießerei Kills Win": 20000, "Gießerei Kills Lose": 10000,
+      "Bank (Gewinn abhängig)": 20000, "Hafen Drop": 25000, "EKZ/Mall Win": 50000,
+      "RP Fabrik Win": 300000, "RP Fabrik Teilnahme": 0, "Cayo": 50000,
       "Sanktion": 0, "Komplett Auszahlung": -1
     };
-    (function initEvents(){
+
+    function fillEvents(selectEl, amountEl){
+      selectEl.innerHTML = "";
       const entries = Object.entries(eventTemplates).sort((a,b)=> a[0].localeCompare(b[0], "de"));
       for (const [label, value] of entries){
         const opt = document.createElement("option");
         opt.value = label;
         opt.textContent = `${label} (${formatEUR(value)})`;
-        eventSel.appendChild(opt);
+        selectEl.appendChild(opt);
       }
-      eventSel.addEventListener("change", () => {
-        const ev = eventSel.value;
-        if (ev && eventTemplates[ev] != null) betragInput.value = eventTemplates[ev];
-      });
-    })();
+      selectEl.onchange = () => {
+        const ev = selectEl.value;
+        if (ev && eventTemplates[ev] != null) amountEl.value = eventTemplates[ev];
+        if (selectEl === payoutEvent) updatePayoutSummary();
+        if (selectEl === pendingEvent) updatePendingSummary();
+      };
+      if (selectEl.options.length){
+        selectEl.selectedIndex = 0;
+        amountEl.value = eventTemplates[selectEl.value] ?? "";
+      }
+    }
 
-    // Eintrag speichern
-    btnSave.onclick = saveEntry;
+    function fillMembers(selectEl){
+      selectEl.innerHTML = "";
+      db.collection("members").orderBy("name").get().then(snap=>{
+        snap.forEach(doc=>{
+          const m = doc.data();
+          const opt = document.createElement("option");
+          opt.value = m.name;
+          opt.textContent = m.name;
+          selectEl.appendChild(opt);
+        });
+      });
+    }
+
+    /* -------------------- Helpers -------------------- */
+    function openModal(id){ document.getElementById(id).classList.add("active"); }
+    function closeModal(id){ document.getElementById(id).classList.remove("active"); }
+
+    function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+    function toLocale(n){ return (n || 0).toLocaleString("de-DE"); }
+    function formatEUR(n){ try { return new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n); } catch(e){ return n.toString(); } }
+    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s => ({ "&":"&amp;","<":"&lt;","&gt;":"&gt;","'":"&#39;","\"":"&quot;" }[s])); }
+    function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
+
     async function ensureMember(name, idMaybe){
       const ref = db.collection("members").doc(name);
       const snap = await ref.get();
@@ -446,51 +467,144 @@
       }
       return ref;
     }
-    async function saveEntry(){
-      let name = mitgliedSel.value;
-      const neuerName = (neuesMitgliedInput.value || "").trim();
-      const id = (mitgliedIdInput.value || "").trim();
-      if (!name && neuerName) name = neuerName;
-      if (!name){ alert("Bitte Mitglied auswählen oder neuen Namen eingeben."); return; }
 
-      const memberRef = await ensureMember(name, id);
-
-      let amount = betragInput.value === "" ? NaN : parseFloat(betragInput.value);
-      if (isNaN(amount)){
-        const ev = eventSel.value;
-        if (ev && eventTemplates[ev] != null) amount = parseFloat(eventTemplates[ev]);
-      }
-      if (isNaN(amount)){
-        clearInputs(); return; // nur Mitglied anlegen/aktualisieren
-      }
-
-      const type = typSel.value; // einzahlung | auszahlung
+    async function addTransaction(memberRef, memberName, memberId, type, event, amount){
       await db.runTransaction(async (tx) => {
         const snap = await tx.get(memberRef);
         if (!snap.exists) throw new Error("Mitglied nicht gefunden");
         let balance = snap.data().balance || 0;
         balance = type === "einzahlung" ? balance + amount : balance - amount;
+
         tx.update(memberRef, { balance });
 
         const tRef = db.collection("transactions").doc();
         tx.set(tRef, {
           ts: new Date().toISOString(),
-          member: name,
-          memberId: snap.data().id || id || "",
-          type,
-          event: eventSel.value || "",
-          amount,
-          newBalance: balance
+          member: memberName,
+          memberId: memberId || snap.data().id || "",
+          type, event, amount, newBalance: balance
         });
       });
-
-      clearInputs();
     }
 
-    // Modal öffnen/schließen
+    /* -------------------- Workflows -------------------- */
+
+    // Mitglied hinzufügen
+    document.getElementById("btnAddMember").onclick = () => {
+      addName.value = ""; addId.value = ""; addWarn.style.display = "none";
+      document.getElementById("addStep1").style.display = "grid";
+      document.getElementById("addStep2").style.display = "none";
+      openModal("addMemberModal");
+    };
+    document.getElementById("addToStep2").onclick = () => {
+      const n = (addName.value || "").trim();
+      if (!n) return;
+      addWarn.style.display = "none";
+      addCName.textContent = escapeHTML(n);
+      addCId.textContent = escapeHTML(addId.value || "—");
+      document.getElementById("addStep1").style.display = "none";
+      document.getElementById("addStep2").style.display = "grid";
+    };
+    document.getElementById("addCancel").onclick = () => closeModal("addMemberModal");
+    document.getElementById("addId").addEventListener("input", ()=>{ addCId.textContent = escapeHTML(addId.value || "—"); });
+    document.getElementById("addConfirm").onclick = async () => {
+      const name = (addName.value || "").trim();
+      const id = (addId.value || "").trim();
+      if (!name) return;
+      const ref = db.collection("members").doc(name);
+      const snap = await ref.get();
+      if (snap.exists){ addWarn.style.display = "block"; return; }
+      await ref.set({ name, id, balance: 0 });
+      closeModal("addMemberModal");
+    };
+
+    // Auszahlung
+    document.getElementById("btnPayout").onclick = () => {
+      document.getElementById("payoutStep1").style.display = "grid";
+      document.getElementById("payoutStep2").style.display = "none";
+      document.getElementById("payoutStep3").style.display = "none";
+      payoutSummary.textContent = "";
+      fillMembers(payoutMember);
+      fillEvents(payoutEvent, payoutAmount);
+      openModal("payoutModal");
+    };
+    document.getElementById("payoutToStep2").onclick = () => {
+      if (!payoutMember.value) return;
+      document.getElementById("payoutStep1").style.display = "none";
+      document.getElementById("payoutStep2").style.display = "grid";
+    };
+    document.getElementById("payoutToStep3").onclick = async () => {
+      if (!payoutEvent.value) return;
+      document.getElementById("payoutStep2").style.display = "none";
+      document.getElementById("payoutStep3").style.display = "grid";
+      updatePayoutSummary();
+    };
+    document.getElementById("payoutAmount").addEventListener("input", updatePayoutSummary);
+    document.getElementById("payoutCancel").onclick = () => closeModal("payoutModal");
+    document.getElementById("payoutConfirm").onclick = async () => {
+      const name = payoutMember.value;
+      const ev = payoutEvent.value;
+      const amount = parseFloat(payoutAmount.value);
+      if (!name || !ev || isNaN(amount)) return;
+      const ref = await ensureMember(name, null);
+      await addTransaction(ref, name, null, "auszahlung", ev, amount);
+      closeModal("payoutModal");
+    };
+    async function updatePayoutSummary(){
+      const name = payoutMember.value;
+      const ev = payoutEvent.value;
+      const amount = parseFloat(payoutAmount.value);
+      if (!name || !ev || isNaN(amount)) { payoutSummary.textContent = ""; return; }
+      const snap = await db.collection("members").doc(name).get();
+      const id = snap.exists ? (snap.data().id || "—") : "—";
+      payoutSummary.innerHTML = `Möchtest du <b>${escapeHTML(name)} | ${escapeHTML(id)}</b> für <b>${escapeHTML(ev)}</b> mit dem Betrag <b>${toLocale(amount)}</b> € auszahlen?`;
+    }
+
+    // Offene Auszahlung (Geld hinzufügen)
+    document.getElementById("btnPending").onclick = () => {
+      document.getElementById("pendingStep1").style.display = "grid";
+      document.getElementById("pendingStep2").style.display = "none";
+      document.getElementById("pendingStep3").style.display = "none";
+      pendingSummary.textContent = "";
+      fillMembers(pendingMember);
+      fillEvents(pendingEvent, pendingAmount);
+      openModal("pendingModal");
+    };
+    document.getElementById("pendingToStep2").onclick = () => {
+      if (!pendingMember.value) return;
+      document.getElementById("pendingStep1").style.display = "none";
+      document.getElementById("pendingStep2").style.display = "grid";
+    };
+    document.getElementById("pendingToStep3").onclick = async () => {
+      if (!pendingEvent.value) return;
+      document.getElementById("pendingStep2").style.display = "none";
+      document.getElementById("pendingStep3").style.display = "grid";
+      updatePendingSummary();
+    };
+    document.getElementById("pendingAmount").addEventListener("input", updatePendingSummary);
+    document.getElementById("pendingCancel").onclick = () => closeModal("pendingModal");
+    document.getElementById("pendingConfirm").onclick = async () => {
+      const name = pendingMember.value;
+      const ev = pendingEvent.value;
+      const amount = parseFloat(pendingAmount.value);
+      if (!name || !ev || isNaN(amount)) return;
+      const ref = await ensureMember(name, null);
+      await addTransaction(ref, name, null, "einzahlung", ev, amount);
+      closeModal("pendingModal");
+    };
+    async function updatePendingSummary(){
+      const name = pendingMember.value;
+      const ev = pendingEvent.value;
+      const amount = parseFloat(pendingAmount.value);
+      if (!name || !ev || isNaN(amount)) { pendingSummary.textContent = ""; return; }
+      const snap = await db.collection("members").doc(name).get();
+      const id = snap.exists ? (snap.data().id || "—") : "—";
+      pendingSummary.innerHTML = `Möchtest du <b>${escapeHTML(name)} | ${escapeHTML(id)}</b> für <b>${escapeHTML(ev)}</b> den Betrag <b>${toLocale(amount)}</b> € <u>hinzufügen</u>?`;
+    }
+
+    /* -------------------- Mitglied bearbeiten/löschen -------------------- */
     window.editMember = async function(name){
-      if (!isAdmin){ alert("Nicht angemeldet."); return; }
-      try {
+      try{
         const ref = db.collection("members").doc(name);
         const snap = await ref.get();
         if (!snap.exists){ alert("Mitglied nicht gefunden."); return; }
@@ -498,23 +612,22 @@
         currentMemberName = data.name;
         editNameInput.value = data.name;
         editIdInput.value = data.id || "";
-        editHint.textContent = "Hinweis: Eine Namensänderung legt ein neues Dokument an.";
-        editModal.classList.add("active");
-      } catch (e) {
-        alert("Fehler beim Laden: " + (e?.message || e));
-      }
+        editHint.textContent = "Hinweis: Eine Namensänderung legt ein neues Dokument an und übernimmt den Kontostand.";
+        openModal("editModal");
+      }catch(e){ alert("Fehler beim Laden: " + (e?.message || e)); }
     };
-    function closeEditModal(){
-      editModal.classList.remove("active");
-      currentMemberName = null;
-      editHint.textContent = "";
-    }
-    btnEditCancel.onclick = closeEditModal;
-    editModal.addEventListener("click", (e)=>{ if(e.target===editModal) closeEditModal(); });
-    window.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeEditModal(); });
+    window.deleteMember = async function(name){
+      const ok = confirm(`Mitglied "${name}" wirklich entfernen? Transaktionen bleiben erhalten.`);
+      if (!ok) return;
+      try{ await db.collection("members").doc(name).delete(); }
+      catch(e){ alert("Löschen fehlgeschlagen: " + (e?.message || e)); }
+    };
+    btnEditCancel.onclick = () => closeModal("editModal");
+    window.addEventListener("keydown", (e)=>{ if(e.key==="Escape") document.querySelectorAll(".modal-overlay.active").forEach(m=>m.classList.remove("active")); });
+    document.querySelectorAll(".modal-overlay").forEach(ov=>ov.addEventListener("click",(e)=>{ if(e.target===ov) ov.classList.remove("active"); }));
 
     btnEditSave.onclick = async () => {
-      if (!isAdmin || !currentMemberName) return;
+      if (!currentMemberName) return;
       btnEditSave.disabled = true; btnEditCancel.disabled = true;
       editHint.textContent = "Speichern…";
       try{
@@ -535,40 +648,17 @@
         } else {
           await oldRef.update({ id: newId });
         }
-        closeEditModal();
-      } catch (e){
+        closeModal("editModal");
+      }catch(e){
         alert("Bearbeiten fehlgeschlagen: " + (e?.message || e));
-      } finally {
+      }finally{
         btnEditSave.disabled = false; btnEditCancel.disabled = false;
         editHint.textContent = "";
+        currentMemberName = null;
       }
     };
 
-    // Löschen
-    window.deleteMember = async function(name){
-      if (!isAdmin){ alert("Nicht angemeldet."); return; }
-      const ok = confirm(`Mitglied "${name}" wirklich entfernen? Transaktionen bleiben erhalten.`);
-      if (!ok) return;
-      try{ await db.collection("members").doc(name).delete(); }
-      catch(e){ alert("Löschen fehlgeschlagen: " + (e?.message || e)); }
-    };
-
-    function clearInputs(){
-      neuesMitgliedInput.value = "";
-      mitgliedSel.value = "";
-      mitgliedIdInput.value = "";
-      betragInput.value = "";
-      eventSel.value = "";
-      typSel.value = "einzahlung";
-    }
-
-    function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
-    function toLocale(n){ return (n || 0).toLocaleString("de-DE"); }
-    function formatEUR(n){ try { return new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n); } catch(e){ return n.toString(); } }
-    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s => ({ "&":"&amp;","<":"&lt;","&gt;":"&gt;","'":"&#39;","\"":"&quot;" }[s])); }
-    function escapeAttr(str){ return String(str).replace(/["'\\`]/g, "_"); }
-
-    /* Partikel-Netz */
+    /* -------------------- Hintergrund: Partikel-Netz -------------------- */
     (function(){
       const canvas = document.getElementById('netCanvas');
       if(!canvas) return;
@@ -589,7 +679,9 @@
         const count = Math.max(min, Math.min(max, targetCount));
 
         if (particles.length > count) particles.length = count;
-        while (particles.length < count){ particles.push({ x: Math.random()*w, y: Math.random()*h, vx:(Math.random()*2-1)*0.25, vy:(Math.random()*2-1)*0.25, r: Math.random()*1.2+0.6 }); }
+        while (particles.length < count){
+          particles.push({ x: Math.random()*w, y: Math.random()*h, vx:(Math.random()*2-1)*0.25, vy:(Math.random()*2-1)*0.25, r: Math.random()*1.2+0.6 });
+        }
       }
 
       const MAX_D = 160, DOT_A = 0.35, LINK_A = 0.14;
