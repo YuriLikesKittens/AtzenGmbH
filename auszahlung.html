@@ -3,101 +3,156 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Übersicht, Transaktionen & Auszahlungstabelle (Read-Only)</title>
+  <title>💰 Auszahlungen </title>
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#0b0f1a;
-      --bg2:#111828;
-      --text:#f3f4f6;
-      --muted:#cbd5e1;
-      --accent:#7c3aed;
-      --accent2:#06b6d4;
-      --radius:20px;
-      --stroke: rgba(255,255,255,.16);
-      --panel: rgba(255,255,255,.08);
-      --shadow: 0 18px 42px rgba(124,58,237,.22), inset 0 0 0 1px var(--stroke);
+      --blue: 0,150,255;
+      --text:#f5faff;
+      --muted:#b0c4de;
+      --card-bg: rgba(6,16,26,.82);
     }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
+    *{box-sizing:border-box}
+    html,body{
       margin:0;
+      min-height:100%;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
       color:var(--text);
-      background:
-        radial-gradient(1200px 800px at 10% 10%, rgba(124,58,237,.16), transparent 40%),
-        radial-gradient(800px 600px at 90% 20%, rgba(6,182,212,.15), transparent 45%),
-        radial-gradient(1000px 700px at 80% 90%, rgba(34,197,94,.12), transparent 45%),
-        linear-gradient(160deg,var(--bg) 0%, var(--bg2) 100%);
       overflow-x:hidden;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background-image: radial-gradient(#021027, #000000);
+    }
+
+    /* Hintergrund-Bubbles */
+    .container {
+      position:fixed; inset:0;
+      width:100%; height:100%;
+      overflow:hidden;
+      z-index:-2;
+    }
+    .circle-container {
+      position:absolute;
+      animation-iteration-count: infinite;
+      animation-timing-function: linear;
+    }
+    .circle {
+      width:100%;
+      height:100%;
+      border-radius:50%;
+      mix-blend-mode:screen;
+      background-image: radial-gradient(
+        hsl(180, 100%, 80%),
+        hsl(180, 100%, 80%) 10%,
+        hsla(180, 100%, 80%, 0) 56%
+      );
+      animation: fade-frames 2s infinite, scale-frames 6s infinite;
+    }
+    @keyframes fade-frames { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
+    @keyframes scale-frames { 0%{transform:scale3d(0.4,0.4,1)} 50%{transform:scale3d(2,2,1)} 100%{transform:scale3d(0.4,0.4,1)} }
+
+    /* Seite */
+    .wrap{
+      max-width:1400px;
+      margin:0 auto;
+      position:relative;
+      z-index:1;
       padding:24px 16px 40px;
     }
 
-    /* Hintergrundeffekte */
-    .net-bg{position:fixed; inset:0; pointer-events:none; z-index:0}
-    .net-bg canvas{width:100%; height:100%; display:block}
-    .grid-bg{position:fixed; inset:0; pointer-events:none; opacity:.35; mix-blend-mode:screen;
-      background:
-        linear-gradient(transparent 0 49%, rgba(255,255,255,.10) 49% 51%, transparent 51% 100%),
-        linear-gradient(90deg, transparent 0 49%, rgba(255,255,255,.10) 49% 51%, transparent 51% 100%);
-      background-size: 40px 40px, 40px 40px;
-      transform: perspective(800px) rotateX(55deg) scale(1.2);
-      transform-origin: top center;
-      animation: floatGrid 18s linear infinite;
-      z-index:0;
+    /* Header */
+    .header {
+      text-align:center;
+      margin:10px 0 32px;
+      opacity:0; transform:translateY(-14px);
+      animation:fadeUp .8s ease forwards;
+      animation-delay:.0s;
     }
-    @keyframes floatGrid { 0% { background-position:0 0, 0 0 } 100% { background-position:0 40px, 40px 0 } }
-
-    .wrap{max-width:1200px;margin:0 auto;position:relative;z-index:1}
-
-    /* Topbar */
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
-    h1{margin:0;font-size:clamp(22px,4vw,32px);font-weight:800;font-family: Orbitron, Inter}
+    .header__title {
+      font-family: Orbitron, sans-serif;
+      font-size: clamp(28px, 6vw, 52px);
+      color:#66cfff;
+      text-shadow: 0 0 20px rgba(0,150,255,0.8),
+                   0 0 40px rgba(0,150,255,0.6),
+                   0 0 80px rgba(0,150,255,0.4);
+      margin:0;
+    }
+    .header__subtitle {
+      font-size:16px;
+      color:#b0c4de;
+      letter-spacing:2px;
+      margin-top:8px;
+    }
+    .header::after {
+      content:"";
+      position:absolute;
+      bottom:-14px;
+      left:50%;
+      transform:translateX(-50%);
+      width:200px;
+      height:4px;
+      background:linear-gradient(90deg, transparent, #00aaff, transparent);
+      box-shadow:0 0 20px rgba(0,150,255,0.7);
+      border-radius:4px;
+    }
 
     /* Buttons */
+    .btnrow{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+      margin:32px 0 20px;
+      opacity:0; transform:translateY(10px);
+      animation:fadeUp .8s ease forwards;
+      animation-delay:.35s;
+    }
     a.btn, button.btn{
       display:inline-flex; align-items:center; justify-content:center;
       padding:10px 14px;
       border-radius:12px;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      color:#fff;
-      text-decoration:none;
-      font-weight:700;
-      border:0;
-      cursor:pointer;
-      box-shadow:0 10px 26px rgba(6,182,212,.34), inset 0 0 0 1px rgba(255,255,255,.05);
+      background:linear-gradient(135deg,#0096ff,#00e0ff);
+      color:#fff; text-decoration:none; font-weight:700; border:0; cursor:pointer;
       transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+      box-shadow:0 10px 26px rgba(0,150,255,.3);
     }
-    .btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 14px 36px rgba(124,58,237,.30)}
-    .btnrow{display:flex;gap:8px;flex-wrap:wrap}
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 14px 36px rgba(0,150,255,.5)}
+
+    @keyframes fadeUp { from {opacity:0; transform:translateY(16px)} to {opacity:1; transform:translateY(0)} }
 
     /* Cards */
     .card{
-      position:relative; border-radius:var(--radius); padding:20px;
-      background:
-        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.07), rgba(255,255,255,.03)),
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--stroke);
-      backdrop-filter: blur(8px) saturate(1.2);
+      position:relative;background:var(--card-bg);
+      border-radius:20px;padding:20px;
+      border:1px solid rgba(255,255,255,.08);
       box-shadow:0 14px 36px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.04);
+      backdrop-filter: blur(8px) saturate(1.2);
       margin-bottom:18px;
+      overflow:hidden;
+      text-align:left;
+
+      opacity:0; transform:translateY(16px);
+      animation:fadeUp .8s ease forwards;
+    }
+    .card.stagger-1{ animation-delay:.60s }
+    .card.stagger-2{ animation-delay:.80s }
+    .card.stagger-3{ animation-delay:1.00s }
+    .card.stagger-4{ animation-delay:1.20s }
+
+    .card::before{
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background:radial-gradient(circle at var(--glow-x,50%) var(--glow-y,50%),
+        rgba(var(--blue), calc(var(--glow-intensity,0)*.6)) 0%, transparent 60%);
+      opacity:.85; transition:opacity .2s ease;
     }
 
-    /* Chips */
-    .chips{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
-    .chip{background:#0b1020;border:1px solid var(--stroke);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:13px}
+    .chips{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;justify-content:center}
+    .chip{background:#0b1020;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:13px}
 
-    /* Tabellen */
-    table{width:100%;border-collapse:collapse}
+    table{width:100%;border-collapse:collapse;font-size:14px}
     thead th{
       position:sticky;top:0; z-index:1;
       background:rgba(10,15,31,.7);
       backdrop-filter: blur(6px);
-      border-bottom:1px solid var(--stroke);
+      border-bottom:1px solid rgba(255,255,255,.16);
       text-transform:uppercase;font-size:12px;color:var(--muted);
       padding:10px;text-align:left
     }
@@ -110,75 +165,69 @@
 
     .warn{color:#fca5a5;font-size:12px;margin-top:6px}
 
-    /* Footer (RGB) */
-    footer{margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
-      background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      color: transparent;
-      animation: rgbMove 6s linear infinite;
-      background-size: 300% 100%;
-    }
-    @keyframes rgbMove {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    /* Spotlight */
+    .spotlight{
+      position:fixed;width:800px;height:800px;border-radius:50%;
+      pointer-events:none; mix-blend-mode:screen; transform:translate(-50%,-50%);
+      background:radial-gradient(circle,
+        rgba(var(--blue),.15) 0%, rgba(var(--blue),.08) 15%, rgba(var(--blue),.04) 25%,
+        rgba(var(--blue),.02) 40%, rgba(var(--blue),.01) 65%, transparent 70%);
+      opacity:0; z-index:2;
     }
 
-    /* ===== Modal (Admin Login) ===== */
-    .modal{
-      position:fixed; inset:0; display:none; place-items:center;
-      background:rgba(0,0,0,.5); z-index:50; padding:16px;
+    /* Card Partikel */
+    .particle{
+      position:absolute;border-radius:50%;
+      background:rgba(var(--blue),1);
+      box-shadow:0 0 8px rgba(var(--blue),.6);
+      pointer-events:none; z-index:0; opacity:.7;
+      animation:floatParticle 4s ease-in-out infinite alternate;
     }
-    .modal.open{ display:grid; }
-    .modal-card{
-      width:min(480px, 100%); border-radius:20px; padding:20px;
-      background:
-        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.08), rgba(255,255,255,.04)),
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--stroke);
-      box-shadow:0 24px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05);
-      backdrop-filter: blur(10px) saturate(1.2);
-      position:relative;
+    @keyframes floatParticle{ from{transform:translateY(0) scale(1); opacity:.8} to{transform:translateY(-25px) scale(1.3); opacity:.3} }
+
+    /* Footer RGB */
+    footer{
+      margin-top:24px;
+      text-align:center;
+      font-size:13px;
+      font-weight:600;
+      background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet, red);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-size:400% 400%;
+      animation:rgbFlow 10s linear infinite;
     }
-    .modal h3{margin:0 0 10px; font-size:20px}
-    .modal .close{
-      position:absolute; top:10px; right:10px; width:36px; height:36px;
-      border-radius:12px; border:1px solid var(--stroke);
-      background:rgba(255,255,255,.06); color:var(--text); cursor:pointer;
-    }
-    .modal .row{display:grid; gap:12px; grid-template-columns:1fr}
-    .modal .actions{display:flex; gap:8px; margin-top:12px; align-items:center; flex-wrap:wrap}
-    .small{font-size:12px; color:var(--muted)}
+    @keyframes rgbFlow { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
   </style>
 </head>
 <body>
   <!-- Hintergrund -->
-  <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
-  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="container" id="bg-container"></div>
+  <div class="spotlight" id="spotlight"></div>
 
   <div class="wrap">
-    <div class="topbar">
-      <h1>Auszahlung & Offene Auszahlungen </h1>
-      <div class="btnrow">
-        <a class="btn" href="index.html">Zur Übersicht</a>
-        <!-- Plantage-Log entfernt -->
-        <a class="btn" id="btnBackAdmin" href="admin_sync.html">Zur Leaderschaft Seite</a>
-        <!-- Admin-Login entfernt -->
-      </div>
+    <!-- Header -->
+    <div class="header">
+      <h1 class="header__title">💰 Auszahlung & Transaktionen</h1>
+      <p class="header__subtitle"> Fair · min. 500k · Echtzeit</p>
     </div>
 
-    <!-- Mitglieder Übersicht -->
-    <div class="card">
+    <!-- Buttons -->
+    <div class="btnrow">
+      <a class="btn" href="index.html">🏠 Zur Übersicht</a>
+      <a class="btn" id="btnBackAdmin" href="admin_sync.html">⚙️ Leaderschaft</a>
+    </div>
+
+    <!-- Cards -->
+    <div class="card stagger-1">
       <div class="chips">
-        <span class="chip">Mitglieder: <b id="statMitglieder">0</b></span>
-        <span class="chip">Gesamtsaldo: <b id="statSaldo">0</b> €</span>
+        <span class="chip">👥 Mitglieder: <b id="statMitglieder">0</b></span>
+        <span class="chip">💶 Gesamtsaldo: <b id="statSaldo">0</b> $</span>
       </div>
-      <div style="overflow:auto;max-height:38vh;border:1px solid var(--stroke);border-radius:12px">
+      <div style="overflow:auto;max-height:38vh;border:1px solid rgba(255,255,255,.16);border-radius:12px">
         <table>
           <thead>
-            <tr><th>Mitglied</th><th>ID</th><th class="right">Kontostand (€)</th></tr>
+            <tr><th>Mitglied</th><th>ID</th><th class="right">Kontostand ($)</th></tr>
           </thead>
           <tbody id="tbodyMembers"></tbody>
         </table>
@@ -187,13 +236,12 @@
     </div>
 
     <div class="grid">
-      <!-- Letzte Auszahlungen -->
-      <div class="card">
-        <h3 style="margin:0 0 8px">Letzte Auszahlungen</h3>
-        <div style="overflow:auto;max-height:45vh;border:1px solid var(--stroke);border-radius:12px">
+      <div class="card stagger-2">
+        <h3>📤 Letzte Auszahlungen</h3>
+        <div style="overflow:auto;max-height:45vh;border:1px solid rgba(255,255,255,.16);border-radius:12px">
           <table>
             <thead>
-              <tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Offene Auszahlung</th></tr>
+              <tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag ($)</th><th class="right">Offene Auszahlung</th></tr>
             </thead>
             <tbody id="tbodyPayouts"></tbody>
           </table>
@@ -201,13 +249,12 @@
         <div id="errPayouts" class="warn" style="display:none"></div>
       </div>
 
-      <!-- Letzte Einzahlungen -->
-      <div class="card">
-        <h3 style="margin:0 0 8px">Offene Auszahlung</h3>
-        <div style="overflow:auto;max-height:45vh;border:1px solid var(--stroke);border-radius:12px">
+      <div class="card stagger-3">
+        <h3>📥 Offene Auszahlung</h3>
+        <div style="overflow:auto;max-height:45vh;border:1px solid rgba(255,255,255,.16);border-radius:12px">
           <table>
             <thead>
-              <tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag (€)</th><th class="right">Offene Auszahlung</th></tr>
+              <tr><th>Datum</th><th>Mitglied</th><th>Event</th><th class="right">Betrag ($)</th><th class="right">Offene Auszahlung</th></tr>
             </thead>
             <tbody id="tbodyDeposits"></tbody>
           </table>
@@ -216,58 +263,18 @@
       </div>
     </div>
 
-    <!-- Auszahlungstabelle (Raten) -->
-    <div class="card">
-      <h3 style="margin:0 0 8px">Auszahlungs-Liste (Was wird gezahlt?)</h3>
-      <div style="overflow:auto;max-height:50vh;border:1px solid var(--stroke);border-radius:12px">
+    <div class="card stagger-4">
+      <h3>📑 Auszahlungs-Liste</h3>
+      <div style="overflow:auto;max-height:50vh;border:1px solid rgba(255,255,255,.16);border-radius:12px">
         <table>
-          <thead><tr><th>Event</th><th class="right">Betrag (€)</th></tr></thead>
+          <thead><tr><th>Event</th><th class="right">Betrag ($)</th></tr></thead>
           <tbody id="tbodyRates"></tbody>
         </table>
       </div>
-      <p class="chip" style="margin-top:8px">Hinweis: <b>Komplett Auszahlung</b> = gesamter Kontostand. <b>Sanktion</b> = Betrag wird individuell festgelegt.</p>
+      <p class="chip">ℹ️ Hinweis: <b>Komplett Auszahlung</b> = gesamter Kontostand · <b>Sanktion</b> = individuell</p>
     </div>
 
-    <!-- Footer -->
-<footer style="
-  margin-top:24px;
-  text-align:center;
-  font-size:13px;
-  padding:10px;
-  font-weight:600;
-  background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-  animation: rgbMove 6s linear infinite;
-  background-size: 300% 100%;
-">
-  Made by Alvaro SolanoHebel | 20367
-</footer>
-
-  <!-- Admin-Login Modal -->
-  <div class="modal" id="adminModal" aria-hidden="true" role="dialog" aria-labelledby="adminModalTitle">
-    <div class="modal-card">
-      <button class="close" id="closeAdminModal" aria-label="Schließen">✕</button>
-      <h3 id="adminModalTitle">Admin-Login</h3>
-      <div class="row">
-        <div>
-          <label>E-Mail</label>
-          <input type="email" id="modalEmail" placeholder="admin@beispiel.de" />
-        </div>
-        <div>
-          <label>Passwort</label>
-          <input type="password" id="modalPassword" placeholder="********" />
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn" id="modalBtnLogin">Anmelden</button>
-        <button class="btn" id="modalBtnLogout" style="display:none">Abmelden</button>
-        <span class="small" id="modalAuthState"></span>
-      </div>
-      <p class="small" style="margin-top:6px">Einmal angemeldet → auf allen Seiten als Admin erkannt (bis Abmeldung).</p>
-    </div>
+    <footer>Made by Alvaro SolanoHebel | 20367</footer>
   </div>
 
   <!-- Firebase SDKs -->
@@ -275,12 +282,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" defer></script>
 
+  <!-- Firebase Code -->
   <script>
-  // Warten bis Scripts geladen sind
   window.addEventListener('load', () => {
-    if (!window.firebase) { console.error('Firebase nicht geladen.'); return; }
+    if (!window.firebase) return;
 
-    /* === Firebase Init === */
     const firebaseConfig = {
       apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
       authDomain: "msauszahlung.firebaseapp.com",
@@ -293,50 +299,17 @@
     try { firebase.initializeApp(firebaseConfig); } catch (e) { if(!/already exists/i.test(String(e))) throw e; }
     const auth = firebase.auth();
     const db   = firebase.firestore();
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
 
-    /* === Admin-Modal === */
-    const modal = document.getElementById('adminModal');
-    const openBtn = document.getElementById('openAdminLogin');
-    const closeBtn = document.getElementById('closeAdminModal');
-    const emailEl = document.getElementById('modalEmail');
-    const passEl  = document.getElementById('modalPassword');
-    const btnIn   = document.getElementById('modalBtnLogin');
-    const btnOut  = document.getElementById('modalBtnLogout');
-    const stateEl = document.getElementById('modalAuthState');
+    const tbodyMembers  = document.getElementById('tbodyMembers');
+    const tbodyPayouts  = document.getElementById('tbodyPayouts');
+    const tbodyDeposits = document.getElementById('tbodyDeposits');
+    const tbodyRates    = document.getElementById('tbodyRates');
+    const statMitglieder= document.getElementById('statMitglieder');
+    const statSaldo     = document.getElementById('statSaldo');
+    const errMembers    = document.getElementById('errMembers');
+    const errPayouts    = document.getElementById('errPayouts');
+    const errDeposits   = document.getElementById('errDeposits');
 
-    function openModal(){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); setTimeout(()=>emailEl?.focus(),50); }
-    function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
-    openBtn?.addEventListener('click', openModal);
-    closeBtn?.addEventListener('click', closeModal);
-    modal?.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
-    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
-
-    function setAdminUI(on, user){
-      document.body.classList.toggle('admin', !!on);
-      btnIn.style.display  = on ? 'none'      : 'inline-flex';
-      btnOut.style.display = on ? 'inline-flex': 'none';
-      stateEl.textContent  = on ? `Angemeldet${user?.email?`: ${user.email}`:''}` : 'Abgemeldet';
-    }
-    btnIn.addEventListener('click', async ()=>{
-      stateEl.textContent = 'Anmeldung läuft…';
-      try{
-        await auth.signInWithEmailAndPassword(emailEl.value, passEl.value);
-        stateEl.textContent = 'Erfolgreich angemeldet.';
-        setTimeout(closeModal, 400);
-      }catch(e){
-        stateEl.textContent = e?.message || 'Login fehlgeschlagen';
-      }
-    });
-    btnOut.addEventListener('click', async ()=>{
-      try{ await auth.signOut(); stateEl.textContent = 'Abgemeldet.'; }
-      catch(e){ stateEl.textContent = e?.message || 'Fehler beim Abmelden'; }
-    });
-    auth.onAuthStateChanged(user => setAdminUI(!!user, user));
-
-    /* === Daten laden (Read-Only) === */
-
-    // Vorlagen (wie Admin-Seite)
     const eventTemplates = {
       "40er Kill / Win": 30000,
       "40er Kill / Lose": 15000,
@@ -359,174 +332,131 @@
       "Komplett Auszahlung": -1
     };
 
-    // UI Refs
-    const tbodyMembers  = document.getElementById('tbodyMembers');
-    const tbodyPayouts  = document.getElementById('tbodyPayouts');
-    const tbodyDeposits = document.getElementById('tbodyDeposits');
-    const tbodyRates    = document.getElementById('tbodyRates');
-    const statMitglieder= document.getElementById('statMitglieder');
-    const statSaldo     = document.getElementById('statSaldo');
-    const errMembers    = document.getElementById('errMembers');
-    const errPayouts    = document.getElementById('errPayouts');
-    const errDeposits   = document.getElementById('errDeposits');
-
     // Mitglieder live
-    try {
-   db.collection('members').orderBy('balance', 'desc')
-  .onSnapshot(snap => {
-          tbodyMembers.innerHTML = '';
-          let total = 0, count = 0;
-          snap.forEach(doc => {
-            const m = doc.data();
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${escapeHTML(m.name)}</td>
-              <td class="id">${escapeHTML(m.id||'')}</td>
-              <td class="right">${toLocale(m.balance||0)}</td>`;
-            tbodyMembers.appendChild(tr);
-            total += (m.balance||0); count++;
-          });
-          statMitglieder.textContent = String(count);
-          statSaldo.textContent = toLocale(round2(total));
-          errMembers.style.display = 'none';
-        }, err => {
-          errMembers.textContent = "Fehler beim Laden der Mitglieder: " + (err.message||err);
-          errMembers.style.display = '';
+    db.collection('members').orderBy('balance','desc')
+      .onSnapshot(snap=>{
+        tbodyMembers.innerHTML = '';
+        let total = 0, count = 0;
+        snap.forEach(doc=>{
+          const m = doc.data();
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${escapeHTML(m.name)}</td>
+                          <td class="id">${escapeHTML(m.id||'')}</td>
+                          <td class="right">${toLocale(m.balance||0)}</td>`;
+          tbodyMembers.appendChild(tr);
+          total += (m.balance||0); count++;
         });
-    } catch (e) {
-      errMembers.textContent = "Init-Fehler Mitglieder: " + (e.message||e);
-      errMembers.style.display = '';
-    }
+        statMitglieder.textContent = count;
+        statSaldo.textContent = toLocale(round2(total));
+      },err=>{
+        errMembers.textContent = "Fehler: " + err.message; errMembers.style.display='';
+      });
 
-    // Transaktionen live (letzte 100)
-    try {
-      db.collection('transactions').orderBy('ts','desc').limit(100)
-        .onSnapshot(snap => {
-          tbodyPayouts.innerHTML = '';
-          tbodyDeposits.innerHTML = '';
-          snap.forEach(doc => {
-            const t = doc.data();
-            const row = `
-              <td>${formatDate(t.ts)}</td>
-              <td>${escapeHTML(t.member||'')}</td>
-              <td>${escapeHTML(t.event||'')}</td>
-              <td class="right">${toLocale(round2(t.amount||0))}</td>
-              <td class="right">${toLocale(round2(t.newBalance||0))}</td>`;
-            if ((t.type||'') === 'auszahlung') {
-              const tr = document.createElement('tr'); tr.innerHTML = row; tbodyPayouts.appendChild(tr);
-            } else if ((t.type||'') === 'einzahlung') {
-              const tr = document.createElement('tr'); tr.innerHTML = row; tbodyDeposits.appendChild(tr);
-            }
-          });
-          errPayouts.style.display = 'none';
-          errDeposits.style.display = 'none';
-        }, err => {
-          errPayouts.textContent = "Fehler beim Laden der Auszahlungen: " + (err.message||err);
-          errPayouts.style.display = '';
-          errDeposits.textContent = "Fehler beim Laden der Einzahlungen: " + (err.message||err);
-          errDeposits.style.display = '';
+    // Transaktionen live
+    db.collection('transactions').orderBy('ts','desc').limit(100)
+      .onSnapshot(snap=>{
+        tbodyPayouts.innerHTML=''; tbodyDeposits.innerHTML='';
+        snap.forEach(doc=>{
+          const t = doc.data();
+          const row = `<td>${formatDate(t.ts)}</td>
+                       <td>${escapeHTML(t.member||'')}</td>
+                       <td>${escapeHTML(t.event||'')}</td>
+                       <td class="right">${toLocale(round2(t.amount||0))}</td>
+                       <td class="right">${toLocale(round2(t.newBalance||0))}</td>`;
+          const tr = document.createElement('tr'); tr.innerHTML=row;
+          if(t.type==='auszahlung') tbodyPayouts.appendChild(tr);
+          else if(t.type==='einzahlung') tbodyDeposits.appendChild(tr);
         });
-    } catch (e) {
-      errPayouts.textContent = "Init-Fehler Transaktionen: " + (e.message||e);
-      errPayouts.style.display = '';
-    }
+      },err=>{
+        errPayouts.textContent="Fehler: "+err.message; errPayouts.style.display='';
+        errDeposits.textContent="Fehler: "+err.message; errDeposits.style.display='';
+      });
 
     // Auszahlungstabelle
-    (function renderRates(){
-      const html = Object.entries(eventTemplates)
-        .sort((a,b)=> a[0].localeCompare(b[0],'de'))
-        .map(([label, value]) => {
-          let valText = "";
-          if (label === "Komplett Auszahlung" || value === -1) valText = "Gesamter Kontostand";
-          else if (label === "Sanktion" || value === 0) valText = "Individuell / nach Entscheidung";
-          else valText = toLocale(value);
-          return `<tr><td>${escapeHTML(label)}</td><td class="right">${valText}</td></tr>`;
-        }).join("");
-      tbodyRates.innerHTML = html;
-    })();
+    tbodyRates.innerHTML = Object.entries(eventTemplates)
+      .sort((a,b)=>a[0].localeCompare(b[0],'de'))
+      .map(([label,val])=>{
+        let txt = val===-1 ? "Gesamter Kontostand" :
+                  val===0 ? "Individuell" : toLocale(val);
+        return `<tr><td>${escapeHTML(label)}</td><td class="right">${txt}</td></tr>`;
+      }).join("");
 
-    /* Helpers */
-    function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
-    function toLocale(n){ return (n||0).toLocaleString('de-DE'); }
-    function formatDate(ts){ try{return new Date(ts).toLocaleString('de-DE')}catch(e){return String(ts)} }
-    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])) }
+    // Helpers
+    function round2(n){return Math.round((n+Number.EPSILON)*100)/100}
+    function toLocale(n){return (n||0).toLocaleString('de-DE')}
+    function formatDate(ts){try{return new Date(ts).toLocaleString('de-DE')}catch(e){return ts}}
+    function escapeHTML(str){return String(str).replace(/[&<>'"]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s]))}
   });
   </script>
 
   <script>
-     /* Partikel-Netz (Canvas) – fix hell */
-    (function(){
-      const canvas = document.getElementById('netCanvas');
-      const ctx = canvas.getContext('2d');
-      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      let particles = [];
-      let w = 0, h = 0;
+    // Hintergrund-Bubbles (jetzt von OBEN nach UNTEN, auch über Header sichtbar)
+    const container = document.getElementById('bg-container');
+    const numCircles = 100;
+    for (let i=0; i<numCircles; i++) {
+      const circleContainer = document.createElement('div');
+      circleContainer.className = 'circle-container';
+      const circle = document.createElement('div');
+      circle.className = 'circle';
+      circleContainer.appendChild(circle);
 
-      function resize(){
-        w = canvas.clientWidth;
-        h = canvas.clientHeight;
-        canvas.width = Math.floor(w * DPR);
-        canvas.height = Math.floor(h * DPR);
-        ctx.setTransform(DPR,0,0,DPR,0,0);
+      const size = Math.random()*8+4;
+      circleContainer.style.width = size+'px';
+      circleContainer.style.height = size+'px';
+      circleContainer.style.left = Math.random()*100+'vw';
+      circleContainer.style.top = '-50px'; // Start oben, sichtbar über Header
 
-        const targetCount = Math.round((w*h)/9000);
-        const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
-        const min = 50;
-        const count = Math.max(min, Math.min(max, targetCount));
+      const moveDuration = 7000 + Math.random()*5000;
+      const startY = -30 - Math.random()*20;
+      const endY = 120 + Math.random()*20;
+      const animName = `move-${i}`;
 
-        if (particles.length > count) particles.length = count;
-        while (particles.length < count){ particles.push(makeParticle()); }
-      }
-
-      function makeParticle(){
-        return {
-          x: Math.random()*w,
-          y: Math.random()*h,
-          vx: (Math.random()*2-1)*0.25,
-          vy: (Math.random()*2-1)*0.25,
-          r: Math.random()*1.2 + 0.6
-        };
-      }
-
-      let MAX_D = 160;  let DOT_A = 0.85;  let LINK_A = 0.22;
-
-      function step(){
-        ctx.clearRect(0,0,w,h);
-
-        ctx.beginPath();
-        particles.forEach(p=>{
-          p.x += p.vx; p.y += p.vy;
-          if (p.x < -20 || p.x > w+20) p.vx *= -1;
-          if (p.y < -20 || p.y > h+20) p.vy *= -1;
-          ctx.moveTo(p.x + p.r, p.y);
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        });
-        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
-        ctx.fill();
-
-        for (let i=0;i<particles.length;i++){
-          for (let j=i+1;j<particles.length;j++){
-            const a = particles[i], b = particles[j];
-            const dx = a.x-b.x, dy = a.y-b.y;
-            const d2 = dx*dx + dy*dy;
-            if (d2 < MAX_D*MAX_D){
-              const alpha = 1 - Math.sqrt(d2)/MAX_D;
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-          }
+      const keyframes = `
+        @keyframes ${animName} {
+          from { transform: translate3d(${Math.random()*100}vw, ${startY}vh, 0); }
+          to   { transform: translate3d(${Math.random()*100}vw, ${endY}vh, 0); }
         }
-        requestAnimationFrame(step);
-      }
+      `;
+      const style = document.createElement('style');
+      style.innerHTML = keyframes;
+      document.head.appendChild(style);
 
-      window.addEventListener('resize', resize, {passive:true});
-      resize();
-      requestAnimationFrame(step);
-    })();
+      circleContainer.style.animationName = animName;
+      circleContainer.style.animationDuration = moveDuration+'ms';
+      circleContainer.style.animationDelay = '0ms';
+      container.appendChild(circleContainer);
+    }
+
+    // Spotlight + Card Partikel
+    const spotlight = document.getElementById('spotlight');
+    const cards = document.querySelectorAll('.card');
+    document.addEventListener('mousemove', e => {
+      spotlight.style.left = e.clientX + 'px';
+      spotlight.style.top = e.clientY + 'px';
+      spotlight.style.opacity = 1;
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--glow-x', x + '%');
+        card.style.setProperty('--glow-y', y + '%');
+        card.style.setProperty('--glow-intensity', '1');
+      });
+    });
+    cards.forEach(card => {
+      for (let i=0; i<20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = 3 + Math.random()*6;
+        p.style.width = size+'px';
+        p.style.height = size+'px';
+        p.style.left = Math.random()*(card.offsetWidth-size)+'px';
+        p.style.top = Math.random()*(card.offsetHeight-size)+'px';
+        p.style.animationDuration = (3+Math.random()*4)+'s';
+        p.style.animationDelay = (Math.random()*4)+'s';
+        card.appendChild(p);
+      }
+    });
   </script>
 </body>
 </html>
