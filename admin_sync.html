@@ -183,7 +183,6 @@
       <p class="muted" style="margin-top:8px">Hinweis: Entfernen löscht das Mitglied aus der Übersicht. <b>Transaktionen bleiben erhalten</b>.</p>
     </div>
   </div>
-
   <!-- Modal: Mitglied hinzufügen -->
   <div id="addMemberModal" class="modal-overlay">
     <div class="modal">
@@ -665,6 +664,28 @@
         currentMemberName = null;
       }
     };
+
+    /* -------------------- Auto-Capitalize: Namen (mit funktionierender Leertaste) -------------------- */
+    function capitalizeName(str) {
+      return str
+        .split(/(\s+)/) // Wörter UND Leerzeichen trennen
+        .map(part => {
+          if (part.trim().length === 0) return part; // Leerzeichen unverändert
+          return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+        })
+        .join("");
+    }
+    // Während der Eingabe korrigieren + Cursor-Position erhalten
+    addName?.addEventListener("input", () => {
+      const pos = addName.selectionStart;
+      addName.value = capitalizeName(addName.value);
+      addName.setSelectionRange(pos, pos);
+    });
+    editNameInput?.addEventListener("input", () => {
+      const pos = editNameInput.selectionStart;
+      editNameInput.value = capitalizeName(editNameInput.value);
+      editNameInput.setSelectionRange(pos, pos);
+    });
 
     /* -------------------- Hintergrund: Partikel-Netz -------------------- */
     (function(){
