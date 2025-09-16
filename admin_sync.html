@@ -40,6 +40,9 @@
       background:linear-gradient(120deg,#fff,#a5b4fc 40%,#67e8f9 80%);
       -webkit-background-clip:text;background-clip:text;color:transparent;
     }
+    /* Button oben rechts soll NICHT 100% Breite einnehmen */
+    .topbar .btn-overview{width:auto;white-space:nowrap;padding:10px 16px}
+
     .subtitle{color:var(--text-muted);margin:6px 0 18px}
 
     .card{
@@ -120,6 +123,10 @@
   <div class="container">
     <div class="topbar">
       <h1>Leaderschaft - Auszahlungsmenü</h1>
+      <!-- Neuer schöner Button oben rechts -->
+      <a href="https://yurilikeskittens.github.io/MS13Auszahlung/" class="btn btn-blue btn-overview" title="Zur Hauptseite">
+        <span class="emoji">🏠</span> Zur Übersicht
+      </a>
     </div>
     <p class="subtitle">Verwalte Mitglieder und Auszahlungen – mit geführten Workflows.</p>
 
@@ -176,6 +183,7 @@
       <p class="muted" style="margin-top:8px">Hinweis: Entfernen löscht das Mitglied aus der Übersicht. <b>Transaktionen bleiben erhalten</b>.</p>
     </div>
   </div>
+
   <!-- Modal: Mitglied hinzufügen -->
   <div id="addMemberModal" class="modal-overlay">
     <div class="modal">
