@@ -3,781 +3,417 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Event-Log · Einträge & Proof-Links</title>
+  <title>📑 Event-Log</title>
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#0b1020; --bg2:#0f172a;
-      --text:#e5e7eb; --muted:#9aa4b2;
-      --border:rgba(255,255,255,.14);
-      --panel:rgba(255,255,255,.06);
-      --panel2:rgba(255,255,255,.04);
-      --radius:18px; --radius-sm:12px;
-      --shadow:0 18px 42px rgba(0,0,0,.45);
-      --accent:#7c3aed; --accent2:#06b6d4; --green:#22c55e; --red:#ef4444;
+      --blue: 0,150,255;
+      --text:#f5faff;
+      --muted:#b0c4de;
+      --card-bg: rgba(6,16,26,.82);
+      --stroke: rgba(255,255,255,.12);
     }
-
     *{box-sizing:border-box}
-    html,body{height:100%}
-    html{ overflow-y:auto; scrollbar-gutter: stable; }
-    body{
-      min-height:100svh; margin:0;color:var(--text);
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background:
-        radial-gradient(1200px 800px at 8% 10%, rgba(124,58,237,.12), transparent 40%),
-        radial-gradient(1000px 700px at 85% 15%, rgba(6,182,212,.12), transparent 45%),
-        linear-gradient(160deg,var(--bg) 0%, var(--bg2) 100%);
-      padding:28px 16px 40px; overflow-x:hidden;
+    html,body{
+      margin:0; min-height:100%;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--text); overflow-x:hidden;
+      background-image: radial-gradient(#021027, #000000);
     }
 
-    .net-bg{position:fixed; inset:0; pointer-events:none; z-index:0}
-    .net-bg canvas{width:100%; height:100%; display:block}
+    /* ===== Hintergrund-Bubbles von OBEN nach UNTEN ===== */
+    .container{position:fixed; inset:0; width:100%; height:100%; overflow:hidden; z-index:-2;}
+    .circle-container{position:absolute; animation-iteration-count:infinite; animation-timing-function:linear;}
+    .circle{
+      width:100%; height:100%; border-radius:50%; mix-blend-mode:screen;
+      background-image: radial-gradient(hsl(180,100%,80%), hsl(180,100%,80%) 10%, hsla(180,100%,80%,0) 56%);
+      animation: fade-frames 2s infinite, scale-frames 6s infinite;
+    }
+    @keyframes fade-frames{0%{opacity:1}50%{opacity:.6}100%{opacity:1}}
+    @keyframes scale-frames{0%{transform:scale3d(.4,.4,1)}50%{transform:scale3d(2,2,1)}100%{transform:scale3d(.4,.4,1)}}
 
-    .wrap{max-width:1150px;margin:0 auto;position:relative;z-index:1}
+    /* ===== Spotlight ===== */
+    .spotlight{
+      position:fixed; width:800px; height:800px; border-radius:50%;
+      pointer-events:none; mix-blend-mode:screen; transform:translate(-50%,-50%);
+      background:radial-gradient(circle,
+        rgba(var(--blue),.15) 0%, rgba(var(--blue),.08) 15%, rgba(var(--blue),.04) 25%,
+        rgba(var(--blue),.02) 40%, rgba(var(--blue),.01) 65%, transparent 70%);
+      opacity:0; z-index:2;
+    }
 
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-    h1{margin:0;font-family:Orbitron, Inter;font-size:clamp(22px,4vw,34px);letter-spacing:.02em}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    /* ===== Layout ===== */
+    .wrap{max-width:1400px; margin:0 auto; position:relative; z-index:1; padding:24px 16px 40px;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)}}
+
+    /* ===== Header ===== */
+    .header{
+      text-align:center; margin:10px 0 32px;
+      opacity:0; transform:translateY(-14px); animation:fadeUp .8s ease forwards; position:relative;
+    }
+    .header__title{
+      font-family: Orbitron, sans-serif;
+      font-size: clamp(28px, 6vw, 52px);
+      color:#66cfff;
+      text-shadow: 0 0 20px rgba(0,150,255,.8), 0 0 40px rgba(0,150,255,.6), 0 0 80px rgba(0,150,255,.4);
+      margin:0;
+    }
+    .header__subtitle{font-size:16px; color:var(--muted); letter-spacing:2px; margin-top:8px;}
+    .header::after{
+      content:""; position:absolute; bottom:-14px; left:50%; transform:translateX(-50%);
+      width:200px; height:4px; border-radius:4px;
+      background:linear-gradient(90deg, transparent, #00aaff, transparent);
+      box-shadow:0 0 20px rgba(0,150,255,.7);
+    }
+
+    /* ===== Buttons (Bubble/Neon) ===== */
+    .btnrow{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+      margin:32px 0 20px;
+      opacity:0; transform:translateY(10px); animation:fadeUp .8s ease forwards; animation-delay:.35s;
+    }
     a.btn, button.btn{
-      appearance:none;border:0;cursor:pointer;
-      padding:10px 14px;border-radius:12px;font-weight:800;color:#fff;text-decoration:none;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      box-shadow:0 10px 26px rgba(6,182,212,.34), inset 0 0 0 1px rgba(255,255,255,.06);
-      transition:.2s transform, .2s filter, .2s box-shadow;
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 14px; border-radius:999px;
+      background:linear-gradient(135deg,#0096ff,#00e0ff);
+      color:#fff; text-decoration:none; font-weight:800; border:1px solid rgba(255,255,255,.08); cursor:pointer;
+      box-shadow:0 10px 26px rgba(0,150,255,.3), inset 0 0 0 1px rgba(255,255,255,.05);
+      transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+      letter-spacing:.2px;
     }
-    .btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 14px 34px rgba(124,58,237,.30)}
+    .btn:hover{transform:translateY(-1px); filter:brightness(1.05); box-shadow:0 14px 36px rgba(0,150,255,.5), inset 0 0 0 1px rgba(255,255,255,.08)}
+    .btn-sm{padding:8px 12px; font-size:13px}
+    .btn-icon{width:36px; height:36px; padding:0; border-radius:999px}
 
-    /* Nur hier angepasst: eine Spalte, da die Hinweise-Box entfernt wurde */
-    .row-hero{ display:grid; gap:10px; grid-template-columns: 1fr; align-items:start; margin-bottom:10px; }
-    @media (max-width:980px){ .row-hero{ grid-template-columns:1fr; } }
-    .row-list{ display:block; }
-
+    /* ===== Cards ===== */
     .card{
-      border-radius:var(--radius);
-      background:
-        radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.07), rgba(255,255,255,.03)),
-        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      box-shadow:var(--shadow);
-      backdrop-filter:saturate(1.2) blur(8px);
-      padding:18px;
+      position:relative; background:var(--card-bg); border-radius:20px; padding:20px; margin-bottom:18px; overflow:hidden; text-align:left;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 14px 36px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.04);
+      backdrop-filter: blur(8px) saturate(1.2);
+      opacity:0; transform:translateY(16px); animation:fadeUp .8s ease forwards;
     }
-    .card h2{margin:0 0 12px;font-size:18px}
+    .card::before{
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background:radial-gradient(circle at var(--glow-x,50%) var(--glow-y,50%), rgba(var(--blue), calc(var(--glow-intensity,0)*.6)) 0%, transparent 60%);
+      opacity:.85; transition:opacity .2s ease;
+    }
 
-    label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+    /* ===== Inputs & Chip-Inputs ===== */
+    label{display:block; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:6px}
     input,select{
-      width:100%;padding:12px 14px;border-radius:12px;
-      border:1px solid var(--border);background:#0b1020;color:var(--text);
-      outline:none;transition:border-color .2s, box-shadow .2s, transform .1s;
+      width:100%; padding:12px 14px; border-radius:12px;
+      border:1px solid var(--stroke); background:#09111a; color:var(--text); outline:none;
+      transition:border-color .2s, box-shadow .2s;
     }
-    input:focus,select:focus{border-color:#4c1d95;box-shadow:0 0 0 4px rgba(124,58,237,.22)}
-    .btn.primary{width:100%;margin-top:10px}
-
-    .muted{color:var(--muted);font-size:12px}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
-    .chip{background:#0b1020;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:#a5b4fc}
-    .linkbtn{display:inline-block;margin-top:6px;border:1px solid var(--border);border-radius:10px;padding:6px 10px;text-decoration:none;color:#e5e7eb}
-    .linkbtn:hover{background:#111827}
-
-    .sticky{position:sticky; top:12px}
-
-    .listwrap{
-      border:1px solid var(--border);border-radius:12px;overflow:auto;max-height:68vh;
-      background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.02));
-      scrollbar-gutter: stable;
-    }
-    .listhead{
-      position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;
-      padding:12px;border-bottom:1px solid var(--border);background:#0a0f1f;border-top-left-radius:12px;border-top-right-radius:12px;
-    }
-    .badge{padding:6px 10px;border-radius:999px;border:1px solid var(--border);color:#cbd5e1;font-size:12px}
-    .list{display:grid;gap:12px;padding:12px}
-
-    .item{
-      position:relative;display:grid;grid-template-columns:160px 1fr;gap:14px;
-      border:1px solid var(--border);border-radius:14px;padding:12px;
-      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
-      transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
-      will-change: transform;
-    }
-    .item:hover{transform:translateY(-1px);border-color:rgba(124,58,237,.35);box-shadow:0 8px 18px rgba(0,0,0,.35)}
-    @media (max-width:640px){.item{grid-template-columns:1fr}}
-    .thumb{width:100%;height:120px;max-width:160px;background:#0a0f1f;border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center}
-    .thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:contrast(1.05)}
-    .content{min-width:0}
-    .title{margin:0 0 6px;font-weight:800}
-    .evName{font-weight:800;color:var(--green)}
-    .meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:12px}
-    .count{color:var(--red);font-weight:800}
-    .hint{font-size:12px;color:#a7b0bf;margin-top:6px}
-    .pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:#cbd5e1;margin-top:6px; text-decoration:none}
-    .pill:hover{background:#111827}
-
-    .admin-only{display:none}
-    body.admin .admin-only{display:block}
-
-    /* === Admin Aktions-Buttons === */
-    .delbtn, .donebtn, .rejectbtn, .nobankbtn, .noproofbtn{
-      position:absolute; top:10px; width:34px; height:34px; border-radius:999px;
-      cursor:pointer; display:flex; align-items:center; justify-content:center;
-      font-size:16px; font-weight:800; border:1px solid var(--border);
-      background:#0b1020;
-    }
-    .delbtn{ right:10px; color:#fca5a5; }
-    .delbtn:hover{background:#1f2937;color:#fff}
-
-    .donebtn{ right:52px; color:#bbf7d0; }
-    .donebtn:hover{ background:#10251a; color:#22c55e; border-color:#14532d; }
-
-    .rejectbtn{ right:94px; color:#f87171; }
-    .rejectbtn:hover{ background:#2b1111; color:#fca5a5; border-color:#7f1d1d; }
-
-    .nobankbtn{ right:136px; color:#60a5fa; }
-    .nobankbtn:hover{ background:#10223a; color:#3b82f6; border-color:#1e40af; }
-
-    .noproofbtn{ right:178px; color:#fcd34d; }
-    .noproofbtn:hover{ background:#2a2310; color:#fbbf24; border-color:#92400e; }
-
-    /* Badge für „Von Leadership bearbeitet“ (bestehend) */
-    .review-badge{
-      display:inline-flex; align-items:center; gap:6px;
-      margin-top:8px; padding:6px 10px; border-radius:999px;
-      background:rgba(34,197,94,.12); color:#86efac; font-weight:800;
-      border:1px solid rgba(34,197,94,.35);
-    }
-
-    /* Neue Status-Badges */
-    .status-badge{
-      display:inline-flex; align-items:center; gap:6px;
-      margin-top:8px; padding:6px 10px; border-radius:999px;
-      font-weight:800; border:1px solid;
-    }
-    .badge-reviewed{ background:rgba(34,197,94,.12); color:#86efac; border-color:rgba(34,197,94,.35); }
-    .badge-rejected{ background:rgba(239,68,68,.12); color:#fca5a5; border-color:rgba(239,68,68,.35); }
-    .badge-nobank{ background:rgba(59,130,246,.12); color:#93c5fd; border-color:rgba(59,130,246,.35); }
-    .badge-noproof{ background:rgba(251,191,36,.12); color:#fde68a; border-color:rgba(251,191,36,.35); }
-
-    .listwrap::-webkit-scrollbar{width:10px}
-    .listwrap::-webkit-scrollbar-track{background:transparent}
-    .listwrap::-webkit-scrollbar-thumb{
-      background:linear-gradient(180deg, var(--accent), var(--accent2));
-      border-radius:999px;border:2px solid rgba(0,0,0,.2)
-    }
-    .listwrap{scrollbar-color:#7c3aed transparent;scrollbar-width:thin}
-
-    /* Popup */
-    #adminPopup{display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;}
-    .adminPopup-card{width:90%; max-width:420px; border-radius:16px; background:#111827; border:1px solid var(--border); box-shadow:0 18px 42px rgba(0,0,0,.5); padding:22px;}
-    .authrow{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-    @media (max-width:640px){.authrow{grid-template-columns:1fr}}
-
-    /* Footer RGB */
-    footer{margin-top:24px;text-align:center;font-size:13px;padding:10px;font-weight:600;
-      background: linear-gradient(90deg, rgb(255,0,0), rgb(0,255,0), rgb(0,0,255));
-      -webkit-background-clip: text;-webkit-text-fill-color: transparent;background-clip: text;color: transparent;
-      animation: rgbMove 6s linear infinite;background-size: 300% 100%;}
-    @keyframes rgbMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-
-    /* ========= Teilnehmer Chip-Input ========= */
+    input:focus,select:focus{border-color:#00aaff; box-shadow:0 0 0 4px rgba(0,150,255,.18)}
     .chip-input{
       display:flex; flex-wrap:wrap; gap:8px; align-items:center;
-      padding:8px; border:1px solid var(--border); border-radius:12px; background:#0b1020;
-      min-height:46px;
+      padding:8px; border:1px solid var(--stroke); border-radius:12px; background:#09111a; min-height:46px
     }
-    .chip-input:focus-within{ border-color:#4c1d95; box-shadow:0 0 0 4px rgba(124,58,237,.22); }
-    .chip-input .chip{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px; border:1px solid rgba(124,58,237,.5);
-      background:linear-gradient(135deg, rgba(124,58,237,.18), rgba(6,182,212,.16));
-      color:#e9e7ff; font-weight:700; letter-spacing:.01em;
+    .chip-badge{
+      background:#0b1020; border:1px solid var(--stroke); border-radius:999px; padding:6px 10px;
+      font-size:12px; color:#a5d9ff; display:inline-flex; align-items:center; gap:6px;
     }
-    .chip-input .chip .chipx{
-      appearance:none; border:0; background:#0b1020; color:#fff; opacity:.8;
-      width:20px; height:20px; border-radius:999px; cursor:pointer; line-height:20px; text-align:center;
-      font-weight:900; padding:0;
-    }
-    .chip-input .chip .chipx:hover{ opacity:1; background:#1f2937; }
-    .chip-input input{
-      flex:1 0 180px; min-width:160px; border:0; outline:0; background:transparent; color:var(--text); padding:8px 6px;
-    }
-    .helper{ margin-top:6px; color:#9aa4b2; font-size:12px; }
-    .helper .kbd{
-      display:inline-block; padding:2px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    .chipx{
+      border:0; background:#13202e; color:#fff; border-radius:999px; cursor:pointer;
+      width:18px; height:18px; line-height:18px; text-align:center; font-weight:900;
     }
 
-    /* Collapsible Teilnehmerliste */
-    details.participants{ margin-top:8px; border:1px solid var(--border); border-radius:10px; }
-    details.participants summary{
-      cursor:pointer; padding:8px 10px; user-select:none;
-      background:rgba(255,255,255,.03); border-radius:10px;
-      font-weight:700; color:#c7d2fe; outline:none;
+    /* ===== Liste / Items ===== */
+    .listwrap{border:1px solid var(--stroke); border-radius:12px; overflow:auto; max-height:70vh}
+    .listhead{position:sticky; top:0; z-index:1; display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--stroke); background:rgba(6,16,26,.9)}
+    .list{display:grid; gap:12px; padding:12px}
+    .item{
+      display:grid; grid-template-columns:160px 1fr; gap:14px;
+      border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:12px; position:relative;
+      background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
     }
-    details.participants[open] summary{ border-bottom:1px solid var(--border); border-bottom-left-radius:0;border-bottom-right-radius:0; }
-    .plist{ padding:10px; display:grid; gap:6px; font-size:13px; }
-    .plist .pitem{ display:flex; justify-content:space-between; gap:10px; border:1px solid var(--border); border-radius:10px; padding:6px 10px; background:#0b1020; }
-    .plist .pname{ font-weight:700; color:#e5e7eb; }
-    .plist .pid{ color:#93c5fd; font-family:ui-monospace, monospace; }
+    @media(max-width:640px){.item{grid-template-columns:1fr}}
+    .thumb{width:100%; height:120px; max-width:160px; background:#0a0f1f; border:1px solid rgba(255,255,255,.14); border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center}
+    .thumb img{width:100%; height:100%; object-fit:cover}
+    .content{min-width:0}
+    .title{margin:0 0 6px; font-weight:800}
+    .evName{font-weight:800; color:#9be7ff}
+    .meta{display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--muted)}
+    .hint{font-size:12px; color:#a7b0bf; margin-top:6px}
 
-    /* Proofgrid (für mehrere Proofs im Content, ab Proof #2) */
-    .proofgrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:8px; margin-top:8px; }
-    .proofcell{ border:1px solid var(--border); border-radius:10px; overflow:hidden; background:#0b1020; }
-    .proofcell img{ width:100%; height:90px; object-fit:cover; display:block; }
-    .proofcell a{ display:block; padding:6px 8px; font-size:12px; color:#e5e7eb; text-decoration:none; text-align:center; }
-    .prooflabel{ font-size:12px; color:#9aa4b2; margin-top:8px; }
+    /* ===== Status-Badges ===== */
+    .status-badge{display:inline-block; margin-top:6px; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700}
+    .badge-reviewed{background:rgba(34,197,94,.12); color:#86efac; border:1px solid rgba(34,197,94,.35)}
+    .badge-rejected{background:rgba(239,68,68,.12); color:#fca5a5; border:1px solid rgba(239,68,68,.35)}
+    .badge-nobank{background:rgba(59,130,246,.12); color:#93c5fd; border:1px solid rgba(59,130,246,.35)}
+    .badge-noproof{background:rgba(251,191,36,.12); color:#fde68a; border:1px solid rgba(251,191,36,.35)}
+
+    /* ===== Teilnehmer-Box ===== */
+    details.participants{margin-top:8px; border:1px solid var(--stroke); border-radius:10px; background:#09111a}
+    details.participants summary{cursor:pointer; padding:8px 10px; font-weight:800; color:#c7e5ff}
+    .plist{padding:8px; display:grid; gap:6px}
+    .pitem{display:flex; justify-content:space-between; gap:10px; border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:6px 10px; background:#0b1020}
+    .pname{font-weight:800; color:#e5f7ff}
+    .pid{color:#93c5fd; font-family:ui-monospace,monospace}
+
+    /* ===== Admin Buttons: Bubble-Style (nur sichtbar für Admin) ===== */
+    .admin-tools{
+      position:absolute; top:8px; right:8px; display:flex; gap:6px;
+    }
+    .admin-only{display:none}
+    body.admin .admin-only{display:initial}
+    .btn-ghost{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:36px; height:36px; padding:0 10px; border-radius:999px;
+      background:linear-gradient(135deg,#0096ff,#00e0ff);
+      color:#fff; font-weight:900; border:1px solid rgba(255,255,255,.08); cursor:pointer;
+      box-shadow:0 8px 20px rgba(0,150,255,.28), inset 0 0 0 1px rgba(255,255,255,.05);
+      transition:transform .2s ease, filter .2s ease, box-shadow .2s ease;
+    }
+    .btn-ghost:hover{transform:translateY(-1px); filter:brightness(1.05); box-shadow:0 12px 28px rgba(0,150,255,.45), inset 0 0 0 1px rgba(255,255,255,.08)}
+    .btn-ghost span{font-size:14px; line-height:1}
+
+    /* ===== Card-Particles (dekorativ) ===== */
+    .particle{
+      position:absolute; border-radius:50%; background:rgba(var(--blue),1); box-shadow:0 0 8px rgba(var(--blue),.6);
+      pointer-events:none; z-index:0; opacity:.7; animation:floatParticle 4s ease-in-out infinite alternate;
+    }
+    @keyframes floatParticle{from{transform:translateY(0) scale(1); opacity:.8} to{transform:translateY(-25px) scale(1.3); opacity:.3}}
+
+    /* ===== Footer RGB ===== */
+    footer{
+      text-align:center; margin-top:24px; font-size:13px; font-weight:600;
+      background:linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet, red);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-size:400% 400%; animation:rgbFlow 10s linear infinite;
+    }
+    @keyframes rgbFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
   </style>
 </head>
 <body>
-  <!-- Partikel-Hintergrund -->
-  <div class="net-bg" aria-hidden="true"><canvas id="netCanvas"></canvas></div>
+  <!-- Hintergrund -->
+  <div class="container" id="bg-container" aria-hidden="true"></div>
+  <div class="spotlight" id="spotlight" aria-hidden="true"></div>
 
   <div class="wrap">
-    <div class="topbar">
-      <h1>Event-Log · Einträge & Proof-Links</h1>
-      <div class="actions">
-        <a class="btn" href="index.html">Zur Übersicht</a>
-        <button class="btn" id="btnAdminLogin">Admin-Login</button>
-      </div>
+    <!-- Header -->
+    <div class="header">
+      <h1 class="header__title">📑 Event-Log</h1>
+      <p class="header__subtitle">Log · Deine · Events</p>
     </div>
 
-    <!-- Popup-Login -->
-    <div id="adminPopup">
-      <div class="adminPopup-card">
-        <h2 style="margin:0 0 14px;font-size:18px">Admin Login</h2>
-        <div class="authrow" style="margin-bottom:12px">
-          <div>
-            <label>E-Mail</label>
-            <input type="email" id="email" placeholder="admin@beispiel.de" />
-          </div>
-          <div>
-            <label>Passwort</label>
-            <input type="password" id="password" placeholder="********" />
-          </div>
+    <!-- Top Buttons -->
+    <div class="btnrow">
+      <a class="btn" href="index.html">🧭 Hauptseite</a>
+      <button class="btn" id="btnAdminLogin">🔒 Leaderschaft-Login</button>
+      <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
+    </div>
+
+    <!-- Admin Popup (hidden by default) -->
+    <div id="adminPopup" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+      <div style="width:min(420px,92%); border-radius:16px; background:#0b1020; border:1px solid var(--stroke); box-shadow:0 18px 42px rgba(0,0,0,.5); padding:22px;">
+        <h3 style="margin:0 0 12px; font-family:Orbitron,Inter">Admin Login</h3>
+        <div style="display:grid; gap:10px; margin:12px 0">
+          <label for="email">E-Mail</label>
+          <input type="email" id="email" placeholder="admin@beispiel.de" />
+          <label for="password">Passwort</label>
+          <input type="password" id="password" placeholder="********" />
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
           <button class="btn" id="btnLogin">Anmelden</button>
-          <button class="btn" id="btnLogout" style="display:none">Abmelden</button>
-          <button class="btn" id="btnClosePopup" style="background:#6b7280">Schließen</button>
+          <button class="btn btn-sm" id="btnClosePopup">Schließen</button>
         </div>
         <p class="muted" id="authState" style="margin-top:8px"></p>
       </div>
     </div>
 
-    <!-- OBERER BEREICH: EIN SPALTE (Hinweise-Box entfernt) -->
-    <div class="row-hero">
-      <!-- Linke Spalte (sticky) -->
-      <div class="card sticky">
-        <h2>Neues Event eintragen</h2>
-        <div class="chips">
-          <span class="chip">Letzte Auswahl bleibt leer</span>
-          <span class="chip">Proofs optional / mehrere möglich</span>
+    <!-- Card: Neues Event -->
+    <div class="card">
+      <h2 style="margin:0 0 10px">Neues Event eintragen</h2>
+
+      <div style="display:grid; gap:12px; grid-template-columns:1fr">
+        <div>
+          <label>Art des Events</label>
+          <select id="eventType"><option value="">— Bitte wählen —</option></select>
         </div>
 
-        <!-- 1) Eventtyp + Mitglieder (Mitglieder = readonly, auto) -->
-        <div style="display:grid;gap:12px;grid-template-columns:1fr;margin-top:8px">
-          <div>
-            <label>Art des Events</label>
-            <select id="eventType"><option value="">— Bitte wählen —</option></select>
-          </div>
-          <div>
-            <label>Mitglieder</label>
-            <input type="number" id="memberCount" min="0" step="1" placeholder="0" readonly />
+        <div>
+          <label>Teilnehmer</label>
+          <div id="participantsInput" class="chip-input">
+            <input id="participantText" type="text" placeholder="Name#ID eingeben und Enter/Tab/Komma" />
           </div>
         </div>
 
-        <!-- 2) Teilnehmer und 3) Proofs jeweils untereinander -->
-        <div style="display:grid;gap:12px;grid-template-columns:1fr">
-          <div>
-            <label>Teilnehmer</label>
-            <div id="participantsInput" class="chip-input" role="group" aria-label="Teilnehmer">
-              <!-- Chips kommen hier dynamisch rein -->
-              <input id="participantText" type="text" placeholder="Name#ID eingeben und Enter" />
-            </div>
-            <div class="helper">
-              Format: <b>Name#ID</b>, dann <span class="kbd">Enter</span> / <span class="kbd">,</span> / <span class="kbd">;</span> / <span class="kbd">Tab</span>. &nbsp;Beispiel: <i>Max#4711</i>
-            </div>
+        <div>
+          <label>Proof-Links</label>
+          <div id="proofsInput" class="chip-input">
+            <input id="proofText" type="url" placeholder="https://… und Enter/Tab/Komma" />
           </div>
-
-          <div>
-            <label>Proof-URLs (optional, mehrere)</label>
-            <div id="proofsInput" class="chip-input" role="group" aria-label="Proof-Links">
-              <!-- Proof-Chips -->
-              <input id="proofText" type="url" placeholder="Link einfügen und Enter" />
-            </div>
-            <a class="linkbtn" href="https://imgur.com/upload" target="_blank" rel="noopener">Bild bei Imgur hochladen ↗</a>
-            <div class="muted">Füge beliebige http/https Links hinzu. Bilder werden automatisch als Thumbnails angezeigt.</div>
-          </div>
+          <!-- Kleiner Bubble-Button -->
+          <a href="https://imgur.com/upload" target="_blank" rel="noopener" class="btn btn-sm" style="margin-top:8px;display:inline-flex;">⬆️ Upload bei Imgur</a>
         </div>
 
-        <!-- 4) Bemerkung -->
-        <div style="display:grid;gap:12px;grid-template-columns:1fr">
-          <div>
-            <label>Bemerkung (optional)</label>
-            <input type="text" id="note" placeholder="Anmerkungen" />
-          </div>
+        <div>
+          <label>Bemerkung</label>
+          <input type="text" id="note" placeholder="Optional" />
         </div>
+      </div>
 
-        <button class="btn primary" id="btnSubmit">Eintragen</button>
-        <p class="muted" id="status"></p>
+      <!-- Bubble-Submit -->
+      <button class="btn" id="btnSubmit" style="margin-top:12px">Eintragen</button>
+      <p class="muted" id="status" style="margin-top:6px"></p>
+    </div>
+
+    <!-- Card: Letzte Events -->
+    <div class="card">
+      <h2 style="margin:0 0 10px">Letzte Events</h2>
+      <div class="listwrap">
+        <div class="listhead">
+          <span class="muted">Neueste zuerst</span>
+          <span class="muted" id="counter">0 Einträge</span>
+        </div>
+        <div id="list" class="list"></div>
       </div>
     </div>
 
-    <!-- UNTERER BEREICH: volle Breite, eigene Section -->
-    <div class="row-list">
-      <div class="card">
-        <h2 style="margin-bottom:10px">Letzte Events</h2>
-        <div class="listwrap">
-          <div class="listhead">
-            <span class="muted">Neueste zuerst</span>
-            <span class="badge" id="counter">0 Einträge</span>
-          </div>
-          <div id="list" class="list"></div>
-        </div>
-      </div>
-    </div>
+    <footer>Made by Alvaro SolanoHebel | 20367</footer>
   </div>
-
-  <footer>Made by Alvaro SolanoHebel | 20367</footer>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",
-      authDomain: "msauszahlung.firebaseapp.com",
-      projectId: "msauszahlung",
-      storageBucket: "msauszahlung.appspot.com",
-      messagingSenderId: "1033439801595",
-      appId: "1:1033439801595:web:4251badc1447ed8079805e",
-      measurementId: "G-FWXF3GM505"
-    };
-    try{ firebase.initializeApp(firebaseConfig); }catch(e){ if(!/already exists/i.test(String(e))) throw e; }
-    const auth = firebase.auth();
-    const db   = firebase.firestore();
+    /* ==== Firebase Init (Logout bei Refresh) ==== */
+    const firebaseConfig={apiKey:"AIzaSyBgPA5LV1ILz5MmyzUezVumMgOuWoxfNxo",authDomain:"msauszahlung.firebaseapp.com",projectId:"msauszahlung",storageBucket:"msauszahlung.appspot.com",messagingSenderId:"1033439801595",appId:"1:1033439801595:web:4251badc1447ed8079805e",measurementId:"G-FWXF3GM505"};
+    try{firebase.initializeApp(firebaseConfig);}catch(e){}
+    const auth=firebase.auth(); const db=firebase.firestore();
+    auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(()=>{}); // keine Persistenz => Logout beim Refresh
 
-    const eventOptions = [
-      "40er","50er","Bank","Bizwar","Cayo","EKZ/Mall","Gießerei","Hafen Drop",
-      "RP Fabrik","Waffenfabrik","Drogenlabor Angriff","Flugzeugträger",
-      "Raid / Angriff","Raid / Verteidigung","Famwar", "Shop / Ammu Raub", "Zinken", "Staatliche Übernahme",
-    ];
-
+    /* ==== Discord Webhooks (Routing) ==== */
     /* DEFAULT = Angefahrene Events */
     const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1416741503253872801/2H75_WDeGl2k8K5zDwHWRLlZX8Il2XXOdI658Slo45OmUNxYX_x551T0fNCEXtVdAFz-";
-
     /* Spezielle Channels */
     const WEBHOOKS = {
       "40er":  "https://discord.com/api/webhooks/1416741181152432148/ElS3YqwlR6HygQGk0zc98L0h6J-2OONZu68_595U9IZeeSdJvyEESG9gGJS2j5ATgsxl",
       "Bizwar":"https://discord.com/api/webhooks/1416741309917560852/9fYnthXUW0vtBbcrmrhIT6xIhEC_K4TV1h5QEWI4P2GDS5Lx3uLa5r8URnwMatTZn3tf"
     };
 
-    const btnAdminLogin = document.getElementById('btnAdminLogin');
-    const adminPopup    = document.getElementById('adminPopup');
-    const btnClosePopup = document.getElementById('btnClosePopup');
-    const email         = document.getElementById('email');
-    const password      = document.getElementById('password');
-    const btnLogin      = document.getElementById('btnLogin');
-    const btnLogout     = document.getElementById('btnLogout');
-    const authState     = document.getElementById('authState');
+    /* ==== Helpers ==== */
+    const $=s=>document.querySelector(s);
+    function escapeHTML(str){return String(str).replace(/[&<>'"]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s]))}
+    function escapeAttr(str){return String(str).replace(/["'\\`]/g,"_")}
+    function isImageUrl(u){try{return/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname)}catch{return false}}
+    function normalizeUrl(u){try{const url=new URL(String(u).trim());if(!/^https?:$/i.test(url.protocol))return null;return url.toString()}catch{return null}}
+    function shortName(email){if(!email)return'';const pre=email.split('@')[0]||'';return pre.charAt(0).toUpperCase()+pre.slice(1)}
+  </script>
 
-    btnAdminLogin.addEventListener('click', ()=>{ adminPopup.style.display = 'flex'; });
-    btnClosePopup.addEventListener('click', ()=>{ adminPopup.style.display = 'none'; });
-    adminPopup.addEventListener('click', (e)=>{ if(e.target === adminPopup) adminPopup.style.display='none'; });
+  <script>
+    /* ==== Admin Popup / Auth ==== */
+    const popup=$("#adminPopup");
+    const btnAdminLogin=$("#btnAdminLogin");
+    const btnLogout=$("#btnLogout");
+    const btnLogin=$("#btnLogin");
+    const btnClosePopup=$("#btnClosePopup");
+    const authState=$("#authState");
 
-    function setAdminUI(on){
-      document.body.classList.toggle('admin', !!on);
-      btnLogin.style.display  = on ? 'none' : 'inline-block';
-      btnLogout.style.display = on ? 'inline-block' : 'none';
-      authState.textContent   = on ? 'Angemeldet' : 'Abgemeldet';
-    }
-    btnLogin.addEventListener('click', async () => {
-      authState.textContent = 'Anmeldung läuft…';
+    btnAdminLogin.onclick=()=>{ popup.style.display='flex'; };
+    btnClosePopup.onclick=()=>{ popup.style.display='none'; };
+    popup.addEventListener('click',(e)=>{ if(e.target===popup) popup.style.display='none'; });
+
+    btnLogin.onclick=async()=>{
+      authState.textContent='Anmeldung…';
       try{
-        await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
-        await auth.signInWithEmailAndPassword(email.value, password.value);
-        setAdminUI(true);
+        await auth.signInWithEmailAndPassword($("#email").value,$("#password").value);
+        authState.textContent='Angemeldet.'; setTimeout(()=>popup.style.display='none',300);
       }catch(e){ authState.textContent = e?.message || 'Login fehlgeschlagen'; }
+    };
+    btnLogout.onclick=()=>auth.signOut();
+
+    auth.onAuthStateChanged(user=>{
+      document.body.classList.toggle('admin', !!user);
+      btnLogout.style.display = user ? 'inline-flex' : 'none';
+      authState.textContent = user ? `Angemeldet als ${shortName(user.email)}` : 'Abgemeldet';
     });
-    btnLogout.addEventListener('click', async () => { await auth.signOut(); });
-    auth.onAuthStateChanged(user => setAdminUI(!!user));
+  </script>
 
-    const eventType     = document.getElementById('eventType');
-    const memberCount   = document.getElementById('memberCount');
-    const note          = document.getElementById('note');
-    const btnSubmit     = document.getElementById('btnSubmit');
-    const statusEl      = document.getElementById('status');
-    const listEl        = document.getElementById('list');
-    const counterEl     = document.getElementById('counter');
+  <script>
+    /* ==== Event-Form: Optionen, Chips, Submit + Discord ==== */
+    const eventOptions=["40er","50er","Bank","Bizwar","Cayo","EKZ/Mall","Gießerei","Hafen Drop","RP Fabrik","Waffenfabrik","Raid / Angriff","Raid / Verteidigung","Famwar","Drogenlabor Angriff","Flugzeugträger","Shop / Ammu Raub","Zinken","Staatliche Übernahme"];
+    const eventType=$("#eventType"); for(const o of eventOptions){const opt=document.createElement('option'); opt.value=o; opt.textContent=o; eventType.appendChild(opt);}
 
-    // === Teilnehmer Chip-Input ===
-    const participantsInput = document.getElementById('participantsInput');
-    const participantText   = document.getElementById('participantText');
-    let participantsArr     = []; // [{name, id}]
-
-    // === Proofs Chip-Input (mehrere) ===
-    const proofsInput = document.getElementById('proofsInput');
-    const proofText   = document.getElementById('proofText');
-    let proofsArr     = []; // [url, url, ...]
-
-    function populateEventSelect(){
-      eventType.innerHTML = '<option value="">— Bitte wählen —</option>';
-      for(const label of eventOptions){
-        const opt=document.createElement('option'); opt.value=label; opt.textContent=label;
-        eventType.appendChild(opt);
-      }
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-      populateEventSelect();
-      updateMemberCountInput(); // initial anzeigen (0)
-    });
-
-    // Parse "Name#ID" -> {name,id}
-    function parseParticipant(input){
-      if(!input) return null;
-      const raw = String(input).trim().replace(/\s+/g,' ');
-      const m = raw.match(/^(.+?)\s*#\s*([A-Za-z0-9_-]{1,32})$/);
-      if(!m) return null;
-      const name = m[1].trim();
-      const id   = m[2].trim();
-      if(!name || !id) return null;
-      return {name, id};
-    }
-    function participantKey(p){ return (p.name + '|' + p.id).toLowerCase(); }
-
-    function addParticipantFromText(){
-      const p = parseParticipant(participantText.value);
-      if(!p){
-        bumpInput(participantText, true);
-        return;
-      }
-      if (participantsArr.some(x => participantKey(x) === participantKey(p))) {
-        participantText.value = '';
-        return;
-      }
-      participantsArr.push(p);
-      participantText.value = '';
-      renderParticipantsChips();
-    }
-
-    function removeParticipantByKey(key){
-      participantsArr = participantsArr.filter(p => participantKey(p) !== key);
-      renderParticipantsChips();
-    }
-
-    function updateMemberCountInput(){
-      if(memberCount) memberCount.value = String(participantsArr.length);
-    }
-
-    function renderParticipantsChips(){
-      Array.from(participantsInput.querySelectorAll('.chip')).forEach(n=>n.remove());
+    // Teilnehmer Chips
+    const participantsInput=$("#participantsInput"); const participantText=$("#participantText");
+    let participantsArr=[];
+    function parseParticipant(v){const m=String(v||'').trim().match(/^(.+?)\s*#\s*([A-Za-z0-9_-]{1,32})$/); return m?{name:m[1].trim(), id:m[2].trim()} : null;}
+    function renderParticipants(){
+      [...participantsInput.querySelectorAll('.chip-badge')].forEach(n=>n.remove());
       for(const p of participantsArr){
-        const chip = document.createElement('span');
-        chip.className='chip';
-        chip.innerHTML = `<span>${escapeHTML(p.name)}<span style="opacity:.7">#${escapeHTML(p.id)}</span></span>`;
-        const x = document.createElement('button');
-        x.className='chipx'; x.type='button'; x.ariaLabel='Entfernen'; x.textContent='×';
-        x.addEventListener('click', () => removeParticipantByKey(participantKey(p)));
+        const chip=document.createElement('span'); chip.className='chip-badge';
+        chip.innerHTML=`<span>${escapeHTML(p.name)}<span style="opacity:.7">#${escapeHTML(p.id)}</span></span>`;
+        const x=document.createElement('button'); x.className='chipx'; x.textContent='×';
+        x.onclick=()=>{participantsArr=participantsArr.filter(z=>z!==p); renderParticipants();};
         chip.appendChild(x);
         participantsInput.insertBefore(chip, participantText);
       }
-      updateMemberCountInput(); // live aktualisieren
     }
-
-    participantText.addEventListener('keydown', (e)=>{
-      if(['Enter','Tab'].includes(e.key) || e.key === ',' || e.key === ';'){
-        e.preventDefault();
-        addParticipantFromText();
-      }else if(e.key === 'Backspace' && participantText.value === '' && participantsArr.length){
-        const last = participantsArr[participantsArr.length-1];
-        removeParticipantByKey(participantKey(last));
+    function addParticipantFromInput(){
+      const p=parseParticipant(participantText.value);
+      if(!p){participantText.style.boxShadow='0 0 0 4px rgba(0,150,255,.18)'; setTimeout(()=>participantText.style.boxShadow='',160); return;}
+      if(!participantsArr.some(x=>x.name.toLowerCase()===p.name.toLowerCase() && x.id.toLowerCase()===p.id.toLowerCase())){
+        participantsArr.push(p); renderParticipants();
       }
+      participantText.value='';
+    }
+    participantText.addEventListener('keydown',e=>{
+      if(['Enter','Tab',',',';'].includes(e.key)){e.preventDefault(); addParticipantFromInput();}
+      else if(e.key==='Backspace' && !participantText.value && participantsArr.length){participantsArr.pop(); renderParticipants();}
     });
-    participantText.addEventListener('blur', ()=>{
-      if(participantText.value.trim()) addParticipantFromText();
-    });
+    participantText.addEventListener('blur',()=>{ if(participantText.value.trim()) addParticipantFromInput(); });
 
-    // === Proofs handling ===
-    function normalizeUrl(u){
-      try{
-        const url = new URL(u.trim());
-        if(!/^https?:$/i.test(url.protocol)) return null;
-        return url.toString();
-      }catch{ return null; }
-    }
-    function proofKey(u){ return String(u).trim().toLowerCase(); }
-    function addProofFromText(){
-      const raw = proofText.value;
-      if(!raw){ bumpInput(proofText, true); return; }
-      const url = normalizeUrl(raw);
-      if(!url){ bumpInput(proofText, true); return; }
-      if(proofsArr.some(x => proofKey(x) === proofKey(url))){
-        proofText.value=''; return;
-      }
-      proofsArr.push(url);
-      proofText.value='';
-      renderProofChips();
-    }
-    function removeProofByKey(key){
-      proofsArr = proofsArr.filter(u => proofKey(u) !== key);
-      renderProofChips();
-    }
-    function renderProofChips(){
-      Array.from(proofsInput.querySelectorAll('.chip')).forEach(n=>n.remove());
+    // Proof Chips
+    const proofsInput=$("#proofsInput"); const proofText=$("#proofText");
+    let proofsArr=[];
+    function renderProofs(){
+      [...proofsInput.querySelectorAll('.chip-badge')].forEach(n=>n.remove());
       for(const u of proofsArr){
-        const chip = document.createElement('span');
-        chip.className='chip';
-        const label = isImageUrl(u) ? 'Bild' : 'Link';
-        chip.innerHTML = `<span>${label}</span><a href="${escapeAttr(u)}" target="_blank" rel="noopener" style="color:#c7d2fe;text-decoration:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(u)}</a>`;
-        const x = document.createElement('button');
-        x.className='chipx'; x.type='button'; x.ariaLabel='Entfernen'; x.textContent='×';
-        x.addEventListener('click', () => removeProofByKey(proofKey(u)));
+        const chip=document.createElement('span'); chip.className='chip-badge';
+        chip.innerHTML=`<span>${isImageUrl(u)?'Bild':'Link'}</span><a href="${escapeAttr(u)}" target="_blank" rel="noopener" style="color:#c7e5ff;text-decoration:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(u)}</a>`;
+        const x=document.createElement('button'); x.className='chipx'; x.textContent='×';
+        x.onclick=()=>{proofsArr=proofsArr.filter(z=>z!==u); renderProofs();};
         chip.appendChild(x);
         proofsInput.insertBefore(chip, proofText);
       }
     }
-    proofText.addEventListener('keydown', (e)=>{
-      if(['Enter','Tab'].includes(e.key) || e.key === ',' || e.key === ';'){
-        e.preventDefault();
-        addProofFromText();
-      }else if(e.key === 'Backspace' && proofText.value === '' && proofsArr.length){
-        proofsArr.pop();
-        renderProofChips();
-      }
-    });
-    proofText.addEventListener('blur', ()=>{
-      if(proofText.value.trim()) addProofFromText();
-    });
-
-    // Kleine Eingabe-Animation bei Fehler
-    function bumpInput(el, danger){
-      el.style.transform='scale(0.99)';
-      el.style.boxShadow = danger ? '0 0 0 4px rgba(239,68,68,.22)' : '0 0 0 4px rgba(124,58,237,.22)';
-      setTimeout(()=>{ el.style.transform=''; el.style.boxShadow=''; },160);
+    function addProofFromInput(){
+      const u=normalizeUrl(proofText.value);
+      if(!u){proofText.style.boxShadow='0 0 0 4px rgba(0,150,255,.18)'; setTimeout(()=>proofText.style.boxShadow='',160); return;}
+      if(!proofsArr.includes(u)){proofsArr.push(u); renderProofs();}
+      proofText.value='';
     }
-
-    btnSubmit.onclick = async () => {
-      setStatus("Speichere…");
-      try{
-        const type = (eventType.value||"").trim();
-        const cnt  = participantsArr.length; // automatisch berechnet
-        if(!type) return setStatus("Bitte eine Event-Art wählen.");
-        if(!eventOptions.includes(type)) return setStatus("Ungültiges Event.");
-
-        // payload vorbereiten
-        const proofUrls = proofsArr.slice();
-        const payload={
-          ts:new Date().toISOString(),
-          serverTs:firebase.firestore.FieldValue.serverTimestamp(),
-          type,
-          memberCount:cnt,
-          participants: participantsArr.slice(), // Array von {name,id}
-          note:(note.value||"").trim(),
-          // Mehrere Proofs:
-          proofUrls,
-          // Rückwärtskompatibilität:
-          proofUrl: proofUrls[0] || "",
-          // Stati (alle optional toggelbar)
-          reviewed:false,
-          reviewedBy:null,
-          reviewedTs:null,
-          rejected:false,
-          noPayout:false,
-          proofRejected:false
-        };
-
-        await db.collection('eventLogs').add(payload);
-        try{ await sendDiscordLog(payload); }catch(e){ console.warn("Discord-Webhook Fehler:", e); }
-
-        // Reset
-        populateEventSelect();
-        note.value="";
-        participantsArr = [];
-        proofsArr = [];
-        renderParticipantsChips();
-        renderProofChips();
-        setStatus("Gespeichert & an Discord gesendet.");
-        setTimeout(()=>setStatus(""),2000);
-      }catch(e){ setStatus("Fehler: "+(e.message||e)); }
-    };
-
-    // Realtime Liste
-    db.collection('eventLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
-      const frag=document.createDocumentFragment();
-      let count=0;
-      snap.forEach(doc=>{ frag.appendChild(renderItem(doc.id, doc.data())); count++; });
-      listEl.innerHTML=""; listEl.appendChild(frag);
-      counterEl.textContent = `${count} Einträge`;
+    proofText.addEventListener('keydown',e=>{
+      if(['Enter','Tab',',',';'].includes(e.key)){e.preventDefault(); addProofFromInput();}
+      else if(e.key==='Backspace' && !proofText.value && proofsArr.length){proofsArr.pop(); renderProofs();}
     });
+    proofText.addEventListener('blur',()=>{ if(proofText.value.trim()) addProofFromInput(); });
 
-    function renderItem(id, d){
-      const proofs = Array.isArray(d.proofUrls) && d.proofUrls.length ? d.proofUrls.filter(Boolean)
-                    : (d.proofUrl ? [d.proofUrl] : []);
-      const firstProof = proofs[0] || "";
-      const el=document.createElement('div'); el.className='item';
-
-      // ✅ (grün) Von Leadership bearbeitet (toggle) – speichert reviewedBy/Time
-      const doneBtn=document.createElement('button');
-      doneBtn.className='donebtn admin-only';
-      doneBtn.title = d.reviewed ? 'Als nicht bearbeitet markieren' : 'Als bearbeitet markieren';
-      doneBtn.textContent = d.reviewed ? '✅' : '☑️';
-      doneBtn.onclick = async ()=>{
-        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
-        try{
-          const now = new Date();
-          const patch = d.reviewed
-            ? { reviewed:false, reviewedBy:null, reviewedTs:null }
-            : { reviewed:true,  reviewedBy:auth.currentUser.email||auth.currentUser.uid, reviewedTs:now.toISOString() };
-          await db.collection('eventLogs').doc(id).update(patch);
-        }catch(e){ alert('Konnte Status nicht ändern: ' + (e?.message||e)); }
-      };
-      el.appendChild(doneBtn);
-
-      // ❓ Von Leaderschaft abgelehnt (toggle)
-      const rejectBtn=document.createElement('button');
-      rejectBtn.className='rejectbtn admin-only';
-      rejectBtn.title = d.rejected ? 'Ablehnung entfernen' : 'Von Leaderschaft abgelehnt';
-      rejectBtn.textContent = '❓';
-      rejectBtn.onclick = async ()=>{
-        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
-        try{
-          await db.collection('eventLogs').doc(id).update({ rejected: !d.rejected });
-        }catch(e){ alert('Konnte Status nicht ändern: ' + (e?.message||e)); }
-      };
-      el.appendChild(rejectBtn);
-
-      // 🟦✔️ Von Leaderschaft bearbeitet / Keine Auszahlung (toggle)
-      const nobankBtn=document.createElement('button');
-      nobankBtn.className='nobankbtn admin-only';
-      nobankBtn.title = d.noPayout ? 'Keine Auszahlung entfernen' : 'Von Leaderschaft bearbeitet / Keine Auszahlung';
-      nobankBtn.textContent='✔️';
-      nobankBtn.style.filter = 'hue-rotate(200deg)'; /* visueller blauer Touch */
-      nobankBtn.onclick = async ()=>{
-        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
-        try{
-          await db.collection('eventLogs').doc(id).update({ noPayout: !d.noPayout });
-        }catch(e){ alert('Konnte Status nicht ändern: ' + (e?.message||e)); }
-      };
-      el.appendChild(nobankBtn);
-
-      // 🛡️ Proof wird nicht akzeptiert (toggle)
-      const noproofBtn=document.createElement('button');
-      noproofBtn.className='noproofbtn admin-only';
-      noproofBtn.title = d.proofRejected ? 'Flag entfernen' : 'Proof wird nicht akzeptiert';
-      noproofBtn.textContent='🛡️';
-      noproofBtn.onclick = async ()=>{
-        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
-        try{
-          await db.collection('eventLogs').doc(id).update({ proofRejected: !d.proofRejected });
-        }catch(e){ alert('Konnte Status nicht ändern: ' + (e?.message||e)); }
-      };
-      el.appendChild(noproofBtn);
-
-      // ❌ Lösch-Button (nur Admin)
-      const delBtn=document.createElement('button');
-      delBtn.className='delbtn admin-only'; delBtn.title='Event-Log löschen'; delBtn.textContent='✕';
-      delBtn.onclick=async()=>{
-        if(!auth.currentUser){ alert('Nur als Admin möglich.'); return; }
-        const ok=confirm('Diesen Event-Log wirklich löschen?');
-        if(!ok) return;
-        try{ await db.collection('eventLogs').doc(id).delete(); }
-        catch(e){ alert('Löschen fehlgeschlagen: ' + (e?.message||e)); }
-      };
-      el.appendChild(delBtn);
-
-      // Thumbnail / Proof #1 links
-      const thumb=document.createElement('div'); thumb.className='thumb';
-      if(firstProof && isImageUrl(firstProof)){
-        const img=document.createElement('img'); img.src=firstProof; img.alt='Proof';
-        img.onerror=()=>{ thumb.innerHTML=`<a class="pill" href="${escapeAttr(firstProof)}" target="_blank" rel="noopener">Proof öffnen</a>`; };
-        thumb.appendChild(img);
-      }else{
-        thumb.innerHTML = firstProof
-          ? `<a class="pill" href="${escapeAttr(firstProof)}" target="_blank" rel="noopener">Proof öffnen</a>`
-          : `<span class="pill" style="opacity:.8">Kein Proof</span>`;
-      }
-
-      const content=document.createElement('div'); content.className='content';
-
-      // Teilnehmerliste aufbereiten
-      const plist = Array.isArray(d.participants)
-        ? d.participants.filter(p=>p && (p.name||p.id)).map(p=>({name:String(p.name||'').trim(), id:String(p.id||'').trim()}))
-        : (d.participants ? String(d.participants).split(',').map(s=>{
-            const m = s.trim().match(/^(.+?)\s*\((.+?)\)$/);
-            return m ? {name:m[1], id:m[2]} : {name:s.trim(), id:''};
-          }) : []);
-
-      const pCount = plist.length;
-
-      // Status-Badges (können mehrere sein)
-      const badges = [
-        d.reviewed ? `<div class="status-badge badge-reviewed">✅ Von Leaderschaft bearbeitet</div>` : ``,
-        d.rejected ? `<div class="status-badge badge-rejected">❓ Von Leaderschaft abgelehnt</div>` : ``,
-        d.noPayout ? `<div class="status-badge badge-nobank">✔️ Von Leaderschaft bearbeitet / Keine Auszahlung</div>` : ``,
-        d.proofRejected ? `<div class="status-badge badge-noproof">🛡️ Proof wird nicht akzeptiert</div>` : ``,
-      ].join('');
-
-      // Weitere Proofs ab #2 als Grid
-      const moreProofs = proofs.slice(1);
-      const proofGridHTML = moreProofs.length ? `
-        <div class="prooflabel">Weitere Proofs (${moreProofs.length}):</div>
-        <div class="proofgrid">
-          ${moreProofs.map((u,i)=>{
-            if(isImageUrl(u)){
-              return `<div class="proofcell"><a href="${escapeAttr(u)}" target="_blank" rel="noopener"><img src="${escapeAttr(u)}" alt="Proof ${i+2}"></a></div>`;
-            }else{
-              return `<div class="proofcell"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">Proof ${i+2} öffnen</a></div>`;
-            }
-          }).join('')}
-        </div>
-      ` : ``;
-
-      content.innerHTML=`
-        <p class="title"><span class="evName">${escapeHTML(d.type||'')}</span></p>
-        <div class="meta">
-          <span>Mitglieder: <b class="count">${(d.memberCount||0).toLocaleString('de-DE')}</b></span>
-          <span>Datum: <b>${formatDate(d.serverTs?.toDate ? d.serverTs.toDate() : d.ts)}</b></span>
-        </div>
-        ${d.note?`<div class="hint">Hinweis: ${escapeHTML(d.note)}</div>`:""}
-        ${badges}
-        ${pCount ? `
-          <details class="participants">
-            <summary>Teilnehmer anzeigen (${pCount})</summary>
-            <div class="plist">
-              ${plist.map(p=>`
-                <div class="pitem">
-                  <span class="pname">${escapeHTML(p.name||'')}</span>
-                  <span class="pid">${p.id?`ID: ${escapeHTML(p.id)}`:''}</span>
-                </div>
-              `).join('')}
-            </div>
-          </details>
-        ` : ``}
-        ${proofGridHTML}
-      `;
-      el.appendChild(thumb); el.appendChild(content);
-      return el;
-    }
-
-    async function sendDiscordLog({type, memberCount, note, proofUrls, proofUrl, ts, participants}){
-      const proofs = Array.isArray(proofUrls) && proofUrls.length ? proofUrls : (proofUrl ? [proofUrl] : []);
+    // Discord Webhook Sender
+    async function sendDiscordLog({type, memberCount, note, proofUrls, ts, participants}){
+      const proofs = Array.isArray(proofUrls) && proofUrls.length ? proofUrls : [];
       const first = proofs[0];
-      const firstIsImg = isImageUrl(first||"");
+      const firstIsImg = first && (/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(first));
       const participantsText = Array.isArray(participants) && participants.length
         ? participants.map(p=>`${p.name} (${p.id})`).join(', ')
-        : undefined;
+        : '—';
 
       const fields = [
-        { name: "Event", value: type, inline: true },
+        { name: "Event", value: type || "—", inline: true },
         { name: "Mitglieder", value: String(memberCount||0), inline: true },
-        ...(participantsText ? [{ name: "Teilnehmer", value: participantsText, inline: false }] : []),
-        ...(proofs.length ? proofs.map((u,idx)=>({ name: `Proof ${idx+1}`, value: u, inline: false })) : [])
       ];
+      if (participantsText && participantsText !== '—') fields.push({ name: "Teilnehmer", value: participantsText, inline: false });
+      if (proofs.length) proofs.forEach((u,i)=>fields.push({ name:`Proof ${i+1}`, value:u, inline:false }));
 
       const embed = {
         title: `Neues Event: ${type}`,
@@ -785,12 +421,12 @@
         color: 0x22c55e,
         timestamp: new Date(ts || Date.now()).toISOString(),
         fields,
-        thumbnail: firstIsImg ? { url: first } : undefined,
+        thumbnail: firstIsImg ? { url:first } : undefined,
         footer: { text: "MS Auszahlungen · Event-Log" }
       };
       const body = { username: "MS-Eventlog System", embeds: [embed] };
 
-      // Webhook anhand des Typs wählen; sonst Standard (Angefahrene Events)
+      // Routing
       const webhookUrl = WEBHOOKS[type] || DISCORD_WEBHOOK;
 
       try{
@@ -799,91 +435,211 @@
           body: JSON.stringify(body)
         });
         if (!r.ok && r.status !== 204) throw new Error(`HTTP ${r.status}`);
-      }catch{
+      }catch(e){
+        // Fallback (no-cors)
         try{
           await fetch(webhookUrl, {
             method: "POST", mode: "no-cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
           });
-        }catch{}
+        }catch(_){}
+        console.warn("Discord-Webhook Fehler:", e);
       }
     }
 
-    function setStatus(msg){ statusEl.textContent = msg; }
-    function formatDate(x){ try{ return (x instanceof Date?x:new Date(x)).toLocaleString('de-DE'); }catch{ return String(x); } }
-    function escapeHTML(str){ return String(str).replace(/[&<>'"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[s])); }
-    function escapeAttr(str){ return String(str).replace(/["'\\`]/g,"_"); }
-    function isImageUrl(u){ try{ return /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(new URL(u).pathname); }catch{ return false; } }
+    // Submit
+    const note=$("#note"), statusEl=$("#status");
+    $("#btnSubmit").onclick = async ()=>{
+      const type=(eventType.value||'').trim();
+      if(!type){statusEl.textContent='Bitte eine Event-Art wählen.'; return;}
+      const payload={
+        ts:new Date().toISOString(),
+        serverTs:firebase.firestore.FieldValue.serverTimestamp(),
+        type,
+        memberCount:participantsArr.length,
+        participants:participantsArr.slice(),
+        proofUrls:proofsArr.slice(),
+        note:(note.value||'').trim(),
+        reviewed:false, reviewedBy:null, reviewedTs:null,
+        rejected:false, noPayout:false, proofRejected:false
+      };
+      statusEl.textContent='Speichere…';
+      try{
+        await db.collection('eventLogs').add(payload);
+        // Discord senden (best effort)
+        sendDiscordLog(payload);
+        // Reset
+        participantsArr=[]; proofsArr=[]; renderParticipants(); renderProofs(); note.value=''; eventType.value='';
+        statusEl.textContent='Gespeichert & an Discord gesendet.'; setTimeout(()=>statusEl.textContent='',1800);
+      }catch(e){ statusEl.textContent='Fehler: '+(e.message||e); }
+    };
   </script>
 
-  <!-- Partikel-Netz (Canvas) -->
   <script>
+    /* ==== Event-Liste + Admin-Action-Buttons (Bubble-Style) ==== */
+    const list=$("#list"); const counter=$("#counter");
+
+    db.collection('eventLogs').orderBy('serverTs','desc').limit(100).onSnapshot(snap=>{
+      list.innerHTML=''; let count=0;
+      snap.forEach(doc=>{ count++; list.appendChild(renderItem(doc.id, doc.data())); });
+      counter.textContent = `${count} Einträge`;
+    });
+
+    function renderItem(id,d){
+      const proofs = Array.isArray(d.proofUrls) ? d.proofUrls.filter(Boolean) : (d.proofUrl ? [d.proofUrl] : []);
+      const firstProof = proofs[0] || "";
+      const el = document.createElement('div'); el.className='item';
+
+      /* Admin Button-Gruppe */
+      const tools = document.createElement('div'); tools.className = 'admin-tools admin-only';
+
+      const btnDone = document.createElement('button'); btnDone.className='btn-ghost'; btnDone.title='Als bearbeitet markieren';
+      btnDone.innerHTML = '<span>✅</span>';
+      btnDone.onclick=async()=>{
+        if(!auth.currentUser){alert('Nur Admin.');return;}
+        const now=new Date();
+        const patch=d.reviewed ? {reviewed:false, reviewedBy:null, reviewedTs:null}
+                               : {reviewed:true,  reviewedBy:auth.currentUser.email||null, reviewedTs:now.toISOString()};
+        await db.collection('eventLogs').doc(id).update(patch);
+      };
+      tools.appendChild(btnDone);
+
+      const btnReject = document.createElement('button'); btnReject.className='btn-ghost'; btnReject.title='Ablehnen/Zurücknehmen';
+      btnReject.innerHTML='<span>❌</span>';
+      btnReject.onclick=async()=>{ if(!auth.currentUser){alert('Nur Admin.');return;} await db.collection('eventLogs').doc(id).update({rejected:!d.rejected}); };
+      tools.appendChild(btnReject);
+
+      const btnNoBank = document.createElement('button'); btnNoBank.className='btn-ghost'; btnNoBank.title='Keine Auszahlung toggeln';
+      btnNoBank.innerHTML='<span>💸</span>';
+      btnNoBank.onclick=async()=>{ if(!auth.currentUser){alert('Nur Admin.');return;} await db.collection('eventLogs').doc(id).update({noPayout:!d.noPayout}); };
+      tools.appendChild(btnNoBank);
+
+      const btnNoProof = document.createElement('button'); btnNoProof.className='btn-ghost'; btnNoProof.title='Proof nicht akzeptiert toggeln';
+      btnNoProof.innerHTML='<span>🛡️</span>';
+      btnNoProof.onclick=async()=>{ if(!auth.currentUser){alert('Nur Admin.');return;} await db.collection('eventLogs').doc(id).update({proofRejected:!d.proofRejected}); };
+      tools.appendChild(btnNoProof);
+
+      const btnDel = document.createElement('button'); btnDel.className='btn-ghost'; btnDel.title='Löschen';
+      btnDel.innerHTML='<span>✕</span>';
+      btnDel.onclick=async()=>{ if(!auth.currentUser){alert('Nur Admin.');return;} if(!confirm('Diesen Eintrag wirklich löschen?')) return; await db.collection('eventLogs').doc(id).delete(); };
+      tools.appendChild(btnDel);
+
+      el.appendChild(tools);
+
+      /* Thumbnail */
+      const thumb=document.createElement('div'); thumb.className='thumb';
+      if(firstProof && isImageUrl(firstProof)){ thumb.innerHTML = `<img src="${escapeAttr(firstProof)}" alt="Proof">`; }
+      else if(firstProof){ thumb.innerHTML = `<a href="${escapeAttr(firstProof)}" target="_blank" rel="noopener" class="btn btn-sm">Proof öffnen</a>`; }
+      else{ thumb.innerHTML = `<span style="opacity:.7">Kein Proof</span>`; }
+
+      /* Content */
+      const content=document.createElement('div'); content.className='content';
+      const date = d.serverTs?.toDate ? d.serverTs.toDate() : (d.ts ? new Date(d.ts) : new Date());
+
+      // Teilnehmerliste
+      const plist = Array.isArray(d.participants)
+        ? d.participants.filter(p=>p && (p.name||p.id)).map(p=>({name:String(p.name||'').trim(), id:String(p.id||'').trim()}))
+        : [];
+
+      // Badges (inkl. „Bearbeitet von …“)
+      const badges = [
+        d.reviewed ? `<div class="status-badge badge-reviewed">✅ Bearbeitet${d.reviewedBy?` von ${escapeHTML(shortName(d.reviewedBy))}`:''}</div>` : ``,
+        d.rejected ? `<div class="status-badge badge-rejected">❌ Abgelehnt</div>` : ``,
+        d.noPayout ? `<div class="status-badge badge-nobank">💸 Keine Auszahlung</div>` : ``,
+        d.proofRejected ? `<div class="status-badge badge-noproof">🛡️ Proof nicht akzeptiert</div>` : ``,
+      ].join("");
+
+      // Weitere Proofs ab #2
+      const moreProofs = proofs.slice(1);
+      const proofGridHTML = moreProofs.length ? `
+        <div class="proofgrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:8px">
+          ${moreProofs.map(u=> isImageUrl(u)
+            ? `<div class="proofcell" style="border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden;background:#0b1020"><img src="${escapeAttr(u)}" alt="Proof" style="width:100%;height:90px;object-fit:cover"></div>`
+            : `<div class="proofcell" style="border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden;background:#0b1020"><a class="btn btn-sm" href="${escapeAttr(u)}" target="_blank" rel="noopener" style="display:block;text-align:center">Proof öffnen</a></div>`
+          ).join('')}
+        </div>` : ``;
+
+      content.innerHTML = `
+        <p class="title"><span class="evName">${escapeHTML(d.type||'Event')}</span></p>
+        <div class="meta">👥 ${Number(d.memberCount||0)} · 📅 ${date.toLocaleString('de-DE')}</div>
+        ${d.note?`<div class="hint">📝 ${escapeHTML(d.note)}</div>`:""}
+        ${badges}
+        ${plist.length?`
+          <details class="participants">
+            <summary>Teilnehmer anzeigen (${plist.length})</summary>
+            <div class="plist">
+              ${plist.map(p=>`
+                <div class="pitem">
+                  <span class="pname">${escapeHTML(p.name)}</span>
+                  <span class="pid">${p.id?`ID: ${escapeHTML(p.id)}`:''}</span>
+                </div>
+              `).join('')}
+            </div>
+          </details>`:""}
+        ${proofGridHTML}
+      `;
+
+      el.appendChild(thumb);
+      el.appendChild(content);
+      return el;
+    }
+  </script>
+
+  <script>
+    /* ==== Spotlight & Karten-Glow + Partikel ==== */
+    const spotlight = document.getElementById('spotlight');
+    const cards = document.querySelectorAll('.card');
+
+    document.addEventListener('mousemove', e => {
+      spotlight.style.left = e.clientX + 'px';
+      spotlight.style.top = e.clientY + 'px';
+      spotlight.style.opacity = 1;
+
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--glow-x', x + '%');
+        card.style.setProperty('--glow-y', y + '%');
+        card.style.setProperty('--glow-intensity', '1');
+      });
+    });
+
+    // Card-Particles (Deko)
+    cards.forEach(card => {
+      for (let i=0; i<20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = 3 + Math.random()*6;
+        p.style.width = size+'px';
+        p.style.height = size+'px';
+        p.style.left = Math.random()*(card.offsetWidth-size)+'px';
+        p.style.top = Math.random()*(card.offsetHeight-size)+'px';
+        p.style.animationDuration = (3+Math.random()*4)+'s';
+        p.style.animationDelay = (Math.random()*4)+'s';
+        card.appendChild(p);
+      }
+    });
+  </script>
+
+  <script>
+    /* ==== Hintergrund-Bubbles nach unten ==== */
     (function(){
-      const canvas = document.getElementById('netCanvas');
-      const ctx = canvas.getContext('2d');
-      let DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      let particles = [];
-      let w = 0, h = 0;
-
-      function resize(){
-        w = canvas.clientWidth;
-        h = canvas.clientHeight;
-        canvas.width = Math.floor(w * DPR);
-        canvas.height = Math.floor(h * DPR);
-        ctx.setTransform(DPR,0,0,DPR,0,0);
-
-        const targetCount = Math.round((w*h)/9000);
-        const max = window.matchMedia('(max-width: 900px)').matches ? 80 : 140;
-        const min = 50;
-        const theCount = Math.max(min, Math.min(max, targetCount));
-
-        if (particles.length > theCount) particles.length = theCount;
-        while (particles.length < theCount){ particles.push(makeParticle()); }
+      const container=document.getElementById('bg-container');
+      const num=110;
+      for(let i=0;i<num;i++){
+        const c=document.createElement('div'); c.className='circle-container';
+        const circle=document.createElement('div'); circle.className='circle'; c.appendChild(circle);
+        const size=Math.random()*8+4; c.style.width=size+'px'; c.style.height=size+'px';
+        const startX=Math.random()*100, endX=Math.random()*100;
+        const startY=-30-Math.random()*20, endY=120+Math.random()*20;
+        const dur=7000+Math.random()*5000; const name=`move-${i}`;
+        const css=`@keyframes ${name}{from{transform:translate3d(${startX}vw,${startY}vh,0);}to{transform:translate3d(${endX}vw,${endY}vh,0);}}`;
+        const s=document.createElement('style'); s.innerHTML=css; document.head.appendChild(s);
+        c.style.animationName=name; c.style.animationDuration=dur+'ms'; c.style.animationDelay='0ms';
+        container.appendChild(c);
       }
-
-      function makeParticle(){
-        return { x: Math.random()*w, y: Math.random()*h, vx: (Math.random()*2-1)*0.25, vy: (Math.random()*2-1)*0.25, r: Math.random()*1.2 + 0.6 };
-      }
-
-      let MAX_D = 160;  let DOT_A = 0.85;  let LINK_A = 0.22;
-
-      function step(){
-        ctx.clearRect(0,0,w,h);
-
-        ctx.beginPath();
-        particles.forEach(p=>{
-          p.x += p.vx; p.y += p.vy;
-          if (p.x < -20 || p.x > w+20) p.vx *= -1;
-          if (p.y < -20 || p.y > h+20) p.vy *= -1;
-          ctx.moveTo(p.x + p.r, p.y);
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        });
-        ctx.fillStyle = `rgba(255,255,255,${DOT_A})`;
-        ctx.fill();
-
-        for (let i=0;i<particles.length;i++){
-          for (let j=i+1;j<particles.length;j++){
-            const a = particles[i], b = particles[j];
-            const dx = a.x-b.x, dy = a.y-b.y;
-            const d2 = dx*dx + dy*dy;
-            if (d2 < MAX_D*MAX_D){
-              const alpha = 1 - Math.sqrt(d2)/MAX_D;
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(255,255,255,${alpha*LINK_A})`;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-          }
-        }
-        requestAnimationFrame(step);
-      }
-
-      window.addEventListener('resize', resize, {passive:true});
-      resize();
-      requestAnimationFrame(step);
     })();
   </script>
 </body>
