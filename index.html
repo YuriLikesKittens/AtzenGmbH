@@ -1,311 +1,743 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MS-13</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --blue: 0,150,255;
-      --text:#f5faff;
-      --muted:#b0c4de;
-      --card-bg: rgba(6,16,26,.82);
-    }
-    *{box-sizing:border-box}
-    html,body{
-      margin:0;height:100%;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      color:var(--text);
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0f14" />
+    <title>Atzen GmbH · DE01</title>
 
-    body {
-      background-image: radial-gradient(#021027, #000000);
-    }
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
-    .container {
-      width:100%;
-      height:100%;
-      position:fixed;
-      inset:0;
-      overflow:hidden;
-      z-index:-2;
-    }
-    .circle-container {
-      position:absolute;
-      animation-iteration-count: infinite;
-      animation-timing-function: linear;
-    }
-    .circle {
-      width:100%;
-      height:100%;
-      border-radius:50%;
-      mix-blend-mode:screen;
-      background-image: radial-gradient(
-        hsl(180, 100%, 80%),
-        hsl(180, 100%, 80%) 10%,
-        hsla(180, 100%, 80%, 0) 56%
-      );
-      animation: fade-frames 2s infinite, scale-frames 6s infinite;
-    }
-    @keyframes fade-frames {
-      0%{opacity:1}
-      50%{opacity:0.6}
-      100%{opacity:1}
-    }
-    @keyframes scale-frames {
-      0%{transform:scale3d(0.4,0.4,1)}
-      50%{transform:scale3d(2,2,1)}
-      100%{transform:scale3d(0.4,0.4,1)}
-    }
+    <style>
+        :root {
+            /* kühle Blau/Violett-Palette (ohne Grün) */
+            --bg: #0a0d13;
+            --fg: #ecf1fa;
+            --muted: #9aa8bb;
 
-    .wrap{
-      max-width:1400px;
-      width:100%;
-      text-align:center;
-      position:relative;
-      z-index:1;
-    }
+            --brand-1: 220 95% 62%;
+            --brand-2: 268 90% 68%;
 
-    .header {
-      margin-bottom:60px;
-      position:relative;
-      opacity:0; transform:translateY(-60px);
-      animation:slideDown 1s ease forwards;
-    }
-    .header__title {
-      font-family: Orbitron, sans-serif;
-      font-size: clamp(32px, 7vw, 64px);
-      color:#66cfff;
-      text-shadow: 0 0 20px rgba(0,150,255,0.8),
-                   0 0 40px rgba(0,150,255,0.6),
-                   0 0 80px rgba(0,150,255,0.4);
-      margin:0;
-    }
-    .header__subtitle {
-      font-size:16px;
-      color:#b0c4de;
-      letter-spacing:2px;
-      margin-top:8px;
-    }
-    .header::after {
-      content:"";
-      position:absolute;
-      bottom:-20px;
-      left:50%;
-      transform:translateX(-50%);
-      width:200px;
-      height:4px;
-      background:linear-gradient(90deg, transparent, #00aaff, transparent);
-      box-shadow:0 0 20px rgba(0,150,255,0.7);
-      border-radius:4px;
-    }
+            --card: rgba(12, 16, 26, 0.58);
+            --card-hover: rgba(16, 22, 34, 0.66);
+            --stroke: 220 100% 90% / .10;
+            --ring: 220 100% 62% / .45;
+            --chip-fg: #070c12;
+        }
 
-    @keyframes slideDown{to{opacity:1;transform:translateY(0)}}
-    @keyframes slideUp{to{opacity:1;transform:translateY(0)}}
+        * {
+            box-sizing: border-box
+        }
 
-    .bento-grid{
-      display:flex;
-      justify-content:center;
-      flex-wrap:wrap;
-      gap:24px;
-    }
+        html,
+        body {
+            height: 100%
+        }
 
-    .card{
-      position:relative;background:var(--card-bg);
-      border-radius:20px;width:280px;height:200px;
-      border:1px solid rgba(255,255,255,.08);
-      transition:transform .2s ease, box-shadow .3s ease;
-      text-decoration:none;color:inherit;
-      display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;
+        body {
+            margin: 0;
+            color: var(--fg);
+            background: var(--bg);
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            /* KEIN Body-Fade – Hintergrund soll sofort sichtbar sein */
+        }
 
-      opacity:0; transform:translateY(60px);
-      animation:slideUp .8s ease forwards;
-      overflow:hidden;
-    }
-    .card:nth-child(1){animation-delay:1s}
-    .card:nth-child(2){animation-delay:1.2s}
-    .card:nth-child(3){animation-delay:1.4s}
-    .card:nth-child(4){animation-delay:1.6s}
+        /* dezente Texture ganz hinten */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -4;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140"><g fill="%23111" fill-opacity="0.28"><circle cx="2" cy="2" r="1"/><circle cx="70" cy="70" r="1"/><circle cx="120" cy="40" r="1"/></g></svg>');
+            background-size: 140px 140px;
+            mix-blend-mode: soft-light;
+            opacity: .30;
+        }
 
-    .card:hover{transform:translateY(-6px); box-shadow:0 0 24px rgba(var(--blue),.7)}
-    .card::before{
-      content:""; position:absolute; inset:0; pointer-events:none;
-      background:radial-gradient(circle at var(--glow-x,50%) var(--glow-y,50%),
-        rgba(var(--blue), calc(var(--glow-intensity,0)*.6)) 0%, transparent 60%);
-      opacity:.85; transition:opacity .2s ease;
-    }
+        /* === Hintergrund (Bild + GLOWs + Canvas – CodePen-Style) === */
+        .particle-network-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #0a0d13;
+            z-index: 0;
+        }
 
-    .card__title{font-size:20px;font-family:Orbitron,Inter;margin:0 0 8px;color:#66cfff}
-    .card__description{color:var(--muted);font-size:14px}
+        .particle-network-animation::before {
+            z-index: -2;
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("https://i.imgur.com/MRNf7rb.jpeg");
+            background-position: center center;
+            background-size: cover;
+            opacity: .28;
+            filter: saturate(1.02) contrast(1.06) hue-rotate(-10deg);
+        }
 
-    .spotlight{
-      position:fixed;width:800px;height:800px;border-radius:50%;
-      pointer-events:none; mix-blend-mode:screen; transform:translate(-50%,-50%);
-      background:radial-gradient(circle,
-        rgba(var(--blue),.15) 0%, rgba(var(--blue),.08) 15%, rgba(var(--blue),.04) 25%,
-        rgba(var(--blue),.02) 40%, rgba(var(--blue),.01) 65%, transparent 70%);
-      opacity:0; z-index:2;
-    }
+        .glow {
+            z-index: -1;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            background-image: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.024), transparent);
+            pointer-events: none;
+        }
 
-    .particle{
-      position:absolute;border-radius:50%;
-      background:rgba(var(--blue),1);
-      box-shadow:0 0 8px rgba(var(--blue),.6);
-      pointer-events:none; z-index:0; opacity:.7;
-      animation:floatParticle 4s ease-in-out infinite alternate;
-    }
-    @keyframes floatParticle{
-      from{transform:translateY(0) scale(1); opacity:.8}
-      to{transform:translateY(-25px) scale(1.3); opacity:.3}
-    }
+        @keyframes glow-1-move {
+            from {
+                transform: translate(-100%, 100%)
+            }
 
-    /* Footer RGB */
-    footer{
-      margin-top:40px;
-      text-align:center;
-      font-size:13px;
-      font-weight:bold;
-      background:linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet, red);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      background-size:400% 400%;
-      animation:rgbFlow 10s linear infinite;
-    }
-    @keyframes rgbFlow {
-      0%{background-position:0% 50%}
-      50%{background-position:100% 50%}
-      100%{background-position:0% 50%}
-    }
-  </style>
+            to {
+                transform: translate(100%, -100%)
+            }
+        }
+
+        @keyframes glow-2-move {
+            from {
+                transform: translate(-100%, 0%)
+            }
+
+            to {
+                transform: translate(100%, 100%)
+            }
+        }
+
+        @keyframes glow-3-move {
+            from {
+                transform: translate(100%, 100%)
+            }
+
+            to {
+                transform: translate(0%, -100%)
+            }
+        }
+
+        .glow-1 {
+            width: 150vw;
+            height: 150vh;
+            margin-top: -75vh;
+            margin-left: -75vw;
+            animation: glow-1-move 25s linear infinite both;
+        }
+
+        .glow-2 {
+            width: 100vw;
+            height: 100vh;
+            margin-top: -50vh;
+            margin-left: -50vw;
+            animation: glow-2-move 25s linear calc(25s/3) infinite both;
+        }
+
+        .glow-3 {
+            width: 120vw;
+            height: 120vh;
+            margin-top: -60vh;
+            margin-left: -60vw;
+            animation: glow-3-move 25s linear calc(25s/3*2) infinite both;
+        }
+
+        /* Content */
+        .wrap {
+            max-width: 1200px;
+            margin-inline: auto;
+            padding: 32px;
+            display: grid;
+            gap: 28px;
+            position: relative;
+            z-index: 1
+        }
+
+        header[role="banner"] {
+            display: grid;
+            gap: 14px;
+            margin-top: 10vh;
+            text-align: center
+        }
+
+        /* Logo größer, ohne Box */
+        .brand {
+            width: 240px;
+            height: 240px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 18px;
+            position: relative;
+        }
+
+        .brand img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 28px hsl(var(--brand-1)/.55));
+        }
+
+        .brand.logo-fallback::after {
+            content: "Atzen GmbH";
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            font-family: "Space Grotesk", Inter;
+            font-weight: 700;
+            font-size: 52px;
+            color: var(--fg);
+            opacity: .95;
+            text-shadow: 0 6px 20px rgba(0, 0, 0, .28);
+        }
+
+        h1 {
+            margin: 0;
+            font-family: "Space Grotesk", Inter;
+            font-weight: 700;
+            letter-spacing: .5px;
+            line-height: 1.05;
+            font-size: clamp(38px, 6vw, 64px);
+            background: linear-gradient(90deg, hsl(var(--brand-1)), hsl(var(--brand-2)));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 18px hsl(var(--brand-1)/.12);
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin: 0 auto;
+            letter-spacing: .6px
+        }
+
+        .rule {
+            height: 1px;
+            width: min(560px, 90%);
+            margin: 14px auto 0;
+            border-radius: 1px;
+            opacity: .95;
+            background: linear-gradient(90deg, transparent, hsl(var(--brand-1)/.55), hsl(var(--brand-2)/.55), transparent);
+            box-shadow: 0 0 20px hsl(var(--brand-1)/.18);
+        }
+
+        /* Grid */
+        nav.grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(4, minmax(0, 1fr))
+        }
+
+        @media(max-width:1100px) {
+            nav.grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
+            }
+        }
+
+        @media(max-width:560px) {
+            nav.grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            padding: 22px 20px;
+            min-height: 140px;
+            background: var(--card);
+            backdrop-filter: blur(7px);
+            border: 1px solid hsl(var(--stroke));
+            text-decoration: none;
+            color: inherit;
+            display: grid;
+            align-content: center;
+            gap: 8px;
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+            isolation: isolate;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            background: var(--card-hover);
+            border-color: hsl(var(--brand-1)/.30);
+            box-shadow: 0 14px 36px hsl(var(--brand-2)/.22);
+        }
+
+        .card:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px hsl(var(--ring))
+        }
+
+        .eyebrow {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            color: var(--muted)
+        }
+
+        .title {
+            font-family: "Space Grotesk", Inter;
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: .3px;
+            background: linear-gradient(90deg, hsl(var(--brand-1)/.95), hsl(var(--brand-2)/.95));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .desc {
+            color: color-mix(in oklab, var(--muted), #fff 8%);
+            font-size: 14px;
+            line-height: 1.45
+        }
+
+        .chip {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 11px;
+            letter-spacing: .08em;
+            padding: 6px 9px;
+            border-radius: 999px;
+            color: var(--chip-fg);
+            background: linear-gradient(135deg, hsl(var(--brand-2)/.92), hsl(var(--brand-1)/.92));
+            border: 1px solid hsl(var(--brand-1)/.35);
+            text-transform: uppercase;
+            font-weight: 800
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            inset: -40%;
+            z-index: -1;
+            filter: blur(46px);
+            background:
+                radial-gradient(40% 50% at 30% 40%, hsl(var(--brand-1)/.28), transparent 60%),
+                radial-gradient(40% 50% at 70% 60%, hsl(var(--brand-2)/.28), transparent 60%);
+            transform: translate3d(0, 0, 0) scale(1);
+            animation: float 14s ease-in-out infinite alternate;
+            opacity: .85;
+        }
+
+        @keyframes float {
+            from {
+                transform: translate3d(-2%, -1%, 0) scale(1)
+            }
+
+            to {
+                transform: translate3d(2%, 1%, 0) scale(1.06)
+            }
+        }
+
+        /* ---------- Fade-In für ALLES außer Hintergrund ---------- */
+        /* Basiseffekt */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        header[role="banner"],
+        header[role="banner"]>*,
+        nav.grid .card,
+        footer {
+            opacity: 0;
+            animation: fadeInUp .8s ease forwards;
+        }
+
+        /* Reihenfolge/Delays */
+        header[role="banner"] .brand {
+            animation-delay: .10s
+        }
+
+        header[role="banner"] h1 {
+            animation-delay: .25s
+        }
+
+        header[role="banner"] .subtitle {
+            animation-delay: .40s
+        }
+
+        header[role="banner"] .rule {
+            animation-delay: .55s
+        }
+
+        /* Desktop (4 Spalten): leicht LTR */
+        nav.grid .card:nth-child(1) {
+            animation-delay: .70s
+        }
+
+        nav.grid .card:nth-child(2) {
+            animation-delay: .85s
+        }
+
+        nav.grid .card:nth-child(3) {
+            animation-delay: 1.00s
+        }
+
+        nav.grid .card:nth-child(4) {
+            animation-delay: 1.15s
+        }
+
+        /* Tablet (2 Spalten): Untere Buttons mit deutlichem Delay */
+        @media (max-width:1100px) and (min-width:561px) {
+            nav.grid .card:nth-child(1) {
+                animation-delay: .70s
+            }
+
+            /* oben links */
+            nav.grid .card:nth-child(2) {
+                animation-delay: .85s
+            }
+
+            /* oben rechts */
+            nav.grid .card:nth-child(3) {
+                animation-delay: 1.15s
+            }
+
+            /* unten links */
+            nav.grid .card:nth-child(4) {
+                animation-delay: 1.30s
+            }
+
+            /* unten rechts */
+        }
+
+        /* Mobile (1 Spalte): linear */
+        @media (max-width:560px) {
+            nav.grid .card:nth-child(1) {
+                animation-delay: .70s
+            }
+
+            nav.grid .card:nth-child(2) {
+                animation-delay: .85s
+            }
+
+            nav.grid .card:nth-child(3) {
+                animation-delay: 1.00s
+            }
+
+            nav.grid .card:nth-child(4) {
+                animation-delay: 1.15s
+            }
+        }
+
+        footer {
+            animation-delay: 1.45s
+        }
+
+        /* RGB Footer */
+        footer {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 40px;
+            padding: 20px 0 40px;
+            background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet, red);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 400% 400%;
+            animation-name: rgbFlow, fadeInUp;
+            animation-duration: 12s, .8s;
+            animation-timing-function: linear, ease;
+            animation-iteration-count: infinite, 1;
+            animation-fill-mode: both;
+        }
+
+        @keyframes rgbFlow {
+            0% {
+                background-position: 0% 50%
+            }
+
+            50% {
+                background-position: 100% 50%
+            }
+
+            100% {
+                background-position: 0% 50%
+            }
+        }
+
+        @media(prefers-reduced-motion:reduce) {
+            * {
+                animation: none !important;
+                transition: none !important
+            }
+
+            .card::after {
+                display: none
+            }
+
+            header[role="banner"],
+            header[role="banner"]>*,
+            nav.grid .card,
+            footer {
+                opacity: 1;
+                transform: none
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <div class="container" id="bg-container"></div>
-  <div class="spotlight" id="spotlight"></div>
-
-  <div class="wrap">
-    <div class="header">
-      <h1 class="header__title">MS-13</h1>
-      <p class="header__subtitle">Familie · Respekt · Macht</p>
+    <!-- Hintergrund-Layer (Bild + Glow + Canvas) -->
+    <div class="particle-network-animation" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
     </div>
 
-    <div class="bento-grid">
-      <a href="auszahlung.html" class="card">
-        <h2 class="card__title">💰 Auszahlungen </h2>
-        <p class="card__description">Hier gehts ums Geld!</p>
-      </a>
+    <main class="wrap" id="main" tabindex="-1">
+        <header role="banner">
+            <div class="brand">
+                <img src="https://cdn.discordapp.com/attachments/1426212985549881395/1428774036338642944/Atzen_GmbH_128x128.png?ex=68f3b903&is=68f26783&hm=09480d99e1548f9b6c947e8a52830ab9c1402d0efab555d357dbf889dbf57adb&" alt="Atzen GmbH Logo" width="240" height="240" onerror="this.onerror=null; this.src=''; this.closest('.brand').classList.add('logo-fallback');">
+            </div>
+            <h1>Atzen GmbH</h1>
+            <p class="subtitle">Familie · Respekt · Macht</p>
+            <div class="rule" aria-hidden="true"></div>
+        </header>
 
-      <a href="plantage.html" class="card">
-        <h2 class="card__title">🌿 Plantage-Log</h2>
-        <p class="card__description">Log die Plantage</p>
-      </a>
+        <nav class="grid" aria-label="Hauptnavigation">
+            <a class="card" href="auszahlung.html"><span class="eyebrow">Für Mitglieder</span><span class="title">💰 Auszahlungen</span><span class="desc">Hier findest du die Auszahlungsliste.</span></a>
+            <a class="card" href="plantage.html"><span class="eyebrow">Für Mitglieder</span><span class="title">🌿 Plantage-Log</span><span class="desc">Trage hier den aktuellen Fortschritt der Plantage ein.</span></a>
+            <a class="card" href="event_log.html"><span class="eyebrow">Für Mitglieder</span><span class="title">📅 Event-Logb</span><span class="desc">Hier dokumentierst du angefahrene Events.</span></a>
+            <a class="card" href="admin_sync.html"><span class="chip">Leaderschaft</span><span class="eyebrow">Für Leader</span><span class="title">🛡️Leaderschaft Panel</span><span class="desc">Verpiss dich, kommst eh nicht rein.</span></a>
+        </nav>
 
-      <a href="event_log.html" class="card">
-        <h2 class="card__title">📅 Event-Log</h2>
-        <p class="card__description">Log deine Events</p>
-      </a>
+        <footer>Made by Alvaro Solano Hebel · 20367</footer>
+    </main>
 
-      <a href="admin_sync.html" class="card">
-        <h2 class="card__title">🚫 Leaderschaft Panel</h2>
-        <p class="card__description">Hier hast du nichts zu suchen ^^</p>
-      </a>
-    </div>
+    <!-- jQuery wie im CodePen -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
 
-    <footer>Made by Alvaro SolanoHebel | 20367</footer>
-  </div>
+    <!-- Particle Network (nahe am CodePen) -->
+    <script>
+        (function() {
+            function ParticleNetworkAnimation() {}
+            ParticleNetworkAnimation.prototype.init = function(element) {
+                this.container = element;
+                this.canvas = document.createElement('canvas');
+                this.sizeCanvas();
+                this.container.appendChild(this.canvas);
+                this.ctx = this.canvas.getContext('2d');
+                this.particleNetwork = new ParticleNetwork(this);
+                var _this = this;
+                $(window).on('resize', function() {
+                    _this.ctx.clearRect(0, 0, _this.canvas.width, _this.canvas.height);
+                    _this.sizeCanvas();
+                    _this.particleNetwork.createParticles();
+                });
+                return this;
+            };
+            ParticleNetworkAnimation.prototype.sizeCanvas = function() {
+                this.canvas.width = this.container.offsetWidth;
+                this.canvas.height = this.container.offsetHeight;
+                this.canvas.style.width = this.container.offsetWidth + 'px';
+                this.canvas.style.height = this.container.offsetHeight + 'px';
+            };
 
-  <script>
-    // Hintergrund-Bubbles
-    const container = document.getElementById('bg-container');
-    const numCircles = 100;
+            function Particle(parent, x, y) {
+                this.network = parent;
+                this.canvas = parent.canvas;
+                this.ctx = parent.ctx;
+                this.particleColor = '#b7c2ff'; /* kühles Blau */
+                this.radius = Math.random() * 1 + 1.6;
+                this.opacity = 0;
+                this.x = x || Math.random() * this.canvas.width;
+                this.y = y || Math.random() * this.canvas.height;
+                this.velocity = {
+                    x: (Math.random() - 0.5),
+                    y: (Math.random() - 0.5)
+                };
+            }
+            Particle.prototype.update = function() {
+                if (this.opacity < 1) this.opacity += 0.01;
+                else this.opacity = 1;
+                if (this.x > this.canvas.width + 100 || this.x < -100) this.velocity.x = -this.velocity.x;
+                if (this.y > this.canvas.height + 100 || this.y < -100) this.velocity.y = -this.velocity.y;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+            };
+            Particle.prototype.draw = function() {
+                this.ctx.beginPath();
+                this.ctx.fillStyle = this.particleColor;
+                this.ctx.globalAlpha = this.opacity;
+                this.ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+                this.ctx.fill();
+            };
 
-    for (let i=0; i<numCircles; i++) {
-      const circleContainer = document.createElement('div');
-      circleContainer.className = 'circle-container';
+            function ParticleNetwork(parent) {
+                this.options = {
+                    density: 15000,
+                    netLineDistance: 200,
+                    netLineColor: '#8aa1ff'
+                };
+                this.canvas = parent.canvas;
+                this.ctx = parent.ctx;
+                this.createParticles(true);
+                this.update();
+                this.bindUiActions();
+            }
+            ParticleNetwork.prototype.createParticles = function() {
+                this.particles = [];
+                var quantity = (this.canvas.width * this.canvas.height) / this.options.density;
+                for (var i = 0; i < quantity; i++) {
+                    this.particles.push(new Particle(this));
+                }
+            };
+            ParticleNetwork.prototype.createInteractionParticle = function() {
+                this.interactionParticle = new Particle(this);
+                this.interactionParticle.velocity = {
+                    x: 0,
+                    y: 0
+                };
+                this.particles.push(this.interactionParticle);
+                return this.interactionParticle;
+            };
+            ParticleNetwork.prototype.removeInteractionParticle = function() {
+                var index = this.particles.indexOf(this.interactionParticle);
+                if (index > -1) {
+                    this.particles.splice(index, 1);
+                    this.interactionParticle = undefined;
+                }
+            };
+            ParticleNetwork.prototype.update = function() {
+                if (!this.canvas) return;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.globalAlpha = 1;
 
-      const circle = document.createElement('div');
-      circle.className = 'circle';
-      circleContainer.appendChild(circle);
+                // Linien
+                for (var i = 0; i < this.particles.length; i++) {
+                    for (var j = i + 1; j < this.particles.length; j++) {
+                        var p1 = this.particles[i],
+                            p2 = this.particles[j];
+                        var dx = p1.x - p2.x,
+                            dy = p1.y - p2.y;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist > this.options.netLineDistance) continue;
+                        this.ctx.beginPath();
+                        this.ctx.strokeStyle = this.options.netLineColor;
+                        this.ctx.globalAlpha = (this.options.netLineDistance - dist) / this.options.netLineDistance * p1.opacity * p2.opacity;
+                        this.ctx.lineWidth = 0.7;
+                        this.ctx.moveTo(p1.x, p1.y);
+                        this.ctx.lineTo(p2.x, p2.y);
+                        this.ctx.stroke();
+                    }
+                }
+                // Partikel
+                for (var k = 0; k < this.particles.length; k++) {
+                    this.particles[k].update();
+                    this.particles[k].draw();
+                }
 
-      const size = Math.random()*8+4;
-      circleContainer.style.width = size+'px';
-      circleContainer.style.height = size+'px';
-      circleContainer.style.left = Math.random()*100+'vw';
-      circleContainer.style.bottom = '-20px';
+                requestAnimationFrame(this.update.bind(this));
+            };
 
-      const moveDuration = 7000 + Math.random()*5000;
-      const startY = 110 + Math.random()*20;
-      const endY = -30 - Math.random()*20;
+            // Interaktionen – wie im CodePen (inkl. Klick-Spawn)
+            ParticleNetwork.prototype.bindUiActions = function() {
+                this.spawnQuantity = 3;
+                this.mouseIsDown = false;
+                this.touchIsMoving = false;
 
-      const animName = `move-${i}`;
-      const keyframes = `
-        @keyframes ${animName} {
-          from { transform: translate3d(${Math.random()*100}vw, ${startY}vh, 0); }
-          to   { transform: translate3d(${Math.random()*100}vw, ${endY}vh, 0); }
-        }
-      `;
-      const style = document.createElement('style');
-      style.innerHTML = keyframes;
-      document.head.appendChild(style);
+                var getPos = function(canvas, clientX, clientY) {
+                    var rect = canvas.getBoundingClientRect();
+                    return {
+                        x: clientX - rect.left,
+                        y: clientY - rect.top
+                    };
+                }.bind(this, this.canvas);
 
-      circleContainer.style.animationName = animName;
-      circleContainer.style.animationDuration = moveDuration+'ms';
-      circleContainer.style.animationDelay = '0ms';
-      container.appendChild(circleContainer);
-    }
+                this.onMouseMove = function(e) {
+                    var p = getPos(e.clientX, e.clientY);
+                    if (!this.interactionParticle) this.createInteractionParticle();
+                    this.interactionParticle.x = p.x;
+                    this.interactionParticle.y = p.y;
+                }.bind(this);
 
-    // Spotlight + Card-Bubbles
-    const spotlight = document.getElementById('spotlight');
-    const cards = document.querySelectorAll('.card');
+                this.onMouseDown = function() {
+                    this.mouseIsDown = true;
+                    var counter = 0;
+                    var quantity = this.spawnQuantity;
+                    var intervalId = setInterval(function() {
+                        if (!this.mouseIsDown) return clearInterval(intervalId);
+                        if (counter === 1) quantity = 1;
+                        if (this.interactionParticle) {
+                            for (var i = 0; i < quantity; i++) {
+                                this.particles.push(new Particle(this, this.interactionParticle.x, this.interactionParticle.y));
+                            }
+                        }
+                        counter++;
+                    }.bind(this), 50);
+                }.bind(this);
 
-    document.addEventListener('mousemove', e => {
-      spotlight.style.left = e.clientX + 'px';
-      spotlight.style.top = e.clientY + 'px';
-      spotlight.style.opacity = 1;
+                this.onMouseUp = function() {
+                    this.mouseIsDown = false;
+                }.bind(this);
+                this.onMouseOut = function() {
+                    this.removeInteractionParticle();
+                }.bind(this);
 
-      cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        card.style.setProperty('--glow-x', x + '%');
-        card.style.setProperty('--glow-y', y + '%');
-        card.style.setProperty('--glow-intensity', '1');
-      });
-    });
+                this.onTouchMove = function(e) {
+                    var t = e.changedTouches[0];
+                    var p = getPos(t.clientX, t.clientY);
+                    this.touchIsMoving = true;
+                    if (!this.interactionParticle) this.createInteractionParticle();
+                    this.interactionParticle.x = p.x;
+                    this.interactionParticle.y = p.y;
+                }.bind(this);
 
-    // Card-Bubbles: 20 fixe + 10 beim Hover
-    cards.forEach(card => {
-      for (let i = 0; i < 20; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        const size = 3 + Math.random() * 6;
-        p.style.width = size + 'px';
-        p.style.height = size + 'px';
-        p.style.left = Math.random() * (card.offsetWidth - size) + 'px';
-        p.style.top = Math.random() * (card.offsetHeight - size) + 'px';
-        p.style.animationDuration = (3 + Math.random() * 4) + 's';
-        p.style.animationDelay = (Math.random() * 4) + 's';
-        card.appendChild(p);
-      }
-      card.addEventListener('mouseenter', () => {
-        for (let i=0; i<10; i++) {
-          const p = document.createElement('div');
-          p.className = 'particle';
-          const size = 3 + Math.random() * 6;
-          p.style.width = size + 'px';
-          p.style.height = size + 'px';
-          p.style.left = Math.random() * (card.offsetWidth - size) + 'px';
-          p.style.top = Math.random() * (card.offsetHeight - size) + 'px';
-          p.style.animationDuration = (2 + Math.random() * 2) + 's';
-          card.appendChild(p);
-          setTimeout(() => p.remove(), 5000);
-        }
-      });
-    });
-  </script>
+                this.onTouchStart = function(e) {
+                    var t = e.changedTouches[0];
+                    var p = getPos(t.clientX, t.clientY);
+                    setTimeout(function() {
+                        if (!this.touchIsMoving) {
+                            for (var i = 0; i < this.spawnQuantity; i++) {
+                                this.particles.push(new Particle(this, p.x, p.y));
+                            }
+                        }
+                    }.bind(this), 200);
+                }.bind(this);
+
+                this.onTouchEnd = function() {
+                    this.touchIsMoving = false;
+                    this.removeInteractionParticle();
+                }.bind(this);
+
+                window.addEventListener('mousemove', this.onMouseMove, {
+                    passive: true
+                });
+                window.addEventListener('mousedown', this.onMouseDown);
+                window.addEventListener('mouseup', this.onMouseUp);
+                window.addEventListener('mouseout', this.onMouseOut);
+
+                document.addEventListener('touchmove', this.onTouchMove, {
+                    passive: true
+                });
+                document.addEventListener('touchstart', this.onTouchStart, {
+                    passive: true
+                });
+                document.addEventListener('touchend', this.onTouchEnd, {
+                    passive: true
+                });
+            };
+
+            // Boot
+            new ParticleNetworkAnimation().init(document.querySelector('.particle-network-animation'));
+        }());
+    </script>
 </body>
+
 </html>
