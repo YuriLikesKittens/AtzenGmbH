@@ -310,27 +310,92 @@
     const errPayouts    = document.getElementById('errPayouts');
     const errDeposits   = document.getElementById('errDeposits');
 
-    const eventTemplates = {
-      "40er Kill / Win": 40000,
-      "40er Kill / Lose": 20000,
-      "50er Win": 35000,
-      "Bizwar Kill Win": 20000,
-      "Bizwar Kill Lose": 10000,
-      "Bizwar Teilnahme": 10000,
-      "Waffenfab. Kill Win": 20000,
-      "Waffenfab. Kills Lose": 10000,
-      "Waffenfab. Win": 20000,
-      "Gießerei Kills Win": 20000,
-      "Gießerei Kills Lose": 10000,
-      "Bank (Gewinn Abhängig)": 20000,
-      "Hafen Drop": 25000,
-      "EKZ/Mall Win": 50000,
-      "RP Fabrik Win": 300000,
-      "RP Fabrik Teilnahme": 0,
-      "Cayo": 50000,
-      "Sanktion": 0,
-      "Komplett Auszahlung": -1
-    };
+const eventTemplates = {
+  // 40er
+  "40er Kill / Lose": 20000,
+  "40er Kill / Win": 40000,
+
+  // 50er
+  "50er Kill / Lose": 25000,
+  "50er Kill / Win": 45000,
+
+  // Bizwar
+  "Bizwar Teilnahme": 15000,
+  "Bizwar Kill / Lose": 15000,
+  "Bizwar Kill / Win": 35000,
+  "Bizwar Drop": 35000,
+
+  // Bank
+  "Bank Teilnahme": 20000,
+  // Win-Bonus entfällt (war Prozent-basiert)
+
+  // Cayo
+  "Cayo Win": 50000,
+
+  // Drogenlabor
+  "Drogenlabor Angriff Teilnahme": 15000,
+  "Drogenlabor Verteidigung Teilnahme": 25000,
+
+  // EKZ / Mall
+  "EKZ/Mall Win": 50000,
+
+  // Gießerei
+  "Gießerei Kill / Lose": 10000,
+  "Gießerei Kill / Win": 20000,
+  "Gießerei Teilnahme Win": 25000,
+
+  // Hafen
+  "Hafen Drop": 25000,
+
+  // Raids
+  "Raid Angriff Teilnahme": 15000,
+  "Raid Verteidigung Teilnahme": 20000,
+
+  // RP-Fabrik
+  "RP Fabrik Win": 0, // Keine Prozentangabe → fester Betrag nicht definiert
+
+  // Famwar
+  "Famwar Teilnahme Win": 0, // ebenfalls Prozent entfernt
+
+  // Flugzeugträger
+  "Flugzeugträger Drop": 50000,
+
+  // Kampf ums Ranking
+  "Ranking Teilnahme": 15000,
+  "Ranking Kill / Lose": 15000,
+  "Ranking Kill / Win": 45000,
+
+  // Shop/Ammu-Raub
+  "Shop/Ammu Erfolgreiche Teilnahme": 25000,
+
+  // Staatliche
+  "Staatliche Win": 25000,
+  "Staatliche Lose": 10000,
+
+  // Hotelübernahme
+  "Hotel Win": 0, // Prozent entfernt → fester Wert?
+
+  // Waffenbauteile
+  "Waffenbauteile Teilnahme": 15000,
+
+  // Waffenfabrik
+  "Waffenfab Kill / Lose": 15000,
+  "Waffenfab Kill / Win": 25000,
+
+  // Weinberge
+  "Weinberge Teilnahme": 15000,
+  "Weinberge Kill / Lose": 15000,
+  "Weinberge Kill / Win": 35000,
+
+  // Zinken
+  "Zinken Teilnahme": 10000,
+  "Zinken Beamter erledigt": 20000,
+
+  // Sonstige
+  "Sanktion": 0,
+  "Komplett Auszahlung": -1
+};
+
 
     // Mitglieder live
     db.collection('members').orderBy('balance','desc')
