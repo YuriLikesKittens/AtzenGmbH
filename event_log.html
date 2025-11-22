@@ -341,7 +341,32 @@
 
   <script>
     /* ==== Event-Form: Optionen, Chips, Submit + Discord ==== */
-    const eventOptions=["40er","50er","Bank","Bizwar","Cayo","EKZ/Mall","Gießerei","Hafen Drop","RP Fabrik","Waffenfabrik","Raid / Angriff","Raid / Verteidigung","Famwar","Drogenlabor Angriff","Flugzeugträger","Shop / Ammu Raub","Zinken","Staatliche Übernahme", "Übernahme des Hotels", "Waffen-Bauteile"];
+    const eventOptions = [
+  "40er",
+  "50er",
+  "Bank",
+  "Bizwar",
+  "Cayo",
+  "Drogenlabor Angriff",
+  "Drogenlabor Verteidigung",
+  "EKZ / Mall",
+  "Gießerei",
+  "Hafen",
+  "Raid / Angriff",
+  "Raid / Verteidigung",
+  "RP Fabrik",
+  "Famwar",
+  "Flugzeugträger",
+  "Kampf ums Ranking",
+  "Shop / Ammu Raub",
+  "Staatliche Übernahme",
+  "Übernahme des Hotels",
+  "Waffen-Bauteile",
+  "Waffenfabrik",
+  "Weinberge",
+  "Zinken"
+];
+
     const eventType=$("#eventType"); for(const o of eventOptions){const opt=document.createElement('option'); opt.value=o; opt.textContent=o; eventType.appendChild(opt);}
 
     // Teilnehmer Chips
